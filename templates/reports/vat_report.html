@@ -1,0 +1,511 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تقرير ضريبة القيمة المضافة{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/reports/reports.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="report-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-file-invoice-dollar"></i>
+                تقرير ضريبة القيمة المضافة (VAT)
+            </h1>
+            <p class="subtitle">من {{ date_from }} إلى {{ date_to }}</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'reports:dashboard' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة
+            </a>
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i>
+                طباعة
+            </button>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="filter-section">
+        <form method="GET" class="date-selector">
+            <label>من تاريخ:</label>
+            <input type="date" name="date_from" value="{{ date_from|date:'Y-m-d' }}" required>
+            
+            <label>إلى تاريخ:</label>
+            <input type="date" name="date_to" value="{{ date_to|date:'Y-m-d' }}" required>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i>
+                بحث
+            </button>
+        </form>
+    </div>
+
+    <!-- VAT Summary Alert -->
+    <div class="vat-alert">
+        <div class="alert-icon">
+            <i class="fas fa-info-circle"></i>
+        </div>
+        <div class="alert-content">
+            <h3>معدل ضريبة القيمة المضافة: {{ vat_rate }}%</h3>
+            <p>هذا التقرير يعرض ملخص ضريبة القيمة المضافة المستحقة للفترة المحددة</p>
+        </div>
+    </div>
+
+    <!-- VAT Summary Cards -->
+    <div class="summary-grid">
+        <div class="summary-card sales">
+            <div class="card-icon">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_sales_count }}</h3>
+                <p>عدد الفواتير</p>
+            </div>
+        </div>
+
+        <div class="summary-card collected">
+            <div class="card-icon">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_subtotal|floatformat:2 }}</h3>
+                <p>المجموع الفرعي</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card returns">
+            <div class="card-icon">
+                <i class="fas fa-tag"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_discount|floatformat:2 }}</h3>
+                <p>الخصومات</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card purchases">
+            <div class="card-icon">
+                <i class="fas fa-receipt"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_taxable|floatformat:2 }}</h3>
+                <p>المبلغ الخاضع للضريبة</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card remaining vat-highlight">
+            <div class="card-icon">
+                <i class="fas fa-percentage"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_tax|floatformat:2 }}</h3>
+                <p>إجمالي ضريبة القيمة المضافة</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card payments">
+            <div class="card-icon">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_with_tax|floatformat:2 }}</h3>
+                <p>الإجمالي شامل الضريبة</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- VAT Breakdown Chart -->
+    <div class="chart-card" style="margin-bottom: 2rem;">
+        <div class="chart-header">
+            <h3>
+                <i class="fas fa-chart-line"></i>
+                الضريبة اليومية
+            </h3>
+        </div>
+        <div class="chart-body">
+            <canvas id="dailyVatChart"></canvas>
+        </div>
+    </div>
+
+    <!-- VAT Calculation -->
+    <div class="vat-calculation-box">
+        <h3>
+            <i class="fas fa-calculator"></i>
+            حساب الضريبة
+        </h3>
+        <div class="calculation-steps">
+            <div class="calc-step">
+                <span class="step-label">المجموع الفرعي:</span>
+                <span class="step-value">{{ total_subtotal|floatformat:2 }} ر.س</span>
+            </div>
+            <div class="calc-step minus">
+                <span class="step-label">ناقص: الخصومات:</span>
+                <span class="step-value">{{ total_discount|floatformat:2 }} ر.س</span>
+            </div>
+            <div class="calc-step divider">
+                <span class="step-label">يساوي: المبلغ الخاضع للضريبة:</span>
+                <span class="step-value">{{ total_taxable|floatformat:2 }} ر.س</span>
+            </div>
+            <div class="calc-step multiply">
+                <span class="step-label">ضرب: معدل الضريبة ({{ vat_rate }}%):</span>
+                <span class="step-value">× 0.15</span>
+            </div>
+            <div class="calc-step result">
+                <span class="step-label">الضريبة المستحقة:</span>
+                <span class="step-value">{{ total_tax|floatformat:2 }} ر.س</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- VAT by Payment Method -->
+    <div class="table-section">
+        <div class="section-header">
+            <h3>
+                <i class="fas fa-credit-card"></i>
+                الضريبة حسب طريقة الدفع
+            </h3>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>طريقة الدفع</th>
+                    <th>الضريبة</th>
+                    <th>الإجمالي شامل الضريبة</th>
+                    <th>النسبة</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for method in vat_by_payment %}
+                <tr>
+                    <td>
+                        {% if method.payment_method == 'cash' %}
+                        <i class="fas fa-money-bill"></i> نقدي
+                        {% elif method.payment_method == 'card' %}
+                        <i class="fas fa-credit-card"></i> بطاقة
+                        {% elif method.payment_method == 'transfer' %}
+                        <i class="fas fa-exchange-alt"></i> تحويل
+                        {% elif method.payment_method == 'mada' %}
+                        <i class="fas fa-credit-card"></i> مدى
+                        {% else %}
+                        {{ method.payment_method }}
+                        {% endif %}
+                    </td>
+                    <td style="font-weight: 600;">{{ method.total_tax|floatformat:2 }} ر.س</td>
+                    <td>{{ method.total_amount|floatformat:2 }} ر.س</td>
+                    <td>
+                        {% if total_tax > 0 %}
+                        {% widthratio method.total_tax total_tax 100 %}%
+                        {% else %}
+                        0%
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; color: #999;">لا توجد معاملات</td>
+                </tr>
+                {% endfor %}
+                <tr style="background: #f8f9fa; font-weight: 600;">
+                    <td>الإجمالي:</td>
+                    <td>{{ total_tax|floatformat:2 }} ر.س</td>
+                    <td>{{ total_with_tax|floatformat:2 }} ر.س</td>
+                    <td>100%</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Sales Details -->
+    <div class="table-section">
+        <div class="section-header">
+            <h3>
+                <i class="fas fa-list"></i>
+                تفاصيل الفواتير (آخر 100 فاتورة)
+            </h3>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>رقم الفاتورة</th>
+                        <th>التاريخ</th>
+                        <th>العميل</th>
+                        <th>المجموع الفرعي</th>
+                        <th>الخصم</th>
+                        <th>المبلغ الخاضع</th>
+                        <th>الضريبة (15%)</th>
+                        <th>الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales_details %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'sales:detail' sale.pk %}" style="color: #4A9EAD; text-decoration: none;">
+                                {{ sale.order_number }}
+                            </a>
+                        </td>
+                        <td>{{ sale.order_date|date:"Y-m-d" }}</td>
+                        <td>{{ sale.customer.name }}</td>
+                        <td>{{ sale.subtotal|floatformat:2 }} ر.س</td>
+                        <td>{{ sale.discount|floatformat:2 }} ر.س</td>
+                        <td>{{ sale.subtotal|add:"-"|add:sale.discount|floatformat:2 }} ر.س</td>
+                        <td style="font-weight: 600; color: #4A9EAD;">{{ sale.tax|floatformat:2 }} ر.س</td>
+                        <td style="font-weight: 600;">{{ sale.total_amount|floatformat:2 }} ر.س</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" style="text-align: center; color: #999;">لا توجد فواتير</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot style="background: #f8f9fa; font-weight: 600;">
+                    <tr>
+                        <td colspan="3">الإجمالي:</td>
+                        <td>{{ total_subtotal|floatformat:2 }} ر.س</td>
+                        <td>{{ total_discount|floatformat:2 }} ر.س</td>
+                        <td>{{ total_taxable|floatformat:2 }} ر.س</td>
+                        <td style="color: #4A9EAD;">{{ total_tax|floatformat:2 }} ر.س</td>
+                        <td>{{ total_with_tax|floatformat:2 }} ر.س</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- VAT Notes -->
+    <div class="vat-notes">
+        <h3>
+            <i class="fas fa-info-circle"></i>
+            ملاحظات هامة
+        </h3>
+        <ul>
+            <li>هذا التقرير للفترة من {{ date_from|date:"d/m/Y" }} إلى {{ date_to|date:"d/m/Y" }}</li>
+            <li>معدل ضريبة القيمة المضافة المطبق هو {{ vat_rate }}%</li>
+            <li>الضريبة محسوبة على المبلغ بعد الخصم (المجموع الفرعي - الخصم)</li>
+            <li>يجب حفظ هذا التقرير للسجلات الضريبية</li>
+            <li>في حالة وجود أي استفسارات، يرجى مراجعة المحاسب أو هيئة الزكاة والضريبة والجمارك</li>
+        </ul>
+    </div>
+</div>
+
+<style>
+.vat-highlight {
+    background: linear-gradient(135deg, #4A9EAD 0%, #3a7d8a 100%) !important;
+    color: white !important;
+}
+
+.vat-highlight .card-icon {
+    background: rgba(255, 255, 255, 0.2) !important;
+    color: white !important;
+}
+
+.vat-highlight .card-content h3,
+.vat-highlight .card-content p,
+.vat-highlight .card-note {
+    color: white !important;
+}
+
+.vat-alert {
+    background: linear-gradient(135deg, #4A9EAD 0%, #3a7d8a 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 4px 12px rgba(74, 158, 173, 0.3);
+}
+
+.alert-icon {
+    font-size: 3rem;
+    opacity: 0.9;
+}
+
+.alert-content h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.3rem;
+}
+
+.alert-content p {
+    margin: 0;
+    opacity: 0.9;
+}
+
+.vat-calculation-box {
+    background: white;
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin-bottom: 2rem;
+}
+
+.vat-calculation-box h3 {
+    margin: 0 0 1.5rem 0;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.vat-calculation-box h3 i {
+    color: #4A9EAD;
+}
+
+.calculation-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.calc-step {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-right: 4px solid #4A9EAD;
+}
+
+.calc-step.minus {
+    border-right-color: #e74c3c;
+}
+
+.calc-step.divider {
+    border-right-color: #f39c12;
+    background: #fff3cd;
+}
+
+.calc-step.multiply {
+    border-right-color: #9b59b6;
+}
+
+.calc-step.result {
+    border-right-color: #27ae60;
+    background: #d4edda;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.step-label {
+    color: #2c3e50;
+}
+
+.step-value {
+    font-weight: 600;
+    color: #4A9EAD;
+}
+
+.calc-step.result .step-value {
+    color: #27ae60;
+    font-size: 1.3rem;
+}
+
+.vat-notes {
+    background: #fff3cd;
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    border-right: 4px solid #f39c12;
+    margin-top: 2rem;
+}
+
+.vat-notes h3 {
+    margin: 0 0 1rem 0;
+    color: #856404;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.vat-notes ul {
+    margin: 0;
+    padding-right: 1.5rem;
+    color: #856404;
+}
+
+.vat-notes li {
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}
+
+@media print {
+    .vat-alert,
+    .vat-notes {
+        break-inside: avoid;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Daily VAT Chart
+    const dailyVatData = {{ daily_vat|safe }};
+    const dailyVatCtx = document.getElementById('dailyVatChart');
+    
+    if (dailyVatCtx && dailyVatData.length > 0) {
+        new Chart(dailyVatCtx, {
+            type: 'line',
+            data: {
+                labels: dailyVatData.map(d => d.date_ar),
+                datasets: [
+                    {
+                        label: 'الضريبة (ر.س)',
+                        data: dailyVatData.map(d => d.tax),
+                        borderColor: '#4A9EAD',
+                        backgroundColor: 'rgba(74, 158, 173, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'الإجمالي (ر.س)',
+                        data: dailyVatData.map(d => d.total),
+                        borderColor: '#27ae60',
+                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + ' ر.س';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}استيراد المنتجات{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/stock/import_products.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="import-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-file-import"></i>
+                استيراد المنتجات من ملف Excel/CSV
+            </h1>
+            <p class="subtitle">قم برفع ملف Excel أو CSV لإضافة منتجات متعددة دفعة واحدة</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'stock:products' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة للمنتجات
+            </a>
+        </div>
+    </div>
+
+    <div class="import-container">
+        <!-- Instructions Section -->
+        <div class="instructions-card">
+            <div class="card-header">
+                <i class="fas fa-lightbulb"></i>
+                <h2>كيفية استيراد المنتجات</h2>
+            </div>
+            <div class="card-body">
+                <div class="steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>تحميل القالب</h3>
+                            <p>قم بتحميل ملف Excel النموذجي الذي يحتوي على الأعمدة المطلوبة</p>
+                            <a href="{% url 'stock:download_template' %}" class="btn btn-success">
+                                <i class="fas fa-download"></i>
+                                تحميل ملف Excel النموذجي
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>تعبئة البيانات</h3>
+                            <p>افتح الملف وأضف بيانات المنتجات في الصفوف</p>
+                            <ul class="requirements-list">
+                                <li><strong>اسم المنتج:</strong> مطلوب (item_name)</li>
+                                <li><strong>الباركود:</strong> مطلوب (barcode)</li>
+                                <li><strong>الكمية:</strong> رقم (quantity)</li>
+                                <li><strong>سعر التكلفة:</strong> رقم (cost_price)</li>
+                                <li><strong>سعر البيع:</strong> رقم (selling_price)</li>
+                                <li><strong>التصنيف:</strong> اسم التصنيف (category)</li>
+                                <li><strong>المورد:</strong> اسم الشركة (supplier)</li>
+                                <li><strong>الحد الأدنى:</strong> رقم (min_quantity)</li>
+                                <li><strong>رقم الصندوق:</strong> نص (box_number)</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>رفع الملف</h3>
+                            <p>احفظ الملف وارفعه باستخدام النموذج أدناه</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upload Form -->
+        <div class="upload-card">
+            <div class="card-header">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h2>رفع ملف المنتجات</h2>
+            </div>
+            <div class="card-body">
+                <form id="uploadForm" method="POST" enctype="multipart/form-data" action="{% url 'stock:import_products_process' %}">
+                    {% csrf_token %}
+                    
+                    <div class="file-upload-area" id="fileUploadArea">
+                        <div class="upload-icon">
+                            <i class="fas fa-file-excel"></i>
+                        </div>
+                        <h3>اسحب وأفلت الملف هنا</h3>
+                        <p>أو</p>
+                        <label for="file" class="btn btn-primary">
+                            <i class="fas fa-folder-open"></i>
+                            اختر ملف
+                        </label>
+                        <input type="file" 
+                               id="file" 
+                               name="file" 
+                               accept=".xlsx,.xls,.csv"
+                               required
+                               style="display: none;">
+                        <p class="file-types">الملفات المدعومة: Excel (.xlsx, .xls) و CSV (.csv)</p>
+                    </div>
+
+                    <div class="selected-file" id="selectedFile" style="display: none;">
+                        <div class="file-info">
+                            <i class="fas fa-file-excel"></i>
+                            <div class="file-details">
+                                <div class="file-name" id="fileName"></div>
+                                <div class="file-size" id="fileSize"></div>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-remove" onclick="removeFile()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <div class="form-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="skip_duplicates" checked>
+                            <span>تخطي المنتجات المكررة (نفس الباركود)</span>
+                        </label>
+                        
+                        <label class="checkbox-label">
+                            <input type="checkbox" name="update_existing">
+                            <span>تحديث المنتجات الموجودة</span>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary btn-large" id="submitBtn" disabled>
+                        <i class="fas fa-upload"></i>
+                        رفع واستيراد المنتجات
+                    </button>
+                </form>
+
+                <!-- Progress -->
+                <div class="upload-progress" id="uploadProgress" style="display: none;">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    <p class="progress-text" id="progressText">جاري الرفع...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        {% if results %}
+        <div class="results-card">
+            <div class="card-header">
+                <i class="fas fa-check-circle"></i>
+                <h2>نتائج الاستيراد</h2>
+            </div>
+            <div class="card-body">
+                <div class="results-summary">
+                    <div class="result-item success">
+                        <div class="result-icon">
+                            <i class="fas fa-check"></i>
+                        </div>
+                        <div class="result-info">
+                            <div class="result-number">{{ results.success }}</div>
+                            <div class="result-label">تم الإضافة بنجاح</div>
+                        </div>
+                    </div>
+
+                    <div class="result-item warning">
+                        <div class="result-icon">
+                            <i class="fas fa-exclamation"></i>
+                        </div>
+                        <div class="result-info">
+                            <div class="result-number">{{ results.skipped }}</div>
+                            <div class="result-label">تم التخطي</div>
+                        </div>
+                    </div>
+
+                    <div class="result-item danger">
+                        <div class="result-icon">
+                            <i class="fas fa-times"></i>
+                        </div>
+                        <div class="result-info">
+                            <div class="result-number">{{ results.errors }}</div>
+                            <div class="result-label">أخطاء</div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if results.error_details %}
+                <div class="error-details">
+                    <h3>تفاصيل الأخطاء:</h3>
+                    <ul>
+                        {% for error in results.error_details %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                <div class="results-actions">
+                    <a href="{% url 'stock:products' %}" class="btn btn-primary">
+                        <i class="fas fa-eye"></i>
+                        عرض المنتجات
+                    </a>
+                    <button onclick="location.reload()" class="btn btn-outline">
+                        <i class="fas fa-redo"></i>
+                        استيراد ملف جديد
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Example Section -->
+        <div class="example-card">
+            <div class="card-header">
+                <i class="fas fa-table"></i>
+                <h2>مثال على البيانات</h2>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="example-table">
+                        <thead>
+                            <tr>
+                                <th>item_name</th>
+                                <th>barcode</th>
+                                <th>quantity</th>
+                                <th>cost_price</th>
+                                <th>selling_price</th>
+                                <th>category</th>
+                                <th>supplier</th>
+                                <th>min_quantity</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>نظارة شمسية راي بان</td>
+                                <td>1234567890</td>
+                                <td>50</td>
+                                <td>150.00</td>
+                                <td>250.00</td>
+                                <td>نظارات شمسية</td>
+                                <td>شركة النظارات</td>
+                                <td>10</td>
+                            </tr>
+                            <tr>
+                                <td>عدسات لاصقة يومية</td>
+                                <td>0987654321</td>
+                                <td>100</td>
+                                <td>80.00</td>
+                                <td>120.00</td>
+                                <td>عدسات</td>
+                                <td>شركة العدسات</td>
+                                <td>20</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/stock/import_products.js' %}"></script>
+{% endblock %}

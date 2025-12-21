@@ -1,0 +1,624 @@
+/* Reports CSS - Complete Styling */
+
+/* =============== Layout =============== */
+
+.reports-dashboard,
+.report-page {
+    padding: 2rem;
+    background: #f5f7fa;
+    min-height: 100vh;
+}
+
+/* =============== Page Header =============== */
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    background: white;
+    padding: 1.5rem 2rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.header-content h1 {
+    font-size: 1.8rem;
+    color: #2c3e50;
+    margin: 0 0 0.5rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.header-content h1 i {
+    color: #4A9EAD;
+}
+
+.subtitle {
+    color: #7f8c8d;
+    font-size: 0.95rem;
+    margin: 0;
+}
+
+.header-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+/* =============== Quick Report Buttons =============== */
+
+.quick-reports {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.report-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+    background: white;
+    border: 2px solid transparent;
+    border-radius: 12px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.report-btn i {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.report-btn span {
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.report-btn:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+}
+
+/* Report Button Colors */
+.report-btn.primary {
+    border-color: #4A9EAD;
+    color: #4A9EAD;
+}
+
+.report-btn.primary:hover {
+    background: #4A9EAD;
+    color: white;
+}
+
+.report-btn.success {
+    border-color: #27ae60;
+    color: #27ae60;
+}
+
+.report-btn.success:hover {
+    background: #27ae60;
+    color: white;
+}
+
+.report-btn.warning {
+    border-color: #f39c12;
+    color: #f39c12;
+}
+
+.report-btn.warning:hover {
+    background: #f39c12;
+    color: white;
+}
+
+.report-btn.info {
+    border-color: #3498db;
+    color: #3498db;
+}
+
+.report-btn.info:hover {
+    background: #3498db;
+    color: white;
+}
+
+.report-btn.purple {
+    border-color: #9b59b6;
+    color: #9b59b6;
+}
+
+.report-btn.purple:hover {
+    background: #9b59b6;
+    color: white;
+}
+
+/* =============== Statistics Cards =============== */
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    border-left: 4px solid;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.1);
+}
+
+.stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.8rem;
+}
+
+.stat-details h3 {
+    font-size: 1.8rem;
+    margin: 0 0 0.25rem 0;
+    color: #2c3e50;
+}
+
+.stat-details p {
+    font-size: 0.9rem;
+    color: #7f8c8d;
+    margin: 0 0 0.5rem 0;
+}
+
+.stat-amount,
+.stat-percent,
+.stat-warning,
+.stat-new {
+    font-size: 0.85rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    display: inline-block;
+}
+
+/* Stat Card Colors */
+.stat-card.sales {
+    border-left-color: #4A9EAD;
+}
+
+.stat-card.sales .stat-icon {
+    background: rgba(74, 158, 173, 0.1);
+    color: #4A9EAD;
+}
+
+.stat-card.revenue {
+    border-left-color: #27ae60;
+}
+
+.stat-card.revenue .stat-icon {
+    background: rgba(39, 174, 96, 0.1);
+    color: #27ae60;
+}
+
+.stat-card.pending {
+    border-left-color: #f39c12;
+}
+
+.stat-card.pending .stat-icon {
+    background: rgba(243, 156, 18, 0.1);
+    color: #f39c12;
+}
+
+.stat-card.products {
+    border-left-color: #9b59b6;
+}
+
+.stat-card.products .stat-icon {
+    background: rgba(155, 89, 182, 0.1);
+    color: #9b59b6;
+}
+
+.stat-card.customers {
+    border-left-color: #3498db;
+}
+
+.stat-card.customers .stat-icon {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+}
+
+.stat-amount {
+    background: #e8f5f7;
+    color: #4A9EAD;
+}
+
+.stat-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.stat-new {
+    background: #d4edda;
+    color: #155724;
+}
+
+/* =============== Charts Section =============== */
+
+.charts-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.charts-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.chart-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.chart-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.chart-header h3 {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.chart-header h3 i {
+    color: #4A9EAD;
+}
+
+.chart-body {
+    height: 300px;
+    position: relative;
+}
+
+.chart-body canvas {
+    max-height: 100%;
+}
+
+/* =============== Tables =============== */
+
+.table-section {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    margin-bottom: 1.5rem;
+}
+
+.section-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.section-header h3 {
+    font-size: 1.1rem;
+    color: #2c3e50;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-header h3 i {
+    color: #4A9EAD;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table thead {
+    background: #f8f9fa;
+}
+
+.data-table th {
+    padding: 1rem;
+    text-align: right;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.data-table td {
+    padding: 1rem;
+    border-bottom: 1px solid #f0f0f0;
+    color: #495057;
+}
+
+.data-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.data-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+/* =============== Summary Cards (Daily Balance) =============== */
+
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.summary-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.summary-card .card-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.summary-card.sales .card-icon {
+    background: rgba(74, 158, 173, 0.1);
+    color: #4A9EAD;
+}
+
+.summary-card.payments .card-icon {
+    background: rgba(39, 174, 96, 0.1);
+    color: #27ae60;
+}
+
+.summary-card.collected .card-icon {
+    background: rgba(52, 152, 219, 0.1);
+    color: #3498db;
+}
+
+.summary-card.remaining .card-icon {
+    background: rgba(243, 156, 18, 0.1);
+    color: #f39c12;
+}
+
+.summary-card.purchases .card-icon {
+    background: rgba(155, 89, 182, 0.1);
+    color: #9b59b6;
+}
+
+.summary-card.returns .card-icon {
+    background: rgba(231, 76, 60, 0.1);
+    color: #e74c3c;
+}
+
+.card-content h3 {
+    font-size: 1.5rem;
+    margin: 0 0 0.25rem 0;
+    color: #2c3e50;
+}
+
+.card-content p {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    margin: 0 0 0.25rem 0;
+}
+
+.card-amount,
+.card-note {
+    font-size: 0.8rem;
+    color: #4A9EAD;
+    font-weight: 600;
+}
+
+/* =============== Filter Section =============== */
+
+.filter-section {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin-bottom: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.date-selector {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.date-selector label {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.date-selector input[type="date"] {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.date-selector input[type="date"]:focus {
+    outline: none;
+    border-color: #4A9EAD;
+}
+
+/* =============== Badges =============== */
+
+.badge {
+    padding: 0.4rem 0.8rem;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.badge-success {
+    background: #d4edda;
+    color: #155724;
+}
+
+.badge-warning {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.badge-danger {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.badge-info {
+    background: #d1ecf1;
+    color: #0c5460;
+}
+
+.badge-primary {
+    background: #cce5ff;
+    color: #004085;
+}
+
+/* =============== Buttons =============== */
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: #4A9EAD;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #3a7d8a;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(74, 158, 173, 0.3);
+}
+
+.btn-outline {
+    background: white;
+    color: #4A9EAD;
+    border: 2px solid #4A9EAD;
+}
+
+.btn-outline:hover {
+    background: #4A9EAD;
+    color: white;
+}
+
+/* =============== Print Styles =============== */
+
+@media print {
+    .page-header,
+    .filter-section,
+    .header-actions,
+    .quick-reports {
+        display: none !important;
+    }
+
+    .report-page,
+    .reports-dashboard {
+        padding: 0;
+        background: white;
+    }
+
+    .chart-card,
+    .table-section,
+    .stat-card {
+        box-shadow: none;
+        border: 1px solid #ddd;
+        page-break-inside: avoid;
+    }
+}
+
+/* =============== Responsive =============== */
+
+@media (max-width: 1024px) {
+    .charts-section,
+    .charts-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .reports-dashboard,
+    .report-page {
+        padding: 1rem;
+    }
+
+    .page-header {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+
+    .header-actions {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .quick-reports {
+        grid-template-columns: 1fr;
+    }
+
+    .stats-grid,
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .chart-body {
+        height: 250px;
+    }
+
+    .data-table {
+        font-size: 0.85rem;
+    }
+
+    .data-table th,
+    .data-table td {
+        padding: 0.75rem 0.5rem;
+    }
+}

@@ -1,0 +1,428 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الدخول - {{ company_name }}</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'IBM Plex Sans Arabic', -apple-system, system-ui, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 450px;
+        }
+
+        /* Logo Container */
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+
+        .logo-wrapper {
+            width: 120px;
+            height: 120px;
+            background: #e0e5ec;
+            border-radius: 50%;
+            box-shadow: 
+                12px 12px 24px #bebebe,
+                -12px -12px 24px #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .logo-wrapper img {
+            width: 80%;
+            height: 80%;
+            object-fit: contain;
+        }
+
+        .logo-placeholder {
+            font-size: 2.5rem;
+            color: #9ca3af;
+            font-weight: 600;
+        }
+
+        /* Login Card */
+        .login-card {
+            background: #e0e5ec;
+            border-radius: 3rem;
+            box-shadow: 
+                20px 20px 60px #bebebe,
+                -20px -20px 60px #ffffff;
+            padding: 3rem;
+        }
+
+        .company-title {
+            text-align: center;
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #4A9EAD;
+            margin-bottom: 2rem;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        .form-label {
+            display: block;
+            color: #9ca3af;
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            background: #e0e5ec;
+            border: none;
+            border-radius: 3rem;
+            box-shadow: 
+                inset 8px 8px 16px #bebebe,
+                inset -8px -8px 16px #ffffff;
+            color: #4b5563;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            box-shadow: 
+                inset 12px 12px 24px #bebebe,
+                inset -12px -12px 24px #ffffff;
+        }
+
+        .form-input::placeholder {
+            color: #d1d5db;
+        }
+
+        /* Remember Me & Actions */
+        .form-actions {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 2rem;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+        }
+
+        .checkbox-custom {
+            width: 24px;
+            height: 24px;
+            background: #e0e5ec;
+            border-radius: 6px;
+            box-shadow: 
+                inset 2px 2px 4px #bebebe,
+                inset -2px -2px 4px #ffffff;
+            appearance: none;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .checkbox-custom:checked {
+            background: #4A9EAD;
+            box-shadow: 
+                inset 2px 2px 4px rgba(0,0,0,0.2),
+                inset -2px -2px 4px rgba(255,255,255,0.1);
+        }
+
+        .checkbox-custom:checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .remember-label {
+            color: #9ca3af;
+            font-size: 0.95rem;
+            user-select: none;
+        }
+
+        .forgot-password {
+            color: #4A9EAD;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        .forgot-password:hover {
+            color: #3a7d8a;
+        }
+
+        /* Submit Button */
+        .btn-submit {
+            width: 100%;
+            padding: 1.125rem;
+            background: linear-gradient(135deg, #4A9EAD 0%, #3a7d8a 100%);
+            border: none;
+            border-radius: 3rem;
+            color: white;
+            font-size: 1.125rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 
+                8px 8px 16px #bebebe,
+                -8px -8px 16px #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                12px 12px 24px #bebebe,
+                -12px -12px 24px #ffffff;
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+            box-shadow: 
+                inset 4px 4px 8px #bebebe,
+                inset -4px -4px 8px #ffffff;
+        }
+
+        /* Error Messages */
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border-right: 4px solid #ef4444;
+            color: #dc2626;
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            box-shadow: 
+                4px 4px 8px rgba(190, 190, 190, 0.3),
+                -4px -4px 8px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Success Message */
+        .success-message {
+            background: rgba(16, 185, 129, 0.1);
+            border-right: 4px solid #10b981;
+            color: #059669;
+            padding: 1rem 1.5rem;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            box-shadow: 
+                4px 4px 8px rgba(190, 190, 190, 0.3),
+                -4px -4px 8px rgba(255, 255, 255, 0.5);
+        }
+
+        /* Loading State */
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-submit.loading {
+            position: relative;
+        }
+
+        .btn-submit.loading::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            top: 50%;
+            left: 50%;
+            margin-top: -10px;
+            margin-left: -10px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+
+            .login-card {
+                padding: 2rem 1.5rem;
+            }
+
+            .logo-wrapper {
+                width: 100px;
+                height: 100px;
+            }
+
+            .company-title {
+                font-size: 1.5rem;
+            }
+
+            .form-actions {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-container {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <!-- Logo -->
+        <div class="logo-container">
+            <div class="logo-wrapper">
+                {% if company_logo %}
+                    <img src="{{ company_logo }}" alt="{{ company_name }}">
+                {% else %}
+                    <div class="logo-placeholder">
+                        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path>
+                            <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Login Card -->
+        <div class="login-card">
+            <h1 class="company-title">{{ company_name }}</h1>
+
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    {% if message.tags == 'error' %}
+                        <div class="error-message">{{ message }}</div>
+                    {% elif message.tags == 'success' %}
+                        <div class="success-message">{{ message }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+
+            <!-- Login Form -->
+            <form method="POST" action="{% url 'login' %}" id="loginForm">
+                {% csrf_token %}
+
+                <!-- Username/Email -->
+                <div class="form-group">
+                    <label for="username" class="form-label">اسم المستخدم أو البريد الإلكتروني</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="form-input"
+                        placeholder="admin@example.com"
+                        required
+                        autofocus
+                    >
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password" class="form-label">كلمة المرور</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="form-input"
+                        placeholder="أدخل كلمة المرور"
+                        required
+                    >
+                </div>
+
+                <!-- Remember Me & Forgot Password -->
+                <div class="form-actions">
+                    <label class="remember-me">
+                        <input 
+                            type="checkbox" 
+                            name="remember" 
+                            class="checkbox-custom"
+                        >
+                        <span class="remember-label">تذكرني</span>
+                    </label>
+                    
+                    <a href="#" class="forgot-password">نسيت كلمة المرور؟</a>
+                </div>
+
+                <!-- Submit Button -->
+                <button type="submit" class="btn-submit" id="submitBtn">
+                    تسجيل الدخول
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Form submission with loading state
+        const loginForm = document.getElementById('loginForm');
+        const submitBtn = document.getElementById('submitBtn');
+
+        loginForm.addEventListener('submit', function() {
+            submitBtn.classList.add('loading');
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'جاري تسجيل الدخول...';
+        });
+
+        // Auto-hide messages after 5 seconds
+        setTimeout(function() {
+            const messages = document.querySelectorAll('.error-message, .success-message');
+            messages.forEach(function(message) {
+                message.style.transition = 'opacity 0.5s ease';
+                message.style.opacity = '0';
+                setTimeout(function() {
+                    message.remove();
+                }, 500);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>

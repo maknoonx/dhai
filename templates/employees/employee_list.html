@@ -1,0 +1,288 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}الموظفين{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/employees/employees.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="employees-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-users"></i>
+                إدارة الموظفين
+            </h1>
+            <p class="subtitle">{{ total_employees }} موظف</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'employees:group_list' %}" class="btn btn-outline">
+                <i class="fas fa-user-shield"></i>
+                المجموعات والصلاحيات
+            </a>
+            <a href="{% url 'employees:add' %}" class="btn btn-primary">
+                <i class="fas fa-user-plus"></i>
+                إضافة موظف
+            </a>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-cards">
+        <div class="stat-card total">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ total_employees }}</h3>
+                <p>إجمالي الموظفين</p>
+            </div>
+        </div>
+
+        <div class="stat-card active">
+            <div class="stat-icon">
+                <i class="fas fa-user-check"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ active_employees }}</h3>
+                <p>موظفين نشطين</p>
+            </div>
+        </div>
+
+        <div class="stat-card inactive">
+            <div class="stat-icon">
+                <i class="fas fa-user-times"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ inactive_employees }}</h3>
+                <p>موظفين موقوفين</p>
+            </div>
+        </div>
+
+        <div class="stat-card online">
+            <div class="stat-icon">
+                <i class="fas fa-circle"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ online_count }}</h3>
+                <p>متصلين حالياً</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <form method="GET" class="filters-form">
+            <div class="filter-group">
+                <input type="text" 
+                       name="search" 
+                       value="{{ search }}"
+                       placeholder="ابحث بالاسم، رقم الموظف، الجوال..."
+                       class="search-input">
+            </div>
+
+            <div class="filter-group">
+                <select name="status" onchange="this.form.submit()">
+                    <option value="">جميع الحالات</option>
+                    <option value="active" {% if status == 'active' %}selected{% endif %}>نشط</option>
+                    <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>موقوف</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <select name="position" onchange="this.form.submit()">
+                    <option value="">جميع المناصب</option>
+                    {% for value, label in position_choices %}
+                    <option value="{{ value }}" {% if position == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <select name="group" onchange="this.form.submit()">
+                    <option value="">جميع المجموعات</option>
+                    {% for group in groups %}
+                    <option value="{{ group.id }}" {% if selected_group == group.id|stringformat:"s" %}selected{% endif %}>
+                        {{ group.name_arabic }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i>
+                بحث
+            </button>
+
+            <a href="{% url 'employees:list' %}" class="btn btn-outline">
+                <i class="fas fa-redo"></i>
+                إعادة تعيين
+            </a>
+        </form>
+    </div>
+
+    <!-- Employees Grid -->
+    <div class="employees-grid">
+        {% for employee in employees %}
+        <div class="employee-card {% if not employee.is_active %}inactive{% endif %}">
+            <!-- Status Indicator -->
+            {% if employee.id in online_employees %}
+            <div class="online-indicator" title="متصل الآن"></div>
+            {% endif %}
+
+            <!-- Photo -->
+            <div class="employee-photo">
+                <img src="{{ employee.get_photo_url }}" alt="{{ employee.full_name_arabic }}">
+                {% if not employee.is_active %}
+                <div class="inactive-badge">موقوف</div>
+                {% endif %}
+            </div>
+
+            <!-- Info -->
+            <div class="employee-info">
+                <h3 class="employee-name">{{ employee.full_name_arabic }}</h3>
+                <p class="employee-id">{{ employee.employee_id }}</p>
+                <p class="employee-position">
+                    <i class="fas fa-briefcase"></i>
+                    {{ employee.get_position_display }}
+                </p>
+                
+                <div class="employee-meta">
+                    <span class="meta-item">
+                        <i class="fas fa-phone"></i>
+                        {{ employee.phone }}
+                    </span>
+                    <span class="meta-item">
+                        <i class="fas fa-envelope"></i>
+                        {{ employee.user.email }}
+                    </span>
+                </div>
+
+                <!-- Groups -->
+                {% if employee.user.groups.all %}
+                <div class="employee-groups">
+                    {% for group in employee.user.groups.all %}
+                    <span class="group-badge">{{ group.employee_group.name_arabic }}</span>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Actions -->
+            <div class="employee-actions">
+                <a href="{% url 'employees:detail' employee.pk %}" class="btn-action btn-view" title="عرض">
+                    <i class="fas fa-eye"></i>
+                </a>
+                <a href="{% url 'employees:edit' employee.pk %}" class="btn-action btn-edit" title="تعديل">
+                    <i class="fas fa-edit"></i>
+                </a>
+                
+                {% if employee.is_active %}
+                <button onclick="toggleEmployee({{ employee.pk }}, false)" 
+                        class="btn-action btn-deactivate" 
+                        title="إيقاف">
+                    <i class="fas fa-user-times"></i>
+                </button>
+                {% else %}
+                <button onclick="toggleEmployee({{ employee.pk }}, true)" 
+                        class="btn-action btn-activate" 
+                        title="تفعيل">
+                    <i class="fas fa-user-check"></i>
+                </button>
+                {% endif %}
+            </div>
+        </div>
+        {% empty %}
+        <div class="no-data">
+            <i class="fas fa-users"></i>
+            <p>لا يوجد موظفين</p>
+            <a href="{% url 'employees:add' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                إضافة موظف جديد
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Toggle Employee Modal -->
+<div id="toggleModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle"></h3>
+            <button class="btn-close" onclick="closeToggleModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="toggleForm" method="POST">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div id="deactivateReason" style="display: none;">
+                    <label>سبب الإيقاف:</label>
+                    <textarea name="reason" 
+                              class="form-control" 
+                              rows="3" 
+                              placeholder="اذكر سبب إيقاف الموظف..."></textarea>
+                </div>
+                <div id="activateMessage" style="display: none;">
+                    <p>هل أنت متأكد من تفعيل هذا الموظف؟</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" id="confirmBtn">تأكيد</button>
+                <button type="button" class="btn btn-cancel" onclick="closeToggleModal()">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleEmployee(employeeId, activate) {
+    const modal = document.getElementById('toggleModal');
+    const form = document.getElementById('toggleForm');
+    const title = document.getElementById('modalTitle');
+    const deactivateReason = document.getElementById('deactivateReason');
+    const activateMessage = document.getElementById('activateMessage');
+    
+    form.action = `/employees/${employeeId}/toggle-active/`;
+    
+    if (activate) {
+        title.textContent = 'تفعيل الموظف';
+        deactivateReason.style.display = 'none';
+        activateMessage.style.display = 'block';
+    } else {
+        title.textContent = 'إيقاف الموظف';
+        deactivateReason.style.display = 'block';
+        activateMessage.style.display = 'none';
+    }
+    
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+}
+
+function closeToggleModal() {
+    const modal = document.getElementById('toggleModal');
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+}
+
+// Close modal on outside click
+document.getElementById('toggleModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeToggleModal();
+    }
+});
+
+// Close on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeToggleModal();
+    }
+});
+</script>
+{% endblock %}

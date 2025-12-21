@@ -1,0 +1,581 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}الإعدادات - ضي للبصريات{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/settings.css' %}">
+{% endblock %}
+
+{% block header_icon %}
+<circle cx="12" cy="12" r="3"></circle>
+<path d="M12 1v6m0 6v6m8.66-13.66-4.24 4.24m-8.48 8.48-4.24 4.24M23 12h-6m-6 0H1m20.66 8.66-4.24-4.24m-8.48-8.48L4.7 3.7"></path>
+{% endblock %}
+
+{% block page_title %}الإعدادات{% endblock %}
+
+{% block content %}
+<div class="settings-page">
+    <!-- Tabs Navigation -->
+    <div class="settings-tabs">
+        <button class="tab-btn active" data-tab="company">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            </svg>
+            بيانات المؤسسة
+        </button>
+        <button class="tab-btn" data-tab="payment">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                <line x1="1" y1="10" x2="23" y2="10"></line>
+            </svg>
+            طرق الدفع
+        </button>
+        <button class="tab-btn" data-tab="attachments">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                <polyline points="13 2 13 9 20 9"></polyline>
+            </svg>
+            المرفقات
+        </button>
+    </div>
+
+    <!-- Company Settings Tab -->
+    <div class="tab-content active" id="company-tab">
+        <form method="POST" action="{% url 'settings:update_company' %}" class="settings-form" enctype="multipart/form-data">
+            {% csrf_token %}
+            
+            <!-- Company Information -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    </svg>
+                    <h3>بيانات المؤسسة</h3>
+                </div>
+                
+                <div class="form-grid">
+                    <!-- Logo Upload -->
+                    <div class="form-group full-width">
+                        <label class="form-label">شعار المؤسسة</label>
+                        <div class="logo-upload-container">
+                            <div class="logo-preview">
+                                {% if company_settings.logo %}
+                                <img src="{{ company_settings.logo.url }}" alt="Logo" id="logoPreview">
+                                {% else %}
+                                <div class="logo-placeholder" id="logoPreview">
+                                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                        <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                        <polyline points="21 15 16 10 5 21"></polyline>
+                                    </svg>
+                                    <p>اختر شعار المؤسسة</p>
+                                </div>
+                                {% endif %}
+                            </div>
+                            <div class="logo-upload-actions">
+                                <input type="file" name="logo" id="logoInput" accept="image/*" class="hidden-input">
+                                <button type="button" class="btn btn-secondary" onclick="document.getElementById('logoInput').click()">
+                                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                        <polyline points="17 8 12 3 7 8"></polyline>
+                                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                                    </svg>
+                                    رفع الشعار
+                                </button>
+                                <small class="form-hint">PNG, JPG أو SVG (الحد الأقصى: 2 MB)</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">اسم المؤسسة (عربي)</label>
+                        <input 
+                            type="text" 
+                            name="company_name_ar" 
+                            class="form-control"
+                            value="{{ company_settings.company_name_ar }}"
+                            placeholder="ضي للبصريات"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">اسم المؤسسة (إنجليزي)</label>
+                        <input 
+                            type="text" 
+                            name="company_name_en" 
+                            class="form-control"
+                            value="{{ company_settings.company_name_en }}"
+                            placeholder="Zai Optics"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">الرقم الموحد</label>
+                        <input 
+                            type="text" 
+                            name="unified_number" 
+                            class="form-control"
+                            value="{{ company_settings.unified_number }}"
+                            placeholder="7001234567"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">السجل التجاري</label>
+                        <input 
+                            type="text" 
+                            name="commercial_register" 
+                            class="form-control"
+                            value="{{ company_settings.commercial_register }}"
+                            placeholder="1234567890"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">الرقم الضريبي</label>
+                        <input 
+                            type="text" 
+                            name="tax_number" 
+                            class="form-control"
+                            value="{{ company_settings.tax_number }}"
+                            placeholder="300123456700003"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">رابط الموقع (Google Maps)</label>
+                        <input 
+                            type="url" 
+                            name="location_url" 
+                            class="form-control"
+                            value="{{ company_settings.location_url }}"
+                            placeholder="https://maps.google.com/..."
+                        >
+                    </div>
+                    
+                    <div class="form-group full-width">
+                        <label class="form-label">العنوان الوطني</label>
+                        <textarea 
+                            name="national_address" 
+                            class="form-control"
+                            rows="3"
+                            placeholder="العنوان الوطني بالتفصيل"
+                        >{{ company_settings.national_address }}</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                    </svg>
+                    <h3>بيانات التواصل</h3>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">رقم الجوال</label>
+                        <input 
+                            type="tel" 
+                            name="contact_phone" 
+                            class="form-control"
+                            value="{{ company_settings.contact_phone }}"
+                            placeholder="0501234567"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">البريد الإلكتروني</label>
+                        <input 
+                            type="email" 
+                            name="contact_email" 
+                            class="form-control"
+                            value="{{ company_settings.contact_email }}"
+                            placeholder="info@zai-optics.sa"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Owner Information -->
+            <div class="settings-section">
+                <div class="section-header">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    <h3>بيانات المفوض / المالك</h3>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label">الاسم الكامل</label>
+                        <input 
+                            type="text" 
+                            name="owner_name" 
+                            class="form-control"
+                            value="{{ company_settings.owner_name }}"
+                            placeholder="محمد أحمد"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">رقم الهوية</label>
+                        <input 
+                            type="text" 
+                            name="owner_id_number" 
+                            class="form-control"
+                            value="{{ company_settings.owner_id_number }}"
+                            placeholder="1234567890"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">رقم الجوال</label>
+                        <input 
+                            type="tel" 
+                            name="owner_phone" 
+                            class="form-control"
+                            value="{{ company_settings.owner_phone }}"
+                            placeholder="0501234567"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">البريد الإلكتروني</label>
+                        <input 
+                            type="email" 
+                            name="owner_email" 
+                            class="form-control"
+                            value="{{ company_settings.owner_email }}"
+                            placeholder="owner@zai-optics.sa"
+                        >
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    حفظ التغييرات
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Payment Methods Tab -->
+    <div class="tab-content" id="payment-tab">
+        <div class="settings-section">
+            <div class="section-header">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                    <line x1="1" y1="10" x2="23" y2="10"></line>
+                </svg>
+                <h3>طرق الدفع</h3>
+                <button type="button" class="btn btn-primary btn-sm" onclick="showAddPaymentModal()">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    إضافة طريقة دفع
+                </button>
+            </div>
+
+            <div class="payment-methods-grid">
+                {% for method in payment_methods %}
+                <div class="payment-card">
+                    <div class="payment-header">
+                        <div class="payment-icon">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                                <line x1="1" y1="10" x2="23" y2="10"></line>
+                            </svg>
+                        </div>
+                        <h4>{{ method.name }}</h4>
+                    </div>
+                    <div class="payment-body">
+                        {% if method.company %}
+                        <div class="payment-detail">
+                            <span class="detail-label">الشركة:</span>
+                            <span class="detail-value">{{ method.company }}</span>
+                        </div>
+                        {% endif %}
+                        {% if method.percentage %}
+                        <div class="payment-detail">
+                            <span class="detail-label">النسبة:</span>
+                            <span class="detail-value">{{ method.percentage }}%</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="payment-footer">
+                        <button 
+                            type="button" 
+                            class="btn btn-sm btn-secondary"
+                            onclick="showEditPaymentModal({{ method.pk }}, '{{ method.name }}', '{{ method.company }}', '{{ method.percentage }}')"
+                        >
+                            تعديل
+                        </button>
+                        <button 
+                            type="button" 
+                            class="btn btn-sm btn-danger"
+                            onclick="confirmDeletePayment({{ method.pk }}, '{{ method.name }}')"
+                        >
+                            حذف
+                        </button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                        <line x1="1" y1="10" x2="23" y2="10"></line>
+                    </svg>
+                    <p>لا توجد طرق دفع مضافة</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Attachments Tab -->
+    <div class="tab-content" id="attachments-tab">
+        <div class="settings-section">
+            <div class="section-header">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                    <polyline points="13 2 13 9 20 9"></polyline>
+                </svg>
+                <h3>المرفقات</h3>
+                <button type="button" class="btn btn-primary btn-sm" onclick="showAddAttachmentModal()">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    إضافة مرفق
+                </button>
+            </div>
+
+            <div class="attachments-list">
+                {% for attachment in attachments %}
+                <div class="attachment-item">
+                    <div class="attachment-icon">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                            <polyline points="14 2 14 8 20 8"></polyline>
+                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                            <polyline points="10 9 9 9 8 9"></polyline>
+                        </svg>
+                        <span class="file-type">PDF</span>
+                    </div>
+                    <div class="attachment-info">
+                        <h4>{{ attachment.name }}</h4>
+                        {% if attachment.description %}
+                        <p>{{ attachment.description }}</p>
+                        {% endif %}
+                        <div class="attachment-meta">
+                            <span>{{ attachment.get_file_size }}</span>
+                            <span>•</span>
+                            <span>{{ attachment.uploaded_at|date:"Y/m/d" }}</span>
+                        </div>
+                    </div>
+                    <div class="attachment-actions">
+                        <a href="{{ attachment.file.url }}" target="_blank" class="btn btn-sm btn-info">
+                            عرض
+                        </a>
+                        <button 
+                            type="button" 
+                            class="btn btn-sm btn-secondary"
+                            onclick="showEditAttachmentModal({{ attachment.pk }}, '{{ attachment.name }}', '{{ attachment.description|escapejs }}')"
+                        >
+                            تعديل
+                        </button>
+                        <button 
+                            type="button" 
+                            class="btn btn-sm btn-danger"
+                            onclick="confirmDeleteAttachment({{ attachment.pk }}, '{{ attachment.name }}')"
+                        >
+                            حذف
+                        </button>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path>
+                        <polyline points="13 2 13 9 20 9"></polyline>
+                    </svg>
+                    <p>لا توجد مرفقات</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Payment Method Modal -->
+<div id="paymentModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>إضافة طريقة دفع</h3>
+            <button type="button" class="modal-close" onclick="closePaymentModal()">×</button>
+        </div>
+        <form method="POST" action="{% url 'settings:add_payment' %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">اسم طريقة الدفع *</label>
+                    <input type="text" name="payment_name" class="form-control" required placeholder="مثال: مدى">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الشركة</label>
+                    <input type="text" name="payment_company" class="form-control" placeholder="مثال: البنك الأهلي">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">النسبة (%)</label>
+                    <input type="number" name="payment_percentage" class="form-control" step="0.01" min="0" max="100" placeholder="مثال: 2.5">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closePaymentModal()">إلغاء</button>
+                <button type="submit" class="btn btn-primary">إضافة</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Payment Method Modal -->
+<div id="editPaymentModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>تعديل طريقة الدفع</h3>
+            <button type="button" class="modal-close" onclick="closeEditPaymentModal()">×</button>
+        </div>
+        <form method="POST" id="editPaymentForm">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">اسم طريقة الدفع *</label>
+                    <input type="text" name="payment_name" id="edit_payment_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الشركة</label>
+                    <input type="text" name="payment_company" id="edit_payment_company" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">النسبة (%)</label>
+                    <input type="number" name="payment_percentage" id="edit_payment_percentage" class="form-control" step="0.01" min="0" max="100">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeEditPaymentModal()">إلغاء</button>
+                <button type="submit" class="btn btn-primary">حفظ التعديلات</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Add Attachment Modal -->
+<div id="attachmentModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>إضافة مرفق</h3>
+            <button type="button" class="modal-close" onclick="closeAttachmentModal()">×</button>
+        </div>
+        <form method="POST" action="{% url 'settings:add_attachment' %}" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">اسم المرفق *</label>
+                    <input type="text" name="attachment_name" class="form-control" required placeholder="مثال: السجل التجاري">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الوصف</label>
+                    <textarea name="attachment_description" class="form-control" rows="2" placeholder="وصف مختصر للمرفق"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الملف (PDF فقط) *</label>
+                    <input type="file" name="attachment_file" class="form-control" accept=".pdf" required>
+                    <small class="form-hint">الحد الأقصى لحجم الملف: 10 MB</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeAttachmentModal()">إلغاء</button>
+                <button type="submit" class="btn btn-primary">رفع المرفق</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Attachment Modal -->
+<div id="editAttachmentModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>تعديل المرفق</h3>
+            <button type="button" class="modal-close" onclick="closeEditAttachmentModal()">×</button>
+        </div>
+        <form method="POST" id="editAttachmentForm" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">اسم المرفق *</label>
+                    <input type="text" name="attachment_name" id="edit_attachment_name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الوصف</label>
+                    <textarea name="attachment_description" id="edit_attachment_description" class="form-control" rows="2"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">الملف الجديد (PDF فقط - اختياري)</label>
+                    <input type="file" name="attachment_file" class="form-control" accept=".pdf">
+                    <small class="form-hint">اترك فارغاً للاحتفاظ بالملف الحالي</small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" onclick="closeEditAttachmentModal()">إلغاء</button>
+                <button type="submit" class="btn btn-primary">حفظ التعديلات</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content delete-modal">
+        <div class="modal-header">
+            <h3>تأكيد الحذف</h3>
+            <button type="button" class="modal-close" onclick="closeDeleteModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="delete-warning">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+                <p id="deleteMessage"></p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">إلغاء</button>
+            <form method="POST" id="deleteForm" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-danger">تأكيد الحذف</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/settings.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فحص العين - {{ customer.name }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1.5cm;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Tahoma', 'Arial', sans-serif;
+            font-size: 12pt;
+            line-height: 1.6;
+            color: #333;
+            direction: rtl;
+            text-align: right;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 21cm;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            border-bottom: 3px solid #2c3e50;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .company-logo {
+            max-width: 120px;
+            max-height: 80px;
+            margin-bottom: 10px;
+        }
+        
+        .company-name {
+            font-size: 28pt;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        
+        .company-name-en {
+            font-size: 14pt;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+            font-family: 'Arial', sans-serif;
+        }
+        
+        .company-info {
+            font-size: 10pt;
+            color: #7f8c8d;
+            margin: 3px 0;
+        }
+        
+        .company-info strong {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .document-title {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+            font-size: 20pt;
+            font-weight: bold;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+        
+        /* Customer Info */
+        .customer-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border-right: 5px solid #667eea;
+        }
+        
+        .section-title {
+            font-size: 16pt;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title::before {
+            content: "👤";
+            font-size: 20pt;
+        }
+        
+        .customer-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+        
+        .info-row {
+            display: flex;
+            align-items: center;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #7f8c8d;
+            min-width: 120px;
+        }
+        
+        .info-value {
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        /* Eye Exam Section */
+        .exam-section {
+            margin-bottom: 30px;
+        }
+        
+        .exam-section .section-title::before {
+            content: "👁️";
+        }
+        
+        .eye-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .eye-table thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .eye-table th {
+            padding: 15px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 13pt;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .eye-table tbody tr {
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .eye-table td {
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #e9ecef;
+        }
+        
+        .eye-label {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #2c3e50;
+            text-align: right;
+            padding-right: 20px !important;
+        }
+        
+        .eye-value {
+            font-size: 14pt;
+            font-weight: 600;
+            color: #667eea;
+        }
+        
+        .right-eye {
+            background: #e8f5e9;
+        }
+        
+        .left-eye {
+            background: #fff3e0;
+        }
+        
+        /* Visual Representation */
+        .eyes-visual {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+        
+        .eye-visual {
+            text-align: center;
+        }
+        
+        .eye-icon {
+            font-size: 80pt;
+            margin-bottom: 10px;
+        }
+        
+        .eye-visual h3 {
+            font-size: 16pt;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        
+        .eye-visual .power {
+            font-size: 18pt;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        /* Notes Section */
+        .notes-section {
+            background: #fff3cd;
+            padding: 20px;
+            border-radius: 8px;
+            border-right: 5px solid #ffc107;
+            margin-bottom: 30px;
+        }
+        
+        .notes-section .section-title {
+            color: #856404;
+            border-bottom-color: #ffc107;
+        }
+        
+        .notes-section .section-title::before {
+            content: "📝";
+        }
+        
+        .notes-content {
+            color: #856404;
+            font-size: 12pt;
+            line-height: 1.8;
+            white-space: pre-wrap;
+        }
+        
+        /* Exam Details */
+        .exam-details {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .detail-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 2px solid #e9ecef;
+            text-align: center;
+        }
+        
+        .detail-card .label {
+            font-size: 10pt;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        
+        .detail-card .value {
+            font-size: 14pt;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 50px;
+            padding-top: 20px;
+            border-top: 2px solid #e9ecef;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 10pt;
+        }
+        
+        .footer-info {
+            margin: 5px 0;
+        }
+        
+        .signature-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 50px;
+            margin: 40px 0 20px 0;
+        }
+        
+        .signature-box {
+            text-align: center;
+        }
+        
+        .signature-line {
+            border-top: 2px solid #2c3e50;
+            margin-top: 50px;
+            padding-top: 10px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        /* Print Styles */
+        @media print {
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            
+            .container {
+                padding: 0;
+            }
+        }
+        
+        /* Watermark */
+        .watermark {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-45deg);
+            font-size: 100pt;
+            color: rgba(0,0,0,0.03);
+            z-index: -1;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="watermark">فحص عين</div>
+    
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            {% if company.logo %}
+            <img src="{{ company.logo }}" alt="الشعار" class="company-logo">
+            {% endif %}
+            
+            <div class="company-name">{{ company.company_name }}</div>
+            
+
+            
+            <div class="company-info">
+             <strong>الجوال:</strong> {{ company.phone }}
+                {% if company.email %}
+                 <strong>البريد:</strong> {{ company.email }}
+                {% endif %}
+            </div>
+            
+            {% if company.address %}
+            <div class="company-info">
+            <strong>العنوان:</strong> {{ company.address }}
+            </div>
+            {% endif %}
+            
+            <div class="company-info">
+                {% if company.tax_number %}
+                <strong>الرقم الضريبي:</strong> {{ company.tax_number }}
+                {% endif %}
+                {% if company.commercial_register %}
+                | <strong>السجل التجاري:</strong> {{ company.commercial_register }}
+                {% endif %}
+            </div>
+            
+            <div class="company-info">
+                <strong>تاريخ الطباعة:</strong> {{ print_date|date:"Y/m/d - H:i" }}
+            </div>
+        </div>
+        
+        <!-- Document Title -->
+        <div class="document-title">
+            تقرير فحص العين
+        </div>
+        
+        <!-- Customer Information -->
+        <div class="customer-section">
+            <div class="section-title">معلومات العميل</div>
+            <div class="customer-grid">
+                <div class="info-row">
+                    <span class="info-label">رقم العميل:</span>
+                    <span class="info-value">{{ customer.customer_id }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">الاسم:</span>
+                    <span class="info-value">{{ customer.name }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">رقم الجوال:</span>
+                    <span class="info-value">0{{ customer.phone }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">العمر:</span>
+                    <span class="info-value">{{ customer.age|default:"غير محدد" }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">الجنس:</span>
+                    <span class="info-value">{{ customer.gender }}</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">تاريخ التسجيل:</span>
+                    <span class="info-value">{{ customer.join_date|date:"Y/m/d" }}</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Exam Details -->
+        <div class="exam-details">
+            <div class="detail-card">
+                <div class="label">تاريخ الفحص</div>
+                <div class="value">{{ eye_exam.exam_date|date:"Y/m/d" }}</div>
+            </div>
+            <div class="detail-card">
+                <div class="label">رقم الفاتورة</div>
+                <div class="value">{{ invoice.order_number }}</div>
+            </div>
+
+        </div>
+        
+        <!-- Visual Representation -->
+        <div class="eyes-visual">
+            <div class="eye-visual">
+                <div class="eye-icon">👁️</div>
+                <h3>العين اليمنى</h3>
+                <div class="power">
+                    {% if eye_exam.right_sphere %}
+                        SPH: {{ eye_exam.right_sphere }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </div>
+            </div>
+            <div class="eye-visual">
+                <div class="eye-icon">👁️</div>
+                <h3>العين اليسرى</h3>
+                <div class="power">
+                    {% if eye_exam.left_sphere %}
+                        SPH: {{ eye_exam.left_sphere }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Eye Exam Results -->
+        <div class="exam-section">
+            <div class="section-title">نتائج الفحص التفصيلية</div>
+            
+            <table class="eye-table">
+                <thead>
+                    <tr>
+                        <th>القياس</th>
+                        <th class="right-eye">العين اليمنى</th>
+                        <th class="left-eye">العين اليسرى</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="eye-label">القوة الكروية (Sphere - SPH)</td>
+                        <td class="eye-value">{{ eye_exam.right_sphere|default:"-" }}</td>
+                        <td class="eye-value">{{ eye_exam.left_sphere|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="eye-label">القوة الأسطوانية (Cylinder - CYL)</td>
+                        <td class="eye-value">{{ eye_exam.right_cylinder|default:"-" }}</td>
+                        <td class="eye-value">{{ eye_exam.left_cylinder|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="eye-label">المحور (Axis)</td>
+                        <td class="eye-value">{{ eye_exam.right_axis|default:"-" }}</td>
+                        <td class="eye-value">{{ eye_exam.left_axis|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="eye-label">القراءة (Addition - ADD)</td>
+                        <td class="eye-value">{{ eye_exam.right_add|default:"-" }}</td>
+                        <td class="eye-value">{{ eye_exam.left_add|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="eye-label">المسافة البؤرية (PD)</td>
+                        <td class="eye-value">{{ eye_exam.right_pd|default:"-" }}</td>
+                        <td class="eye-value">{{ eye_exam.left_pd|default:"-" }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Notes -->
+        {% if eye_exam.notes %}
+        <div class="notes-section">
+            <div class="section-title">ملاحظات الفحص</div>
+            <div class="notes-content">{{ eye_exam.notes }}</div>
+        </div>
+        {% endif %}
+        
+        
+        <!-- Footer -->
+        <div class="footer">
+            <p class="footer-info">هذا التقرير صادر من <strong>{{ company.company_name }}</strong></p>
+            <p class="footer-info">للاستفسارات: {{ company.phone }}{% if company.email %} | {{ company.email }}{% endif %}</p>
+            {% if company.location_url %}
+            <p class="footer-info">الموقع: {{ company.location_url }}</p>
+            {% endif %}
+            <p style="margin-top: 10px; font-size: 9pt; color: #95a5a6;">
+                تنبيه: هذا الفحص صالح لمدة سنة من تاريخ الفحص. يُنصح بإجراء فحص دوري كل 6-12 شهر.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

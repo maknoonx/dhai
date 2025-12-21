@@ -1,0 +1,550 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{% if employee %}تعديل موظف{% else %}إضافة موظف{% endif %}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/employees/employees.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="employees-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-user-{% if employee %}edit{% else %}plus{% endif %}"></i>
+                {% if employee %}تعديل موظف{% else %}إضافة موظف جديد{% endif %}
+            </h1>
+            {% if employee %}
+            <p class="subtitle">{{ employee.employee_id }} - {{ employee.full_name_arabic }}</p>
+            {% endif %}
+        </div>
+        <div class="header-actions">
+            <a href="{% if employee %}{% url 'employees:detail' employee.pk %}{% else %}{% url 'employees:list' %}{% endif %}" class="btn btn-outline">
+                <i class="fas fa-times"></i>
+                إلغاء
+            </a>
+        </div>
+    </div>
+
+    <!-- Form -->
+    <form method="POST" enctype="multipart/form-data" class="employee-form">
+        {% csrf_token %}
+        
+        {% if form.errors %}
+        <div class="alert alert-danger">
+            <i class="fas fa-exclamation-triangle"></i>
+            <strong>يوجد أخطاء في النموذج:</strong>
+            <ul>
+                {% for field, errors in form.errors.items %}
+                    {% for error in errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        <div class="form-grid">
+            <!-- Personal Information Section -->
+            <div class="form-section full-width">
+                <div class="section-header">
+                    <h3>
+                        <i class="fas fa-user"></i>
+                        المعلومات الشخصية
+                    </h3>
+                </div>
+                
+                <div class="fields-row">
+                    <div class="field-group">
+                        <label for="{{ form.employee_id.id_for_label }}" class="required">
+                            رقم الموظف
+                        </label>
+                        {{ form.employee_id }}
+                        {% if form.employee_id.errors %}
+                        <span class="field-error">{{ form.employee_id.errors.0 }}</span>
+                        {% endif %}
+                        <small class="field-help">رقم تعريف فريد للموظف</small>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="{{ form.full_name_arabic.id_for_label }}" class="required">
+                            الاسم الكامل بالعربي
+                        </label>
+                        {{ form.full_name_arabic }}
+                        {% if form.full_name_arabic.errors %}
+                        <span class="field-error">{{ form.full_name_arabic.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="fields-row">
+                    <div class="field-group">
+                        <label for="{{ form.position.id_for_label }}" class="required">
+                            المسمى الوظيفي
+                        </label>
+                        {{ form.position }}
+                        {% if form.position.errors %}
+                        <span class="field-error">{{ form.position.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="field-group">
+                        <label for="{{ form.gender.id_for_label }}" class="required">
+                            الجنس
+                        </label>
+                        {{ form.gender }}
+                        {% if form.gender.errors %}
+                        <span class="field-error">{{ form.gender.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="fields-row">
+                    <div class="field-group">
+                        <label for="{{ form.phone.id_for_label }}" class="required">
+                            رقم الجوال
+                        </label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                        <span class="field-error">{{ form.phone.errors.0 }}</span>
+                        {% endif %}
+                        <small class="field-help">يجب أن يبدأ بـ 05 (10 أرقام)</small>
+                    </div>
+
+                    <div class="field-group">
+                        <label for="{{ form.national_id.id_for_label }}">
+                            رقم الهوية الوطنية
+                        </label>
+                        {{ form.national_id }}
+                        {% if form.national_id.errors %}
+                        <span class="field-error">{{ form.national_id.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.photo.id_for_label }}">
+                        صورة الموظف
+                    </label>
+                    
+                    {% if employee and employee.photo %}
+                    <div class="current-photo">
+                        <img src="{{ employee.get_photo_url }}" alt="الصورة الحالية">
+                        <span>الصورة الحالية</span>
+                    </div>
+                    {% endif %}
+                    
+                    {{ form.photo }}
+                    {% if form.photo.errors %}
+                    <span class="field-error">{{ form.photo.errors.0 }}</span>
+                    {% endif %}
+                    <small class="field-help">اختياري - سيتم استخدام صورة افتراضية إذا لم يتم الرفع</small>
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.address.id_for_label }}">
+                        العنوان
+                    </label>
+                    {{ form.address }}
+                    {% if form.address.errors %}
+                    <span class="field-error">{{ form.address.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Work Information Section -->
+            <div class="form-section full-width">
+                <div class="section-header">
+                    <h3>
+                        <i class="fas fa-briefcase"></i>
+                        معلومات العمل
+                    </h3>
+                </div>
+
+                <div class="fields-row">
+                    <div class="field-group">
+                        <label for="{{ form.hire_date.id_for_label }}" class="required">
+                            تاريخ التوظيف
+                        </label>
+                        {{ form.hire_date }}
+                        {% if form.hire_date.errors %}
+                        <span class="field-error">{{ form.hire_date.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="field-group">
+                        <label for="{{ form.department.id_for_label }}">
+                            القسم
+                        </label>
+                        {{ form.department }}
+                        {% if form.department.errors %}
+                        <span class="field-error">{{ form.department.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.salary.id_for_label }}">
+                        الراتب الشهري (ر.س)
+                    </label>
+                    {{ form.salary }}
+                    {% if form.salary.errors %}
+                    <span class="field-error">{{ form.salary.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Login Information Section -->
+            <div class="form-section full-width">
+                <div class="section-header">
+                    <h3>
+                        <i class="fas fa-key"></i>
+                        بيانات تسجيل الدخول
+                    </h3>
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.email.id_for_label }}" class="required">
+                        البريد الإلكتروني
+                    </label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <span class="field-error">{{ form.email.errors.0 }}</span>
+                    {% endif %}
+                    <small class="field-help">سيُستخدم لتسجيل الدخول</small>
+                </div>
+
+                <div class="fields-row">
+                    <div class="field-group">
+                        <label for="{{ form.password.id_for_label }}" {% if not employee %}class="required"{% endif %}>
+                            كلمة المرور
+                        </label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                        <span class="field-error">{{ form.password.errors.0 }}</span>
+                        {% endif %}
+                        {% if employee %}
+                        <small class="field-help">اتركه فارغاً للاحتفاظ بكلمة المرور الحالية</small>
+                        {% endif %}
+                    </div>
+
+                    <div class="field-group">
+                        <label for="{{ form.password_confirm.id_for_label }}" {% if not employee %}class="required"{% endif %}>
+                            تأكيد كلمة المرور
+                        </label>
+                        {{ form.password_confirm }}
+                        {% if form.password_confirm.errors %}
+                        <span class="field-error">{{ form.password_confirm.errors.0 }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Groups & Permissions Section -->
+            <div class="form-section full-width">
+                <div class="section-header">
+                    <h3>
+                        <i class="fas fa-user-shield"></i>
+                        المجموعات والصلاحيات
+                    </h3>
+                </div>
+
+                <div class="field-group">
+                    <label>اختر المجموعات</label>
+                    <div class="groups-checkboxes">
+                        {% for group in groups %}
+                        <div class="checkbox-group">
+                            <input type="checkbox" 
+                                   name="groups" 
+                                   value="{{ group.group.id }}" 
+                                   id="group_{{ group.id }}"
+                                   {% if group.group in form.initial.groups %}checked{% endif %}>
+                            <label for="group_{{ group.id }}">
+                                <div class="checkbox-label-content">
+                                    <strong>{{ group.name_arabic }}</strong>
+                                    <span class="group-desc">{{ group.description|truncatewords:10 }}</span>
+                                </div>
+                            </label>
+                        </div>
+                        {% empty %}
+                        <p class="no-data-text">لا توجد مجموعات. <a href="{% url 'employees:group_add' %}">إضافة مجموعة جديدة</a></p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notes Section -->
+            <div class="form-section full-width">
+                <div class="section-header">
+                    <h3>
+                        <i class="fas fa-sticky-note"></i>
+                        ملاحظات إضافية
+                    </h3>
+                </div>
+
+                <div class="field-group">
+                    <label for="{{ form.notes.id_for_label }}">
+                        ملاحظات
+                    </label>
+                    {{ form.notes }}
+                    {% if form.notes.errors %}
+                    <span class="field-error">{{ form.notes.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-large">
+                <i class="fas fa-save"></i>
+                {% if employee %}حفظ التعديلات{% else %}إضافة الموظف{% endif %}
+            </button>
+            <a href="{% if employee %}{% url 'employees:detail' employee.pk %}{% else %}{% url 'employees:list' %}{% endif %}" class="btn btn-cancel btn-large">
+                <i class="fas fa-times"></i>
+                إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+.employee-form {
+    background: white;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.form-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.form-section {
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.form-section.full-width {
+    grid-column: 1 / -1;
+}
+
+.section-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.section-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-header h3 i {
+    color: #4A9EAD;
+}
+
+.fields-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.fields-row:last-child {
+    margin-bottom: 0;
+}
+
+.field-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.field-group label {
+    font-weight: 600;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.field-group label.required::after {
+    content: '*';
+    color: #e74c3c;
+    font-size: 1.2rem;
+}
+
+.field-group input[type="text"],
+.field-group input[type="email"],
+.field-group input[type="password"],
+.field-group input[type="date"],
+.field-group input[type="number"],
+.field-group select,
+.field-group textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    font-family: inherit;
+}
+
+.field-group input:focus,
+.field-group select:focus,
+.field-group textarea:focus {
+    outline: none;
+    border-color: #4A9EAD;
+}
+
+.field-help {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+    font-style: italic;
+}
+
+.field-error {
+    color: #e74c3c;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.current-photo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.current-photo img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #4A9EAD;
+}
+
+.groups-checkboxes {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+.checkbox-group {
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 2px solid #e9ecef;
+    transition: all 0.3s ease;
+}
+
+.checkbox-group:hover {
+    border-color: #4A9EAD;
+}
+
+.checkbox-group input[type="checkbox"] {
+    display: none;
+}
+
+.checkbox-group label {
+    display: block;
+    padding: 1rem;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.checkbox-group input[type="checkbox"]:checked + label {
+    background: #e8f5f7;
+    border-right: 4px solid #4A9EAD;
+}
+
+.checkbox-label-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.checkbox-label-content strong {
+    color: #2c3e50;
+}
+
+.group-desc {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+}
+
+.alert {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+}
+
+.alert i {
+    font-size: 1.5rem;
+    margin-top: 0.25rem;
+}
+
+.alert strong {
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.alert ul {
+    margin: 0;
+    padding-right: 1.5rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 2px solid #e9ecef;
+}
+
+.btn-large {
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+}
+
+@media (max-width: 768px) {
+    .employee-form {
+        padding: 1rem;
+    }
+    
+    .fields-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .btn-large {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}

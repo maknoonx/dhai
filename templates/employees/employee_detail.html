@@ -1,0 +1,780 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ employee.full_name_arabic }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/employees/employees.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="employees-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-user"></i>
+                تفاصيل الموظف
+            </h1>
+            <p class="subtitle">{{ employee.employee_id }}</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'employees:list' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة
+            </a>
+            <a href="{% url 'employees:edit' employee.pk %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i>
+                تعديل
+            </a>
+        </div>
+    </div>
+
+    <!-- Employee Profile -->
+    <div class="employee-detail-grid">
+        <!-- Main Info Card -->
+        <div class="detail-card main-info">
+            <div class="employee-header">
+                <div class="employee-photo-large">
+                    <img src="{{ employee.get_photo_url }}" alt="{{ employee.full_name_arabic }}">
+                    {% if is_online %}
+                    <div class="online-badge">
+                        <i class="fas fa-circle"></i>
+                        متصل الآن
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <div class="employee-main-info">
+                    <h2>{{ employee.full_name_arabic }}</h2>
+                    <p class="employee-id-large">{{ employee.employee_id }}</p>
+                    
+                    <div class="status-badges">
+                        {% if employee.is_active %}
+                        <span class="status-badge active">
+                            <i class="fas fa-check-circle"></i>
+                            نشط
+                        </span>
+                        {% else %}
+                        <span class="status-badge inactive">
+                            <i class="fas fa-times-circle"></i>
+                            موقوف
+                        </span>
+                        {% endif %}
+                        
+                        <span class="status-badge position">
+                            <i class="fas fa-briefcase"></i>
+                            {{ employee.get_position_display }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="quick-actions">
+                {% if employee.is_active %}
+                <button onclick="toggleEmployee({{ employee.pk }}, false)" class="action-btn danger">
+                    <i class="fas fa-user-times"></i>
+                    إيقاف الموظف
+                </button>
+                {% else %}
+                <button onclick="toggleEmployee({{ employee.pk }}, true)" class="action-btn success">
+                    <i class="fas fa-user-check"></i>
+                    تفعيل الموظف
+                </button>
+                {% endif %}
+                
+                <a href="{% url 'employees:edit' employee.pk %}" class="action-btn primary">
+                    <i class="fas fa-edit"></i>
+                    تعديل البيانات
+                </a>
+            </div>
+        </div>
+
+        <!-- Contact Info Card -->
+        <div class="detail-card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-address-card"></i>
+                    معلومات الاتصال
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-phone"></i>
+                        رقم الجوال:
+                    </span>
+                    <span class="info-value">{{ employee.phone }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-envelope"></i>
+                        البريد الإلكتروني:
+                    </span>
+                    <span class="info-value">{{ employee.user.email }}</span>
+                </div>
+                
+                {% if employee.national_id %}
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-id-card"></i>
+                        رقم الهوية:
+                    </span>
+                    <span class="info-value">{{ employee.national_id }}</span>
+                </div>
+                {% endif %}
+                
+                {% if employee.address %}
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-map-marker-alt"></i>
+                        العنوان:
+                    </span>
+                    <span class="info-value">{{ employee.address }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Work Info Card -->
+        <div class="detail-card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-briefcase"></i>
+                    معلومات العمل
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-calendar-alt"></i>
+                        تاريخ التوظيف:
+                    </span>
+                    <span class="info-value">{{ employee.hire_date }}</span>
+                </div>
+                
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-building"></i>
+                        القسم:
+                    </span>
+                    <span class="info-value">{{ employee.department|default:"غير محدد" }}</span>
+                </div>
+                
+                {% if perms.employees.view_salary %}
+                <div class="info-row">
+                    <span class="info-label">
+                        <i class="fas fa-money-bill-wave"></i>
+                        الراتب:
+                    </span>
+                    <span class="info-value">{{ employee.salary|floatformat:2 }} ر.س</span>
+                </div>
+                {% endif %}
+                
+                {% if not employee.is_active and employee.termination_date %}
+                <div class="info-row warning">
+                    <span class="info-label">
+                        <i class="fas fa-calendar-times"></i>
+                        تاريخ الإيقاف:
+                    </span>
+                    <span class="info-value">{{ employee.termination_date }}</span>
+                </div>
+                
+                {% if employee.termination_reason %}
+                <div class="info-row warning">
+                    <span class="info-label">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        سبب الإيقاف:
+                    </span>
+                    <span class="info-value">{{ employee.termination_reason }}</span>
+                </div>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Groups & Permissions Card -->
+        <div class="detail-card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-user-shield"></i>
+                    المجموعات والصلاحيات
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if employee.user.groups.all %}
+                <div class="groups-list">
+                    {% for group in employee.user.groups.all %}
+                    <div class="group-item">
+                        <div class="group-item-header">
+                            <i class="fas fa-users"></i>
+                            <strong>{{ group.employee_group.name_arabic }}</strong>
+                        </div>
+                        <div class="group-permissions-mini">
+                            {% if group.employee_group.can_view_reports %}
+                            <span class="mini-badge">عرض التقارير</span>
+                            {% endif %}
+                            {% if group.employee_group.can_manage_sales %}
+                            <span class="mini-badge">المبيعات</span>
+                            {% endif %}
+                            {% if group.employee_group.can_manage_inventory %}
+                            <span class="mini-badge">المخزون</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="no-data-text">لا ينتمي لأي مجموعة</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Recent Activities Card -->
+        <div class="detail-card full-width">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-history"></i>
+                    آخر النشاطات (10)
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if recent_activities %}
+                <div class="activities-timeline">
+                    {% for activity in recent_activities %}
+                    <div class="activity-item">
+                        <div class="activity-icon">
+                            <i class="fas fa-circle"></i>
+                        </div>
+                        <div class="activity-content">
+                            <div class="activity-action">{{ activity.action }}</div>
+                            {% if activity.description %}
+                            <div class="activity-description">{{ activity.description }}</div>
+                            {% endif %}
+                            <div class="activity-meta">
+                                <span class="activity-time">
+                                    <i class="fas fa-clock"></i>
+                                    {{ activity.created_at|date:"Y-m-d H:i" }}
+                                </span>
+                                {% if activity.ip_address %}
+                                <span class="activity-ip">
+                                    <i class="fas fa-network-wired"></i>
+                                    {{ activity.ip_address }}
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="no-data-text">لا توجد نشاطات مسجلة</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Attendance Records Card -->
+        <div class="detail-card full-width">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-calendar-check"></i>
+                    سجل الحضور (آخر 30 يوم)
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if attendance_records %}
+                <div class="attendance-table-wrapper">
+                    <table class="attendance-table">
+                        <thead>
+                            <tr>
+                                <th>التاريخ</th>
+                                <th>الوقت</th>
+                                <th>النوع</th>
+                                <th>ملاحظات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in attendance_records %}
+                            <tr>
+                                <td>{{ record.date }}</td>
+                                <td>{{ record.time|date:"H:i" }}</td>
+                                <td>
+                                    {% if record.type == 'in' %}
+                                    <span class="attendance-badge in">
+                                        <i class="fas fa-sign-in-alt"></i>
+                                        حضور
+                                    </span>
+                                    {% else %}
+                                    <span class="attendance-badge out">
+                                        <i class="fas fa-sign-out-alt"></i>
+                                        انصراف
+                                    </span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ record.notes|default:"-" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="no-data-text">لا توجد سجلات حضور</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Notes Card -->
+        {% if employee.notes %}
+        <div class="detail-card full-width">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-sticky-note"></i>
+                    ملاحظات
+                </h3>
+            </div>
+            <div class="card-body">
+                <p class="notes-text">{{ employee.notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Toggle Employee Modal -->
+<div id="toggleModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="modalTitle"></h3>
+            <button class="btn-close" onclick="closeToggleModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="toggleForm" method="POST">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div id="deactivateReason" style="display: none;">
+                    <label>سبب الإيقاف:</label>
+                    <textarea name="reason" 
+                              class="form-control" 
+                              rows="3" 
+                              placeholder="اذكر سبب إيقاف الموظف..."></textarea>
+                </div>
+                <div id="activateMessage" style="display: none;">
+                    <p>هل أنت متأكد من تفعيل هذا الموظف؟</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" id="confirmBtn">تأكيد</button>
+                <button type="button" class="btn btn-cancel" onclick="closeToggleModal()">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.employee-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.detail-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.detail-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.detail-card.main-info {
+    grid-column: 1 / -1;
+}
+
+.employee-header {
+    display: flex;
+    gap: 2rem;
+    align-items: center;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 1.5rem;
+}
+
+.employee-photo-large {
+    position: relative;
+}
+
+.employee-photo-large img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 5px solid #4A9EAD;
+}
+
+.online-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #27ae60;
+    color: white;
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+.online-badge i {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.employee-main-info h2 {
+    margin: 0 0 0.5rem 0;
+    color: #2c3e50;
+    font-size: 2rem;
+}
+
+.employee-id-large {
+    margin: 0 0 1rem 0;
+    color: #7f8c8d;
+    font-size: 1.1rem;
+}
+
+.status-badges {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-badge.active {
+    background: #d4edda;
+    color: #155724;
+}
+
+.status-badge.inactive {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.status-badge.position {
+    background: #e8f5f7;
+    color: #4A9EAD;
+}
+
+.quick-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.action-btn {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    text-decoration: none;
+}
+
+.action-btn.danger {
+    background: #e74c3c;
+    color: white;
+}
+
+.action-btn.danger:hover {
+    background: #c0392b;
+}
+
+.action-btn.success {
+    background: #27ae60;
+    color: white;
+}
+
+.action-btn.success:hover {
+    background: #229954;
+}
+
+.action-btn.primary {
+    background: #4A9EAD;
+    color: white;
+}
+
+.action-btn.primary:hover {
+    background: #3a7d8a;
+}
+
+.card-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.card-header h3 {
+    margin: 0;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.card-header h3 i {
+    color: #4A9EAD;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-row.warning {
+    background: #fff3cd;
+    padding: 0.75rem;
+    border-radius: 8px;
+    margin-top: 0.5rem;
+}
+
+.info-label {
+    color: #7f8c8d;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.info-label i {
+    color: #4A9EAD;
+}
+
+.info-value {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.groups-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.group-item {
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-right: 4px solid #4A9EAD;
+}
+
+.group-item-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    color: #2c3e50;
+}
+
+.group-permissions-mini {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.mini-badge {
+    padding: 0.25rem 0.75rem;
+    background: #e8f5f7;
+    color: #4A9EAD;
+    border-radius: 12px;
+    font-size: 0.8rem;
+}
+
+.activities-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.activity-item {
+    display: flex;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.activity-icon {
+    color: #4A9EAD;
+    font-size: 0.8rem;
+    padding-top: 0.25rem;
+}
+
+.activity-content {
+    flex: 1;
+}
+
+.activity-action {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+}
+
+.activity-description {
+    color: #495057;
+    font-size: 0.9rem;
+    margin-bottom: 0.5rem;
+}
+
+.activity-meta {
+    display: flex;
+    gap: 1.5rem;
+    font-size: 0.85rem;
+    color: #7f8c8d;
+}
+
+.activity-time,
+.activity-ip {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.attendance-table-wrapper {
+    overflow-x: auto;
+}
+
+.attendance-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.attendance-table th {
+    background: #f8f9fa;
+    padding: 0.75rem;
+    text-align: right;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 2px solid #e9ecef;
+}
+
+.attendance-table td {
+    padding: 0.75rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.attendance-badge {
+    padding: 0.35rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.attendance-badge.in {
+    background: #d4edda;
+    color: #155724;
+}
+
+.attendance-badge.out {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.notes-text {
+    color: #495057;
+    line-height: 1.8;
+    white-space: pre-wrap;
+}
+
+.no-data-text {
+    text-align: center;
+    color: #7f8c8d;
+    padding: 2rem;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .employee-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .employee-detail-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleEmployee(employeeId, activate) {
+    const modal = document.getElementById('toggleModal');
+    const form = document.getElementById('toggleForm');
+    const title = document.getElementById('modalTitle');
+    const deactivateReason = document.getElementById('deactivateReason');
+    const activateMessage = document.getElementById('activateMessage');
+    
+    form.action = `/employees/${employeeId}/toggle-active/`;
+    
+    if (activate) {
+        title.textContent = 'تفعيل الموظف';
+        deactivateReason.style.display = 'none';
+        activateMessage.style.display = 'block';
+    } else {
+        title.textContent = 'إيقاف الموظف';
+        deactivateReason.style.display = 'block';
+        activateMessage.style.display = 'none';
+    }
+    
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+}
+
+function closeToggleModal() {
+    const modal = document.getElementById('toggleModal');
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+}
+
+document.getElementById('toggleModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeToggleModal();
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeToggleModal();
+    }
+});
+</script>
+{% endblock %}

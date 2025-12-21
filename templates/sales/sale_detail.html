@@ -1,0 +1,408 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}الفاتورة {{ sale.order_number }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sales/sales.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="sale-detail-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-file-invoice"></i>
+                الفاتورة {{ sale.order_number }}
+            </h1>
+            <div class="status-badges">
+                <span class="badge badge-{{ sale.get_payment_status_color }}">
+                    {{ sale.get_payment_status_display_ar }}
+                </span>
+                <span class="badge badge-{{ sale.get_status_color }}">
+                    {{ sale.get_status_display }}
+                </span>
+            </div>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'sales:print' sale.pk %}" 
+               class="btn btn-primary" 
+               target="_blank">
+                <i class="fas fa-print"></i>
+                طباعة
+            </a>
+            <a href="{% url 'sales:edit' sale.pk %}" class="btn btn-outline">
+                <i class="fas fa-edit"></i>
+                تعديل
+            </a>
+            <a href="{% url 'sales:list' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة
+            </a>
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <!-- Customer Info -->
+        <div class="detail-card">
+            <h3 class="card-title">
+                <i class="fas fa-user"></i>
+                معلومات العميل
+            </h3>
+            <div class="info-list">
+                <div class="info-item">
+                    <span class="label">رقم العميل:</span>
+                    <span class="value">{{ sale.customer.customer_id }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">الاسم:</span>
+                    <span class="value">{{ sale.customer.name }}</span>
+                </div>
+                <div class="info-item">
+                    <span class="label">الجوال:</span>
+                    <span class="value">{{ sale.customer.phone }}</span>
+                </div>
+                {% if sale.customer.email %}
+                <div class="info-item">
+                    <span class="label">البريد:</span>
+                    <span class="value">{{ sale.customer.email }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Order Info -->
+        <div class="detail-card">
+            <h3 class="card-title">
+                <i class="fas fa-clipboard-list"></i>
+                معلومات الطلب
+            </h3>
+            <div class="info-list">
+                <div class="info-item">
+                    <span class="label">تاريخ الطلب:</span>
+                    <span class="value">{{ sale.order_date|date:"Y-m-d H:i" }}</span>
+                </div>
+                {% if sale.delivery_date %}
+                <div class="info-item">
+                    <span class="label">تاريخ التسليم:</span>
+                    <span class="value">{{ sale.delivery_date|date:"Y-m-d" }}</span>
+                </div>
+                {% endif %}
+                {% if sale.laboratory %}
+                <div class="info-item">
+                    <span class="label">المعمل:</span>
+                    <span class="value">{{ sale.laboratory.company_name }}</span>
+                </div>
+                {% endif %}
+                <div class="info-item">
+                    <span class="label">أنشئ بواسطة:</span>
+                    <span class="value">{{ sale.created_by }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Items -->
+        <div class="detail-card full-width">
+            <h3 class="card-title">
+                <i class="fas fa-shopping-cart"></i>
+                العناصر
+            </h3>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>المنتج/الخدمة</th>
+                        <th>السعر</th>
+                        <th>الكمية</th>
+                        <th>الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>
+                            <div class="item-name">
+                                {{ item.get_item_name }}
+                            </div>
+                            {% if item.prescription_right or item.prescription_left %}
+                            <div class="prescription-info">
+                                {% if item.prescription_right %}
+                                <small><strong>قياس اليمنى:</strong> {{ item.prescription_right }}</small><br>
+                                {% endif %}
+                                {% if item.prescription_left %}
+                                <small><strong>قياس اليسرى:</strong> {{ item.prescription_left }}</small>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                        </td>
+                        <td>{{ item.unit_price|floatformat:2 }} ر.س</td>
+                        <td>{{ item.quantity }}</td>
+                        <td class="total">{{ item.total_price|floatformat:2 }} ر.س</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Amount Summary -->
+        <div class="detail-card">
+            <h3 class="card-title">
+                <i class="fas fa-calculator"></i>
+                ملخص المبلغ
+            </h3>
+            <div class="amount-breakdown">
+                <div class="amount-row">
+                    <span>المجموع الفرعي:</span>
+                    <span>{{ sale.subtotal|floatformat:2 }} ر.س</span>
+                </div>
+                {% if sale.discount > 0 %}
+                <div class="amount-row discount">
+                    <span>الخصم:</span>
+                    <span>-{{ sale.discount|floatformat:2 }} ر.س</span>
+                </div>
+                {% endif %}
+                <div class="amount-row">
+                    <span>الضريبة (15%):</span>
+                    <span>{{ sale.tax|floatformat:2 }} ر.س</span>
+                </div>
+                <div class="amount-row total">
+                    <span>الإجمالي:</span>
+                    <span>{{ sale.total_amount|floatformat:2 }} ر.س</span>
+                </div>
+                <div class="amount-row paid">
+                    <span>المدفوع:</span>
+                    <span>{{ sale.paid_amount|floatformat:2 }} ر.س</span>
+                </div>
+                <div class="amount-row remaining">
+                    <span>المتبقي:</span>
+                    <span>{{ remaining_amount|floatformat:2 }} ر.س</span>
+                </div>
+            </div>
+
+            {% if not is_paid %}
+            <button class="btn btn-primary btn-block" onclick="showPaymentModal()">
+                <i class="fas fa-money-bill"></i>
+                إضافة دفعة
+            </button>
+            {% endif %}
+        </div>
+
+        <!-- Payments History -->
+        <div class="detail-card">
+            <h3 class="card-title">
+                <i class="fas fa-history"></i>
+                سجل الدفعات
+            </h3>
+            {% if payments %}
+            <div class="payments-list">
+                {% for payment in payments %}
+                <div class="payment-item">
+                    <div class="payment-info">
+                        <span class="payment-amount">{{ payment.amount|floatformat:2 }} ر.س</span>
+                        <span class="payment-method">{{ payment.get_payment_method_display }}</span>
+                    </div>
+                    <div class="payment-meta">
+                        <span class="payment-date">{{ payment.payment_date|date:"Y-m-d H:i" }}</span>
+                        {% if payment.created_by %}
+                        <span class="payment-by">{{ payment.created_by }}</span>
+                        {% endif %}
+                    </div>
+                    {% if payment.reference %}
+                    <div class="payment-reference">
+                        <small>مرجع: {{ payment.reference }}</small>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-message">لا توجد دفعات</p>
+            {% endif %}
+        </div>
+
+        <!-- Notes -->
+        {% if sale.notes or sale.prescription_notes %}
+        <div class="detail-card full-width">
+            <h3 class="card-title">
+                <i class="fas fa-sticky-note"></i>
+                الملاحظات
+            </h3>
+            {% if sale.prescription_notes %}
+            <div class="note-section">
+                <strong>ملاحظات القياس:</strong>
+                <p>{{ sale.prescription_notes }}</p>
+            </div>
+            {% endif %}
+            {% if sale.notes %}
+            <div class="note-section">
+                <strong>ملاحظات عامة:</strong>
+                <p>{{ sale.notes }}</p>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Actions -->
+    <div class="action-buttons">
+        <button class="btn btn-warning" onclick="showCreditNoteModal()">
+            <i class="fas fa-undo"></i>
+            إشعار دائن
+        </button>
+        <button class="btn btn-info" onclick="showDebitNoteModal()">
+            <i class="fas fa-plus-square"></i>
+            إشعار مدين
+        </button>
+        <form method="POST" action="{% url 'sales:delete' sale.pk %}" 
+              style="display: inline;"
+              onsubmit="return confirm('هل أنت متأكد من حذف هذه الفاتورة؟');">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                <i class="fas fa-trash"></i>
+                حذف الفاتورة
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Payment Modal -->
+<div id="paymentModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>إضافة دفعة</h2>
+            <button class="btn-close" onclick="closePaymentModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="POST" action="{% url 'sales:add_payment' sale.pk %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>المبلغ المتبقي</label>
+                    <input type="text" 
+                           value="{{ remaining_amount|floatformat:2 }} ر.س" 
+                           readonly 
+                           class="readonly-input">
+                </div>
+                <div class="form-group">
+                    <label for="amount">المبلغ <span class="required">*</span></label>
+                    <input type="number" 
+                           id="amount" 
+                           name="amount" 
+                           required
+                           min="0.01"
+                           max="{{ remaining_amount }}"
+                           step="0.01"
+                           placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label for="payment_method">طريقة الدفع <span class="required">*</span></label>
+                    <select id="payment_method" name="payment_method" required>
+                        {% for method in sale.PAYMENT_METHODS %}
+                        <option value="{{ method.0 }}">{{ method.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="reference">المرجع</label>
+                    <input type="text" 
+                           id="reference" 
+                           name="reference"
+                           placeholder="رقم المعاملة أو الإيصال">
+                </div>
+                <div class="form-group">
+                    <label for="notes">ملاحظات</label>
+                    <textarea id="notes" name="notes" rows="2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    حفظ
+                </button>
+                <button type="button" class="btn btn-cancel" onclick="closePaymentModal()">
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Credit Note Modal -->
+<div id="creditNoteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>إنشاء إشعار دائن</h2>
+            <button class="btn-close" onclick="closeCreditNoteModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="POST" action="{% url 'sales:credit_note' sale.pk %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <p class="warning-message">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    سيتم إنشاء فاتورة مرتجع وإرجاع المنتجات للمخزون
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-warning">
+                    <i class="fas fa-check"></i>
+                    تأكيد
+                </button>
+                <button type="button" class="btn btn-cancel" onclick="closeCreditNoteModal()">
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Debit Note Modal -->
+<div id="debitNoteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>إنشاء إشعار مدين</h2>
+            <button class="btn-close" onclick="closeDebitNoteModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="POST" action="{% url 'sales:debit_note' sale.pk %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="debit_amount">المبلغ <span class="required">*</span></label>
+                    <input type="number" 
+                           id="debit_amount" 
+                           name="amount" 
+                           required
+                           min="0.01"
+                           step="0.01"
+                           placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label for="reason">السبب <span class="required">*</span></label>
+                    <textarea id="reason" 
+                              name="reason" 
+                              rows="3" 
+                              required
+                              placeholder="اذكر سبب الرسوم الإضافية..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-info">
+                    <i class="fas fa-check"></i>
+                    إنشاء
+                </button>
+                <button type="button" class="btn btn-cancel" onclick="closeDebitNoteModal()">
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/sales/sale_detail.js' %}"></script>
+{% endblock %}

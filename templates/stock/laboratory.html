@@ -1,0 +1,369 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}المعامل{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/stock/suppliers.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="suppliers-page">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-flask"></i>
+                إدارة المعامل
+            </h1>
+            <p class="subtitle">{{ laboratories|length }} معمل</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-primary" onclick="showAddModal()">
+                <i class="fas fa-plus"></i>
+                إضافة معمل
+            </button>
+            <a href="{% url 'stock:dashboard' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة
+            </a>
+        </div>
+    </div>
+
+    <!-- Laboratories List -->
+    <div class="suppliers-list">
+        {% for laboratory in laboratories %}
+        <div class="supplier-card">
+            <div class="supplier-header">
+                <div class="supplier-code">{{ laboratory.laboratory_code }}</div>
+                <div class="supplier-status {% if laboratory.is_active %}active{% endif %}">
+                    {% if laboratory.is_active %}نشط{% else %}غير نشط{% endif %}
+                </div>
+            </div>
+            
+            <div class="supplier-body">
+                <h3 class="supplier-name">{{ laboratory.company_name }}</h3>
+                
+                <div class="supplier-details">
+                    <div class="detail-item">
+                        <i class="fas fa-phone"></i>
+                        <span>{{ laboratory.phone }}</span>
+                    </div>
+                    
+                    {% if laboratory.email %}
+                    <div class="detail-item">
+                        <i class="fas fa-envelope"></i>
+                        <span>{{ laboratory.email }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if laboratory.address %}
+                    <div class="detail-item">
+                        <i class="fas fa-map-marker-alt"></i>
+                        <span>{{ laboratory.address|truncatewords:10 }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if laboratory.representative_name %}
+                    <div class="detail-item representative">
+                        <i class="fas fa-user"></i>
+                        <div class="rep-info">
+                            <span class="rep-name">{{ laboratory.representative_name }}</span>
+                            {% if laboratory.representative_phone %}
+                            <span class="rep-phone">{{ laboratory.representative_phone }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="supplier-stats">
+                    <!-- تم إزالة عدد المنتجات -->
+                    <div class="stat-item">
+                        <i class="fas fa-calendar"></i>
+                        <span class="stat-label">تاريخ الإضافة</span>
+                        <span class="stat-value">{{ laboratory.created_at|date:"Y-m-d" }}</span>
+                    </div>
+                </div>
+
+                {% if laboratory.notes %}
+                <div class="supplier-notes">
+                    <i class="fas fa-sticky-note"></i>
+                    <p>{{ laboratory.notes|truncatewords:15 }}</p>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="supplier-actions">
+                <button class="btn-action view" onclick="viewLaboratory({{ laboratory.id }})" title="عرض">
+                    <i class="fas fa-eye"></i>
+                    <span>عرض</span>
+                </button>
+                <button class="btn-action edit" onclick="editLaboratory({{ laboratory.id }})" title="تعديل">
+                    <i class="fas fa-edit"></i>
+                    <span>تعديل</span>
+                </button>
+                <button class="btn-action delete" onclick="deleteLaboratory({{ laboratory.id }}, '{{ laboratory.company_name }}')" title="حذف">
+                    <i class="fas fa-trash"></i>
+                    <span>حذف</span>
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-flask"></i>
+            <h3>لا يوجد معامل</h3>
+            <p>ابدأ بإضافة معمل جديد</p>
+            <button class="btn btn-primary" onclick="showAddModal()">
+                <i class="fas fa-plus"></i>
+                إضافة معمل
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add/Edit Modal -->
+<div id="laboratoryModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h2 id="modalTitle">إضافة معمل جديد</h2>
+            <button class="btn-close" onclick="closeModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="laboratoryForm" method="POST">
+            {% csrf_token %}
+            <div class="modal-body">
+                <!-- Company Info -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-flask"></i>
+                        معلومات المعمل
+                    </h3>
+                    <div class="form-group">
+                        <label for="company_name">اسم المعمل <span class="required">*</span></label>
+                        <input type="text" 
+                               id="company_name" 
+                               name="company_name" 
+                               required
+                               autocomplete="off"
+                               placeholder="مثال: معمل النور للبصريات">
+                    </div>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-address-book"></i>
+                        معلومات الاتصال
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="phone">رقم الجوال <span class="required">*</span></label>
+                            <input type="tel" 
+                                   id="phone" 
+                                   name="phone" 
+                                   required
+                                   autocomplete="off"
+                                   pattern="5[0-9]{8}"
+                                   placeholder="5xxxxxxxx">
+                            <small>يجب أن يبدأ بـ 5 ويتكون من 9 أرقام</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="email">البريد الإلكتروني</label>
+                            <input type="email" 
+                                   id="email" 
+                                   name="email"
+                                   autocomplete="off"
+                                   placeholder="example@lab.com">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address">العنوان</label>
+                        <textarea id="address" 
+                                  name="address" 
+                                  rows="2"
+                                  autocomplete="off"
+                                  placeholder="عنوان المعمل..."></textarea>
+                    </div>
+                </div>
+
+                <!-- Representative Info -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-user-tie"></i>
+                        معلومات المندوب
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="representative_name">اسم المندوب</label>
+                            <input type="text" 
+                                   id="representative_name" 
+                                   name="representative_name"
+                                   autocomplete="off"
+                                   placeholder="مثال: أحمد محمد">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="representative_phone">جوال المندوب</label>
+                            <input type="tel" 
+                                   id="representative_phone" 
+                                   name="representative_phone"
+                                   autocomplete="off"
+                                   pattern="5[0-9]{8}"
+                                   placeholder="5xxxxxxxx">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-sticky-note"></i>
+                        ملاحظات
+                    </h3>
+                    <div class="form-group">
+                        <label for="notes">ملاحظات إضافية</label>
+                        <textarea id="notes" 
+                                  name="notes" 
+                                  rows="3"
+                                  autocomplete="off"
+                                  placeholder="أي ملاحظات مهمة..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    حفظ المعمل
+                </button>
+                <button type="button" class="btn btn-cancel" onclick="closeModal()">
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- View Laboratory Modal -->
+<div id="viewLaboratoryModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h2 id="viewModalTitle">تفاصيل المعمل</h2>
+            <button class="btn-close" onclick="closeViewModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="supplier-detail-grid">
+                <!-- Company Info -->
+                <div class="detail-section">
+                    <h3 class="detail-section-title">
+                        <i class="fas fa-flask"></i>
+                        معلومات المعمل
+                    </h3>
+                    <div class="detail-info-list">
+                        <div class="detail-info-item">
+                            <span class="detail-label">اسم المعمل:</span>
+                            <span class="detail-value" id="view_company_name">-</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">كود المعمل:</span>
+                            <span class="detail-value" id="view_laboratory_code">-</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">الحالة:</span>
+                            <span class="detail-value" id="view_status">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="detail-section">
+                    <h3 class="detail-section-title">
+                        <i class="fas fa-address-book"></i>
+                        معلومات الاتصال
+                    </h3>
+                    <div class="detail-info-list">
+                        <div class="detail-info-item">
+                            <span class="detail-label">رقم الجوال:</span>
+                            <span class="detail-value" id="view_phone">-</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">البريد الإلكتروني:</span>
+                            <span class="detail-value" id="view_email">-</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">العنوان:</span>
+                            <span class="detail-value" id="view_address">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Representative Info -->
+                <div class="detail-section">
+                    <h3 class="detail-section-title">
+                        <i class="fas fa-user-tie"></i>
+                        معلومات المندوب
+                    </h3>
+                    <div class="detail-info-list">
+                        <div class="detail-info-item">
+                            <span class="detail-label">اسم المندوب:</span>
+                            <span class="detail-value" id="view_rep_name">-</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">جوال المندوب:</span>
+                            <span class="detail-value" id="view_rep_phone">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Statistics -->
+                <div class="detail-section">
+                    <h3 class="detail-section-title">
+                        <i class="fas fa-chart-bar"></i>
+                        الإحصائيات
+                    </h3>
+                    <div class="detail-info-list">
+                        <!-- تم إزالة عدد المنتجات -->
+                        <div class="detail-info-item">
+                            <span class="detail-label">تاريخ الإضافة:</span>
+                            <span class="detail-value" id="view_created_at">-</span>
+                        </div>
+                        <div class="detail-info-item">
+                            <span class="detail-label">آخر تحديث:</span>
+                            <span class="detail-value" id="view_updated_at">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes (Full Width) -->
+                <div class="detail-section full-width">
+                    <h3 class="detail-section-title">
+                        <i class="fas fa-sticky-note"></i>
+                        ملاحظات
+                    </h3>
+                    <div class="detail-notes" id="view_notes">
+                        لا توجد ملاحظات
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="editLaboratoryFromView()">
+                <i class="fas fa-edit"></i>
+                تعديل
+            </button>
+            <button class="btn btn-cancel" onclick="closeViewModal()">
+                إغلاق
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/stock/laboratory.js' %}"></script>
+{% endblock %}

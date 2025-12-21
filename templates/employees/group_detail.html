@@ -1,0 +1,625 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ group.name_arabic }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/employees/employees.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="employees-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-user-shield"></i>
+                تفاصيل المجموعة
+            </h1>
+            <p class="subtitle">{{ group.name }}</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'employees:group_list' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة
+            </a>
+            <a href="{% url 'employees:group_edit' group.pk %}" class="btn btn-primary">
+                <i class="fas fa-edit"></i>
+                تعديل
+            </a>
+        </div>
+    </div>
+
+    <!-- Group Details Grid -->
+    <div class="group-detail-grid">
+        <!-- Main Info Card -->
+        <div class="detail-card main-card">
+            <div class="group-header-large">
+                <div class="group-icon-large">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <div class="group-main-info">
+                    <h2>{{ group.name_arabic }}</h2>
+                    <p class="group-code-large">{{ group.name }}</p>
+                </div>
+            </div>
+
+            {% if group.description %}
+            <div class="group-description-large">
+                <h4><i class="fas fa-info-circle"></i> الوصف</h4>
+                <p>{{ group.description }}</p>
+            </div>
+            {% endif %}
+
+            <div class="group-stats-large">
+                <div class="stat-box">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>{{ employees.count }}</h3>
+                        <p>موظف</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Permissions Card -->
+        <div class="detail-card">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-shield-alt"></i>
+                    الصلاحيات المخصصة
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="permissions-grid">
+                    <div class="permission-item {% if group.can_view_reports %}granted{% else %}denied{% endif %}">
+                        <div class="permission-icon">
+                            {% if group.can_view_reports %}
+                            <i class="fas fa-check-circle"></i>
+                            {% else %}
+                            <i class="fas fa-times-circle"></i>
+                            {% endif %}
+                        </div>
+                        <div class="permission-info">
+                            <strong>عرض التقارير</strong>
+                            <p>الوصول إلى جميع التقارير</p>
+                        </div>
+                    </div>
+
+                    <div class="permission-item {% if group.can_manage_sales %}granted{% else %}denied{% endif %}">
+                        <div class="permission-icon">
+                            {% if group.can_manage_sales %}
+                            <i class="fas fa-check-circle"></i>
+                            {% else %}
+                            <i class="fas fa-times-circle"></i>
+                            {% endif %}
+                        </div>
+                        <div class="permission-info">
+                            <strong>إدارة المبيعات</strong>
+                            <p>إضافة وتعديل الفواتير</p>
+                        </div>
+                    </div>
+
+                    <div class="permission-item {% if group.can_manage_inventory %}granted{% else %}denied{% endif %}">
+                        <div class="permission-icon">
+                            {% if group.can_manage_inventory %}
+                            <i class="fas fa-check-circle"></i>
+                            {% else %}
+                            <i class="fas fa-times-circle"></i>
+                            {% endif %}
+                        </div>
+                        <div class="permission-info">
+                            <strong>إدارة المخزون</strong>
+                            <p>إدارة المنتجات والمخزون</p>
+                        </div>
+                    </div>
+
+                    <div class="permission-item {% if group.can_manage_customers %}granted{% else %}denied{% endif %}">
+                        <div class="permission-icon">
+                            {% if group.can_manage_customers %}
+                            <i class="fas fa-check-circle"></i>
+                            {% else %}
+                            <i class="fas fa-times-circle"></i>
+                            {% endif %}
+                        </div>
+                        <div class="permission-info">
+                            <strong>إدارة العملاء</strong>
+                            <p>إضافة وتعديل العملاء</p>
+                        </div>
+                    </div>
+
+                    <div class="permission-item {% if group.can_manage_suppliers %}granted{% else %}denied{% endif %}">
+                        <div class="permission-icon">
+                            {% if group.can_manage_suppliers %}
+                            <i class="fas fa-check-circle"></i>
+                            {% else %}
+                            <i class="fas fa-times-circle"></i>
+                            {% endif %}
+                        </div>
+                        <div class="permission-info">
+                            <strong>إدارة الموردين</strong>
+                            <p>إدارة بيانات الموردين</p>
+                        </div>
+                    </div>
+
+                    <div class="permission-item {% if group.can_view_financial %}granted{% else %}denied{% endif %}">
+                        <div class="permission-icon">
+                            {% if group.can_view_financial %}
+                            <i class="fas fa-check-circle"></i>
+                            {% else %}
+                            <i class="fas fa-times-circle"></i>
+                            {% endif %}
+                        </div>
+                        <div class="permission-info">
+                            <strong>عرض البيانات المالية</strong>
+                            <p>الوصول للمعلومات المالية</p>
+                        </div>
+                    </div>
+
+                    <div class="permission-item {% if group.can_manage_settings %}granted{% else %}denied{% endif %}">
+                        <div class="permission-icon">
+                            {% if group.can_manage_settings %}
+                            <i class="fas fa-check-circle"></i>
+                            {% else %}
+                            <i class="fas fa-times-circle"></i>
+                            {% endif %}
+                        </div>
+                        <div class="permission-info">
+                            <strong>إدارة الإعدادات</strong>
+                            <p>تعديل إعدادات النظام</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Django Permissions Card -->
+        <div class="detail-card full-width">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-key"></i>
+                    صلاحيات Django
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if group.group.permissions.all %}
+                <div class="django-permissions-list">
+                    {% for permission in group.group.permissions.all %}
+                    <div class="django-permission-item">
+                        <i class="fas fa-check"></i>
+                        <span>{{ permission.content_type.app_label }} | {{ permission.name }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="no-data-text">لا توجد صلاحيات Django محددة</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Employees in Group Card -->
+        <div class="detail-card full-width">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-users"></i>
+                    الموظفين في هذه المجموعة ({{ employees.count }})
+                </h3>
+            </div>
+            <div class="card-body">
+                {% if employees %}
+                <div class="employees-mini-grid">
+                    {% for employee in employees %}
+                    <a href="{% url 'employees:detail' employee.pk %}" class="employee-mini-card">
+                        <div class="employee-mini-photo">
+                            <img src="{{ employee.get_photo_url }}" alt="{{ employee.full_name_arabic }}">
+                            {% if employee.is_online %}
+                            <div class="online-dot"></div>
+                            {% endif %}
+                        </div>
+                        <div class="employee-mini-info">
+                            <strong>{{ employee.full_name_arabic }}</strong>
+                            <span>{{ employee.employee_id }}</span>
+                            <span class="mini-position">{{ employee.get_position_display }}</span>
+                        </div>
+                        {% if not employee.is_active %}
+                        <div class="inactive-label">موقوف</div>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="no-data-text">لا يوجد موظفين في هذه المجموعة</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Actions Card -->
+        <div class="detail-card full-width">
+            <div class="card-header">
+                <h3>
+                    <i class="fas fa-cog"></i>
+                    الإجراءات
+                </h3>
+            </div>
+            <div class="card-body">
+                <div class="action-buttons">
+                    <a href="{% url 'employees:group_edit' group.pk %}" class="action-btn primary">
+                        <i class="fas fa-edit"></i>
+                        تعديل المجموعة
+                    </a>
+                    <button onclick="confirmDelete()" class="action-btn danger">
+                        <i class="fas fa-trash"></i>
+                        حذف المجموعة
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>تأكيد حذف المجموعة</h3>
+            <button class="btn-close" onclick="closeDeleteModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="POST" action="{% url 'employees:group_delete' group.pk %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="warning-box">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <div>
+                        <p><strong>تحذير!</strong></p>
+                        <p>هل أنت متأكد من حذف المجموعة <strong>{{ group.name_arabic }}</strong>؟</p>
+                        <p>سيتم إزالة جميع الموظفين ({{ employees.count }}) من هذه المجموعة.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i>
+                    نعم، احذف المجموعة
+                </button>
+                <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.group-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.detail-card.full-width {
+    grid-column: 1 / -1;
+}
+
+.detail-card.main-card {
+    grid-column: 1 / -1;
+}
+
+.group-header-large {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid #e9ecef;
+    margin-bottom: 1.5rem;
+}
+
+.group-icon-large {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #4A9EAD 0%, #3a7d8a 100%);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+}
+
+.group-main-info h2 {
+    margin: 0 0 0.5rem 0;
+    color: #2c3e50;
+    font-size: 2rem;
+}
+
+.group-code-large {
+    margin: 0;
+    color: #7f8c8d;
+    font-size: 1.1rem;
+    font-family: 'Courier New', monospace;
+}
+
+.group-description-large {
+    padding: 1.5rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.group-description-large h4 {
+    margin: 0 0 0.75rem 0;
+    color: #2c3e50;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.group-description-large h4 i {
+    color: #4A9EAD;
+}
+
+.group-description-large p {
+    margin: 0;
+    color: #495057;
+    line-height: 1.8;
+}
+
+.group-stats-large {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+}
+
+.stat-box {
+    background: #e8f5f7;
+    padding: 1.5rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-box .stat-icon {
+    width: 50px;
+    height: 50px;
+    background: #4A9EAD;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: white;
+}
+
+.stat-box .stat-info h3 {
+    margin: 0 0 0.25rem 0;
+    color: #2c3e50;
+    font-size: 1.8rem;
+}
+
+.stat-box .stat-info p {
+    margin: 0;
+    color: #4A9EAD;
+    font-weight: 600;
+}
+
+.permissions-grid {
+    display: grid;
+    gap: 1rem;
+}
+
+.permission-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    border-right: 4px solid;
+}
+
+.permission-item.granted {
+    background: #d4edda;
+    border-right-color: #27ae60;
+}
+
+.permission-item.denied {
+    background: #f8d7da;
+    border-right-color: #e74c3c;
+}
+
+.permission-icon {
+    font-size: 1.5rem;
+}
+
+.permission-item.granted .permission-icon {
+    color: #27ae60;
+}
+
+.permission-item.denied .permission-icon {
+    color: #e74c3c;
+}
+
+.permission-info strong {
+    display: block;
+    color: #2c3e50;
+    margin-bottom: 0.25rem;
+}
+
+.permission-info p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #495057;
+}
+
+.django-permissions-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 0.75rem;
+}
+
+.django-permission-item {
+    padding: 0.75rem 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: #495057;
+}
+
+.django-permission-item i {
+    color: #27ae60;
+}
+
+.employees-mini-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.employee-mini-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.employee-mini-card:hover {
+    background: #e8f5f7;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.employee-mini-photo {
+    position: relative;
+}
+
+.employee-mini-photo img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #4A9EAD;
+}
+
+.online-dot {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 12px;
+    height: 12px;
+    background: #27ae60;
+    border: 2px solid white;
+    border-radius: 50%;
+}
+
+.employee-mini-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.employee-mini-info strong {
+    color: #2c3e50;
+}
+
+.employee-mini-info span {
+    font-size: 0.85rem;
+    color: #7f8c8d;
+}
+
+.mini-position {
+    color: #4A9EAD !important;
+    font-weight: 600 !important;
+}
+
+.inactive-label {
+    padding: 0.25rem 0.5rem;
+    background: #e74c3c;
+    color: white;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.warning-box {
+    display: flex;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #fff3cd;
+    border: 1px solid #ffc107;
+    border-radius: 8px;
+}
+
+.warning-box i {
+    font-size: 2rem;
+    color: #856404;
+}
+
+.warning-box p {
+    margin: 0 0 0.5rem 0;
+    color: #856404;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+@media (max-width: 768px) {
+    .group-detail-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .group-header-large {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete() {
+    const modal = document.getElementById('deleteModal');
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+}
+
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDeleteModal();
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeDeleteModal();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,368 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تقرير المخزون{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/reports/reports.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="report-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-boxes"></i>
+                تقرير المخزون
+            </h1>
+            <p class="subtitle">تقرير شامل لحالة المخزون</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'reports:dashboard' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة
+            </a>
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i>
+                طباعة
+            </button>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-section">
+        <form method="GET" class="filters-form-inline">
+            <div class="filter-group">
+                <label>التصنيف:</label>
+                <select name="category" onchange="this.form.submit()">
+                    <option value="">الكل</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if selected_category == cat.id|stringformat:"s" %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>حالة المخزون:</label>
+                <select name="stock_status" onchange="this.form.submit()">
+                    <option value="">الكل</option>
+                    <option value="available" {% if stock_status == 'available' %}selected{% endif %}>متوفر</option>
+                    <option value="low" {% if stock_status == 'low' %}selected{% endif %}>منخفض</option>
+                    <option value="out" {% if stock_status == 'out' %}selected{% endif %}>نافذ</option>
+                </select>
+            </div>
+
+            <a href="{% url 'reports:inventory' %}" class="btn btn-outline">
+                <i class="fas fa-redo"></i>
+                إعادة تعيين
+            </a>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+        <div class="summary-card products">
+            <div class="card-icon">
+                <i class="fas fa-box"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_products }}</h3>
+                <p>إجمالي المنتجات النشطة</p>
+            </div>
+        </div>
+
+        <div class="summary-card payments">
+            <div class="card-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_products|add:"-"|add:out_of_stock|add:"-"|add:low_stock }}</h3>
+                <p>منتجات متوفرة</p>
+            </div>
+        </div>
+
+        <div class="summary-card remaining">
+            <div class="card-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ low_stock }}</h3>
+                <p>مخزون منخفض</p>
+            </div>
+        </div>
+
+        <div class="summary-card returns">
+            <div class="card-icon">
+                <i class="fas fa-times-circle"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ out_of_stock }}</h3>
+                <p>نافذ من المخزون</p>
+            </div>
+        </div>
+
+        <div class="summary-card sales">
+            <div class="card-icon">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_cost_value|floatformat:0 }}</h3>
+                <p>قيمة المخزون (تكلفة)</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card collected">
+            <div class="card-icon">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_selling_value|floatformat:0 }}</h3>
+                <p>قيمة المخزون (بيع)</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card purchases">
+            <div class="card-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ expected_profit|floatformat:0 }}</h3>
+                <p>الربح المتوقع</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>
+                    <i class="fas fa-layer-group"></i>
+                    المخزون حسب التصنيف
+                </h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="categoryStockChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>
+                    <i class="fas fa-chart-pie"></i>
+                    توزيع حالة المخزون
+                </h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="stockStatusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Stock Table -->
+    <div class="table-section">
+        <div class="section-header">
+            <h3>
+                <i class="fas fa-tags"></i>
+                المخزون حسب التصنيف
+            </h3>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>التصنيف</th>
+                    <th>عدد المنتجات</th>
+                    <th>الكمية الإجمالية</th>
+                    <th>القيمة الإجمالية</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for cat in category_stock %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ cat.name }}</td>
+                    <td>{{ cat.product_count }}</td>
+                    <td>{{ cat.total_quantity|default:0 }}</td>
+                    <td>{{ cat.total_value|floatformat:2 }} ر.س</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: #999;">لا توجد بيانات</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Top Value Products -->
+    <div class="table-section">
+        <div class="section-header">
+            <h3>
+                <i class="fas fa-crown"></i>
+                أكثر المنتجات قيمة (أعلى 10)
+            </h3>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>المنتج</th>
+                    <th>الباركود</th>
+                    <th>الكمية</th>
+                    <th>سعر البيع</th>
+                    <th>القيمة الإجمالية</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in top_value_products %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ product.item_name }}</td>
+                    <td><code>{{ product.barcode }}</code></td>
+                    <td>{{ product.quantity }}</td>
+                    <td>{{ product.selling_price|floatformat:2 }} ر.س</td>
+                    <td>{{ product.total_value|floatformat:2 }} ر.س</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #999;">لا توجد منتجات</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- All Products Table -->
+    <div class="table-section">
+        <div class="section-header">
+            <h3>
+                <i class="fas fa-list"></i>
+                جميع المنتجات ({{ total_products }} منتج)
+            </h3>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>الباركود</th>
+                        <th>اسم المنتج</th>
+                        <th>التصنيف</th>
+                        <th>الكمية</th>
+                        <th>الحد الأدنى</th>
+                        <th>سعر التكلفة</th>
+                        <th>سعر البيع</th>
+                        <th>هامش الربح</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><code>{{ product.barcode }}</code></td>
+                        <td>{{ product.item_name }}</td>
+                        <td>{{ product.category.name|default:"غير مصنف" }}</td>
+                        <td style="font-weight: 600;">{{ product.quantity }}</td>
+                        <td>{{ product.min_quantity }}</td>
+                        <td>{{ product.cost_price|floatformat:2 }} ر.س</td>
+                        <td>{{ product.selling_price|floatformat:2 }} ر.س</td>
+                        <td>
+                            {% if product.profit_margin > 0 %}
+                            <span style="color: #27ae60; font-weight: 600;">
+                                +{{ product.profit_margin|floatformat:1 }}%
+                            </span>
+                            {% else %}
+                            <span style="color: #e74c3c;">{{ product.profit_margin|floatformat:1 }}%</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="badge badge-{{ product.stock_status_color }}">
+                                {{ product.stock_status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="10" style="text-align: center; color: #999;">لا توجد منتجات</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Category Stock Chart
+    const categoryStockCtx = document.getElementById('categoryStockChart');
+    
+    if (categoryStockCtx) {
+        new Chart(categoryStockCtx, {
+            type: 'bar',
+            data: {
+                labels: [{% for cat in category_stock %}'{{ cat.name }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'الكمية',
+                    data: [{% for cat in category_stock %}{{ cat.total_quantity|default:0 }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                    backgroundColor: '#4A9EAD',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // Stock Status Chart
+    const stockStatusCtx = document.getElementById('stockStatusChart');
+    
+    if (stockStatusCtx) {
+        new Chart(stockStatusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['متوفر', 'منخفض', 'نافذ'],
+                datasets: [{
+                    data: [
+                        {{ total_products|add:"-"|add:out_of_stock|add:"-"|add:low_stock }},
+                        {{ low_stock }},
+                        {{ out_of_stock }}
+                    ],
+                    backgroundColor: [
+                        '#27ae60',
+                        '#f39c12',
+                        '#e74c3c'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

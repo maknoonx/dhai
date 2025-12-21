@@ -1,0 +1,269 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}الفواتير{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sales/sales.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="sales-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-file-invoice-dollar"></i>
+                إدارة الفواتير
+            </h1>
+            <p class="subtitle">{{ total_sales }} فاتورة</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'sales:add' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                فاتورة جديدة
+            </a>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="stats-grid">
+        <div class="stat-card primary">
+            <div class="stat-icon">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ total_sales }}</h3>
+                <p>إجمالي الفواتير</p>
+            </div>
+        </div>
+
+        <div class="stat-card success">
+            <div class="stat-icon">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ total_amount|floatformat:2 }} ر.س</h3>
+                <p>إجمالي المبيعات</p>
+            </div>
+        </div>
+
+        <div class="stat-card info">
+            <div class="stat-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ total_paid|floatformat:2 }} ر.س</h3>
+                <p>المبالغ المدفوعة</p>
+            </div>
+        </div>
+
+        <div class="stat-card warning">
+            <div class="stat-icon">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="stat-info">
+                <h3>{{ total_remaining|floatformat:2 }} ر.س</h3>
+                <p>المبالغ المتبقية</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <form method="GET" class="filters-form">
+            <div class="filter-group">
+                <label>
+                    <i class="fas fa-search"></i>
+                    بحث
+                </label>
+                <input type="text" 
+                       name="search" 
+                       value="{{ search_query }}"
+                       placeholder="رقم الفاتورة، اسم العميل، رقم الجوال...">
+            </div>
+
+            <div class="filter-group">
+                <label>
+                    <i class="fas fa-clipboard-list"></i>
+                    حالة الطلب
+                </label>
+                <select name="status">
+                    <option value="">الكل</option>
+                    {% for s in status_choices %}
+                    <option value="{{ s.0 }}" {% if status == s.0 %}selected{% endif %}>
+                        {{ s.1 }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>
+                    <i class="fas fa-money-check"></i>
+                    حالة الدفع
+                </label>
+                <select name="payment_status">
+                    <option value="">الكل</option>
+                    <option value="unpaid" {% if payment_status == 'unpaid' %}selected{% endif %}>غير مدفوع</option>
+                    <option value="partial" {% if payment_status == 'partial' %}selected{% endif %}>مدفوع جزئياً</option>
+                    <option value="paid" {% if payment_status == 'paid' %}selected{% endif %}>مدفوع بالكامل</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>
+                    <i class="fas fa-calendar"></i>
+                    من تاريخ
+                </label>
+                <input type="date" name="date_from" value="{{ date_from }}">
+            </div>
+
+            <div class="filter-group">
+                <label>
+                    <i class="fas fa-calendar"></i>
+                    إلى تاريخ
+                </label>
+                <input type="date" name="date_to" value="{{ date_to }}">
+            </div>
+
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-filter">
+                    <i class="fas fa-filter"></i>
+                    تطبيق
+                </button>
+                <a href="{% url 'sales:list' %}" class="btn btn-reset">
+                    <i class="fas fa-redo"></i>
+                    إعادة تعيين
+                </a>
+            </div>
+        </form>
+    </div>
+
+    <!-- Sales Table -->
+    <div class="table-container">
+        <table class="sales-table">
+            <thead>
+                <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>العميل</th>
+                    <th>التاريخ</th>
+                    <th>المبلغ الإجمالي</th>
+                    <th>المدفوع</th>
+                    <th>المتبقي</th>
+                    <th>حالة الدفع</th>
+                    <th>حالة الطلب</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in sales %}
+                <tr>
+                    <td class="order-number">
+                        <a href="{% url 'sales:detail' sale.pk %}">
+                            {{ sale.order_number }}
+                        </a>
+                    </td>
+                    <td>
+                        <div class="customer-info">
+                            <span class="customer-name">{{ sale.customer.name }}</span>
+                            <span class="customer-phone">{{ sale.customer.phone }}</span>
+                        </div>
+                    </td>
+                    <td>{{ sale.order_date|date:"Y-m-d H:i" }}</td>
+                    <td class="amount">{{ sale.total_amount|floatformat:2 }} ر.س</td>
+                    <td class="amount paid">{{ sale.paid_amount|floatformat:2 }} ر.س</td>
+                    <td class="amount remaining">{{ sale.get_remaining_amount|floatformat:2 }} ر.س</td>
+                    <td>
+                        <span class="badge badge-{{ sale.get_payment_status_color }}">
+                            {{ sale.get_payment_status_display_ar }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge badge-{{ sale.get_status_color }}">
+                            {{ sale.get_status_display }}
+                        </span>
+                    </td>
+<!-- استبدل قسم الأزرار في sale_list.html بهذا الكود -->
+
+<td>
+    <div class="action-buttons">
+        <a href="{% url 'sales:detail' sale.pk %}" 
+           class="btn-action view" 
+           title="عرض">
+            <i class="fas fa-eye"></i>
+        </a>
+        <a href="{% url 'sales:print' sale.pk %}" 
+           class="btn-action print" 
+           title="طباعة"
+           target="_blank">
+            <i class="fas fa-print"></i>
+        </a>
+        <a href="{% url 'sales:edit' sale.pk %}" 
+           class="btn-action edit" 
+           title="تعديل">
+            <i class="fas fa-edit"></i>
+        </a>
+
+        <!-- زر طباعة فحص العين - مُصلح -->
+        {% if sale.customer %}
+            {% with latest_exam=sale.customer.eye_exams.first %}
+                {% if latest_exam %}
+                    <a href="{% url 'sales:print_eye_exam' sale.pk %}" 
+                       class="btn-action btn-eye-exam" 
+                       target="_blank"
+                       title="طباعة فحص العين">
+                        <i class="fas fa-eye"></i>
+                    </a>
+                {% else %}
+                    <button class="btn-action btn-eye-exam disabled" 
+                            disabled
+                            title="لا يوجد فحص عين">
+                        <i class="fas fa-eye-slash"></i>
+                    </button>
+                {% endif %}
+            {% endwith %}
+        {% else %}
+            <button class="btn-action btn-eye-exam disabled" 
+                    disabled
+                    title="لا يوجد عميل">
+                <i class="fas fa-user-slash"></i>
+            </button>
+        {% endif %}
+    </div>
+</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="empty-message">
+                        <i class="fas fa-inbox"></i>
+                        <p>لا توجد فواتير</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Status Summary -->
+    <div class="status-summary">
+        <h3>ملخص الحالات</h3>
+        <div class="status-grid">
+            {% for s in status_choices %}
+            <div class="status-item">
+                <span class="status-count">
+                    {% for key, value in status_counts.items %}
+                        {% if key == s.0 %}{{ value }}{% endif %}
+                    {% endfor %}
+                </span>
+                <span class="status-label">{{ s.1 }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/sales/sales.js' %}"></script>
+{% endblock %}

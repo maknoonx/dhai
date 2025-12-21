@@ -1,0 +1,415 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}قائمة المنتجات{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/stock/products_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="products-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-boxes"></i>
+                إدارة المنتجات
+            </h1>
+            <p class="subtitle">إجمالي {{ products|length }} منتج</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-primary" onclick="showAddModal()">
+                <i class="fas fa-plus"></i>
+                إضافة منتج
+            </button>
+            <a href="{% url 'stock:import_products' %}" class="btn btn-secondary">
+                <i class="fas fa-file-excel"></i>
+                استيراد من ملف
+            </a>
+            <a href="{% url 'stock:dashboard' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة
+            </a>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filters-section">
+        <div class="search-box">
+            <i class="fas fa-search"></i>
+            <input type="text" 
+                   id="searchInput" 
+                   name="search"
+                   placeholder="ابحث بالاسم أو الباركود..."
+                   value="{{ search_query }}"
+                   autocomplete="off">
+        </div>
+
+        <div class="filter-group">
+            <select id="categoryFilter" name="category" onchange="applyFilters()">
+                <option value="">جميع التصنيفات</option>
+                {% for category in categories %}
+                <option value="{{ category.id }}" {% if category.id|stringformat:"s" == category_id %}selected{% endif %}>
+                    {{ category.name }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <select id="statusFilter" name="status" onchange="applyFilters()">
+                <option value="">جميع الحالات</option>
+                <option value="available" {% if status == 'available' %}selected{% endif %}>متوفر</option>
+                <option value="low" {% if status == 'low' %}selected{% endif %}>منخفض</option>
+                <option value="out" {% if status == 'out' %}selected{% endif %}>نفذ</option>
+            </select>
+
+            <button class="btn-filter-clear" onclick="clearFilters()">
+                <i class="fas fa-times"></i>
+                مسح الفلاتر
+            </button>
+        </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="mini-stats">
+        <div class="mini-stat">
+            <span class="label">إجمالي</span>
+            <span class="value">{{ stats.total }}</span>
+        </div>
+        <div class="mini-stat warning">
+            <span class="label">منخفض</span>
+            <span class="value">{{ stats.low_stock }}</span>
+        </div>
+        <div class="mini-stat danger">
+            <span class="label">نفذ</span>
+            <span class="value">{{ stats.out_of_stock }}</span>
+        </div>
+    </div>
+
+    <!-- Products Grid -->
+    <div class="products-grid">
+        {% for product in products %}
+        <div class="product-card">
+            <div class="product-header">
+                <div class="product-status {{ product.stock_status_color }}">
+                    {{ product.stock_status }}
+                </div>
+                {% if product.category %}
+                <div class="product-category" style="background-color: {{ product.category.color }}20; color: {{ product.category.color }};">
+                    <i class="{{ product.category.icon }}"></i>
+                    {{ product.category.name }}
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="product-image">
+                {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.item_name }}">
+                {% else %}
+                <div class="no-image">
+                    <i class="fas fa-image"></i>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="product-info">
+                <h3 class="product-name">{{ product.item_name }}</h3>
+                <div class="product-barcode">
+                    <i class="fas fa-barcode"></i>
+                    {{ product.barcode }}
+                </div>
+            </div>
+
+            <div class="product-details">
+                <div class="detail-row">
+                    <span class="label">
+                        <i class="fas fa-box"></i>
+                        الكمية
+                    </span>
+                    <span class="value quantity-badge {{ product.stock_status_color }}">
+                        {{ product.quantity }}
+                    </span>
+                </div>
+
+                {% if product.box_number %}
+                <div class="detail-row">
+                    <span class="label">
+                        <i class="fas fa-archive"></i>
+                        الصندوق
+                    </span>
+                    <span class="value">{{ product.box_number }}</span>
+                </div>
+                {% endif %}
+
+                <div class="detail-row">
+                    <span class="label">
+                        <i class="fas fa-tag"></i>
+                        السعر
+                    </span>
+                    <span class="value price">{{ product.selling_price }} ريال</span>
+                </div>
+
+                {% if product.supplier %}
+                <div class="detail-row">
+                    <span class="label">
+                        <i class="fas fa-truck"></i>
+                        المورد
+                    </span>
+                    <span class="value">{{ product.supplier.company_name }}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="product-actions">
+                <a href="{% url 'stock:product_detail' product.pk %}" class="btn-action primary">
+                    <i class="fas fa-eye"></i>
+                    <span>عرض</span>
+                </a>
+                <button class="btn-action secondary" onclick="showEditModal({{ product.pk }})">
+                    <i class="fas fa-edit"></i>
+                    <span>تعديل</span>
+                </button>
+                <button class="btn-action danger" onclick="showDeleteModal({{ product.pk }}, '{{ product.item_name }}')">
+                    <i class="fas fa-trash"></i>
+                    <span>حذف</span>
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <i class="fas fa-box-open"></i>
+            <h3>لا توجد منتجات</h3>
+            <p>ابدأ بإضافة منتج جديد</p>
+            <button class="btn btn-primary" onclick="showAddModal()">
+                <i class="fas fa-plus"></i>
+                إضافة منتج
+            </button>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Add/Edit Product Modal -->
+<div id="productModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h2 id="modalTitle">إضافة منتج جديد</h2>
+            <button class="btn-close" onclick="closeModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="productForm" method="POST" action="{% url 'stock:products' %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <!-- Basic Info -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-info-circle"></i>
+                        المعلومات الأساسية
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="item_name">اسم المنتج <span class="required">*</span></label>
+                            <input type="text" 
+                                   id="item_name" 
+                                   name="item_name" 
+                                   autocomplete="off"
+                                   required 
+                                   placeholder="مثال: نظارة شمسية ZM-001">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="barcode">الباركود <span class="required">*</span></label>
+                            <input type="text" 
+                                   id="barcode" 
+                                   name="barcode" 
+                                   autocomplete="off"
+                                   required 
+                                   placeholder="مثال: 0524200011111">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="category">التصنيف</label>
+                            <select id="category" name="category" autocomplete="off">
+                                <option value="">بدون تصنيف</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}">{{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="supplier">المورد</label>
+                            <select id="supplier" name="supplier" autocomplete="off">
+                                <option value="">-- اختر المورد --</option>
+                                {% for sup in suppliers %}
+                                <option value="{{ sup.id }}">{{ sup.company_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quantities -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-boxes"></i>
+                        الكميات
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="quantity">الكمية الحالية <span class="required">*</span></label>
+                            <input type="number" 
+                                   id="quantity" 
+                                   name="quantity" 
+                                   autocomplete="off"
+                                   required 
+                                   min="0"
+                                   value="0"
+                                   placeholder="0">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="min_quantity">الحد الأدنى</label>
+                            <input type="number" 
+                                   id="min_quantity" 
+                                   name="min_quantity" 
+                                   autocomplete="off"
+                                   min="1"
+                                   value="5"
+                                   placeholder="5">
+                            <small>تنبيه عند الوصول لهذا الحد</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="box_number">رقم الصندوق</label>
+                            <input type="text" 
+                                   id="box_number" 
+                                   name="box_number" 
+                                   autocomplete="off"
+                                   placeholder="مثال: A-15">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Prices -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-dollar-sign"></i>
+                        الأسعار
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="cost_price">سعر التكلفة</label>
+                            <input type="number" 
+                                   id="cost_price" 
+                                   name="cost_price" 
+                                   autocomplete="off"
+                                   step="0.01"
+                                   min="0"
+                                   value="0"
+                                   placeholder="0.00">
+                            <small>ريال</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="selling_price">سعر البيع</label>
+                            <input type="number" 
+                                   id="selling_price" 
+                                   name="selling_price" 
+                                   autocomplete="off"
+                                   step="0.01"
+                                   min="0"
+                                   value="0"
+                                   placeholder="0.00">
+                            <small>ريال</small>
+                        </div>
+
+                        <div class="form-group">
+                            <label>هامش الربح</label>
+                            <div class="profit-display" id="profitMargin">
+                                <span class="profit-value">0%</span>
+                                <span class="profit-amount">0 ريال</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Info -->
+                <div class="form-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-sticky-note"></i>
+                        معلومات إضافية
+                    </h3>
+                    <div class="form-group">
+                        <label for="description">الوصف</label>
+                        <textarea id="description" 
+                                  name="description" 
+                                  autocomplete="off"
+                                  rows="3" 
+                                  placeholder="وصف المنتج..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="notes">ملاحظات</label>
+                        <textarea id="notes" 
+                                  name="notes" 
+                                  autocomplete="off"
+                                  rows="2" 
+                                  placeholder="ملاحظات إضافية..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    <span id="submitText">حفظ المنتج</span>
+                </button>
+                <button type="button" class="btn btn-cancel" onclick="closeModal()">
+                    <i class="fas fa-times"></i>
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content modal-small">
+        <div class="modal-header">
+            <h2>تأكيد الحذف</h2>
+            <button class="btn-close" onclick="closeDeleteModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="deleteForm" method="POST">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="delete-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p>هل أنت متأكد من حذف المنتج <strong id="deleteProductName"></strong>؟</p>
+                    <p class="warning-note">لن يمكنك التراجع عن هذا الإجراء!</p>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-danger">
+                    <i class="fas fa-trash"></i>
+                    حذف
+                </button>
+                <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/stock/products.js' %}"></script>
+{% endblock %}

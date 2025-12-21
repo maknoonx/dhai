@@ -1,0 +1,333 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}إدارة العملاء{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/customers/customers_list.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="customers-page">
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card stat-purple">
+            <div class="stat-content">
+                <div class="stat-info">
+                    <div class="stat-label">إجمالي العملاء</div>
+                    <div class="stat-value">{{ stats.total }}</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-blue">
+            <div class="stat-content">
+                <div class="stat-info">
+                    <div class="stat-label">عدد الذكور</div>
+                    <div class="stat-value">{{ stats.male }}</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-pink">
+            <div class="stat-content">
+                <div class="stat-info">
+                    <div class="stat-label">عدد الإناث</div>
+                    <div class="stat-value">{{ stats.female }}</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="stat-card stat-green">
+            <div class="stat-content">
+                <div class="stat-info">
+                    <div class="stat-label">عملاء جدد هذا الشهر</div>
+                    <div class="stat-value">{{ stats.new_this_month }}</div>
+                </div>
+                <div class="stat-icon">
+                    <i class="fas fa-user-plus"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters and Search -->
+    <div class="filters-section">
+        <div class="filters-header">
+            <div class="search-box">
+                <input type="text" 
+                       id="searchInput" 
+                       placeholder="ابحث عن عميل بالاسم أو رقم الجوال..."
+                       value="{{ search_query }}">
+                <i class="fas fa-search"></i>
+            </div>
+
+            <button class="btn-add" onclick="showAddModal()">
+                <i class="fas fa-user-plus"></i>
+                <span>إضافة عميل جديد</span>
+            </button>
+        </div>
+
+        <div class="date-filters">
+            <i class="fas fa-filter filter-icon"></i>
+            <span class="filter-label">تاريخ التسجيل:</span>
+            
+            <div class="date-group">
+                <label>من</label>
+                <input type="date" id="dateFrom" value="{{ date_from }}">
+            </div>
+            
+            <div class="date-group">
+                <label>إلى</label>
+                <input type="date" id="dateTo" value="{{ date_to }}">
+            </div>
+
+            {% if date_from or date_to %}
+            <button class="btn-clear-filter" onclick="clearFilters()">
+                إزالة الفلتر
+            </button>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Customers Table -->
+    <div class="table-container">
+        <table class="customers-table">
+            <thead>
+                <tr>
+                    <th>رقم العميل</th>
+                    <th>الاسم</th>
+                    <th>معلومات الاتصال</th>
+                    <th>العنوان</th>
+                    <th>تاريخ التسجيل</th>
+                    <th>إجمالي المشتريات</th>
+                    <th>الجنس</th>
+                    <th>العمر</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td>{{ customer.customer_id }}</td>
+                    <td class="customer-name">{{ customer.name }}</td>
+                    <td>
+                        <div class="contact-info">
+                            <div class="contact-item">
+                                <i class="fas fa-phone"></i>
+                                <span>{{ customer.phone }}</span>
+                            </div>
+                            {% if customer.email %}
+                            <div class="contact-item">
+                                <i class="fas fa-envelope"></i>
+                                <span>{{ customer.email }}</span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td>
+                        {% if customer.address %}
+                        <div class="address-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>{{ customer.address }}</span>
+                        </div>
+                        {% else %}
+                        <span class="text-muted">-</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <div class="date-item">
+                            <i class="fas fa-calendar"></i>
+                            <span>{{ customer.join_date }}</span>
+                        </div>
+                    </td>
+                    <td class="purchases">{{ customer.total_purchases|floatformat:0 }} ريال</td>
+                    <td>
+                        <span class="badge badge-{{ customer.gender }}">{{ customer.gender }}</span>
+                    </td>
+                    <td>{{ customer.age|default:"-" }}</td>
+                    <td>
+                        <div class="actions">
+                            <a href="{% url 'customers:profile' customer.pk %}" 
+                               class="btn-action btn-view" 
+                               title="عرض ملف العميل">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <button class="btn-action btn-edit" 
+                                    onclick="showEditModal({{ customer.pk }})" 
+                                    title="تعديل بيانات العميل">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-action btn-delete" 
+                                    onclick="showDeleteModal({{ customer.pk }}, '{{ customer.name }}')" 
+                                    title="حذف العميل">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="no-data">لا توجد نتائج</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    {% if total_pages > 1 %}
+    <div class="pagination">
+        <div class="pagination-info">
+            عرض {{ start_index }} - {{ end_index }} من أصل {{ total_customers }} عميل
+        </div>
+        
+        <div class="pagination-controls">
+            {% if current_page > 1 %}
+            <button class="btn-page" onclick="goToPage({{ current_page|add:'-1' }})">
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            {% else %}
+            <button class="btn-page" disabled>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+            {% endif %}
+
+            {% for page in total_pages|make_list %}
+            <button class="btn-page {% if forloop.counter == current_page %}active{% endif %}" 
+                    onclick="goToPage({{ forloop.counter }})">
+                {{ forloop.counter }}
+            </button>
+            {% endfor %}
+
+            {% if current_page < total_pages %}
+            <button class="btn-page" onclick="goToPage({{ current_page|add:'1' }})">
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            {% else %}
+            <button class="btn-page" disabled>
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add/Edit Customer Modal -->
+<div id="customerModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2 id="modalTitle">إضافة عميل جديد</h2>
+            <button class="btn-close" onclick="closeModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="customerForm" method="POST">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>الاسم الثلاثي <span class="required">*</span></label>
+                    <input type="text" name="name" id="customerName" required 
+                           placeholder="الاسم الأول الثاني الثالث">
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>رقم الجوال <span class="required">*</span></label>
+                        <input type="tel" name="phone" id="customerPhone" required 
+                               placeholder="5xxxxxxxx" maxlength="9" pattern="5[0-9]{8}">
+                        <small>يجب أن يبدأ بـ 5 ويتكون من 9 أرقام</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label>الجنس <span class="required">*</span></label>
+                        <select name="gender" id="customerGender" required>
+                            <option value="ذكر">ذكر</option>
+                            <option value="أنثى">أنثى</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>العمر (اختياري)</label>
+                        <input type="number" name="age" id="customerAge" 
+                               min="1" max="120" placeholder="العمر">
+                    </div>
+
+                    <div class="form-group">
+                        <label>البريد الإلكتروني (اختياري)</label>
+                        <input type="email" name="email" id="customerEmail" 
+                               placeholder="example@email.com">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>العنوان (اختياري)</label>
+                    <input type="text" name="address" id="customerAddress" 
+                           placeholder="المدينة، الحي">
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-save"></i>
+                    <span id="submitText">إضافة العميل</span>
+                </button>
+                <button type="button" class="btn-cancel" onclick="closeModal()">
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content modal-small">
+        <div class="modal-header">
+            <h2>تأكيد حذف العميل</h2>
+            <button class="btn-close" onclick="closeDeleteModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <p>هل أنت متأكد من أنك تريد حذف العميل <strong id="deleteCustomerName"></strong>؟</p>
+            <p class="warning-text">
+                <i class="fas fa-exclamation-triangle"></i>
+                تحذير: لن تتمكن من استرجاع البيانات بعد الحذف.
+            </p>
+        </div>
+
+        <div class="modal-footer">
+            <form id="deleteForm" method="POST">
+                {% csrf_token %}
+                <button type="submit" class="btn-delete-confirm">
+                    <i class="fas fa-trash"></i>
+                    حذف العميل
+                </button>
+                <button type="button" class="btn-cancel" onclick="closeDeleteModal()">
+                    إلغاء
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/customers/customers_list.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,466 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تقرير الأرباح{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/reports/reports.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="report-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-chart-pie"></i>
+                تقرير الأرباح
+            </h1>
+            <p class="subtitle">من {{ date_from }} إلى {{ date_to }}</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'reports:dashboard' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة
+            </a>
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i>
+                طباعة
+            </button>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="filter-section">
+        <form method="GET" class="date-selector">
+            <label>من تاريخ:</label>
+            <input type="date" name="date_from" value="{{ date_from|date:'Y-m-d' }}">
+            
+            <label>إلى تاريخ:</label>
+            <input type="date" name="date_to" value="{{ date_to|date:'Y-m-d' }}">
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i>
+                بحث
+            </button>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));">
+        <div class="summary-card sales">
+            <div class="card-icon">
+                <i class="fas fa-dollar-sign"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_revenue|floatformat:2 }}</h3>
+                <p>إجمالي الإيرادات</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card returns">
+            <div class="card-icon">
+                <i class="fas fa-money-bill"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_cost|floatformat:2 }}</h3>
+                <p>إجمالي التكاليف</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card payments">
+            <div class="card-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_profit|floatformat:2 }}</h3>
+                <p>صافي الربح</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card collected">
+            <div class="card-icon">
+                <i class="fas fa-percentage"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ profit_margin|floatformat:1 }}%</h3>
+                <p>هامش الربح</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profit Summary Chart -->
+    <div class="chart-card" style="margin-bottom: 2rem;">
+        <div class="chart-header">
+            <h3>
+                <i class="fas fa-chart-bar"></i>
+                مقارنة الإيرادات والتكاليف والأرباح
+            </h3>
+        </div>
+        <div class="chart-body">
+            <canvas id="profitSummaryChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Profit Breakdown -->
+    <div class="profit-breakdown">
+        <div class="breakdown-card revenue">
+            <div class="breakdown-header">
+                <i class="fas fa-arrow-up"></i>
+                <h4>الإيرادات</h4>
+            </div>
+            <div class="breakdown-amount">{{ total_revenue|floatformat:2 }} ر.س</div>
+            <div class="breakdown-bar">
+                <div class="bar-fill" style="width: 100%; background: #27ae60;"></div>
+            </div>
+        </div>
+
+        <div class="breakdown-card cost">
+            <div class="breakdown-header">
+                <i class="fas fa-arrow-down"></i>
+                <h4>التكاليف</h4>
+            </div>
+            <div class="breakdown-amount">{{ total_cost|floatformat:2 }} ر.س</div>
+            <div class="breakdown-bar">
+                <div class="bar-fill" style="width: {% if total_revenue > 0 %}{% widthratio total_cost total_revenue 100 %}{% else %}0{% endif %}%; background: #e74c3c;"></div>
+            </div>
+        </div>
+
+        <div class="breakdown-card profit">
+            <div class="breakdown-header">
+                <i class="fas fa-equals"></i>
+                <h4>صافي الربح</h4>
+            </div>
+            <div class="breakdown-amount">{{ total_profit|floatformat:2 }} ر.س</div>
+            <div class="breakdown-bar">
+                <div class="bar-fill" style="width: {% if total_revenue > 0 %}{% widthratio total_profit total_revenue 100 %}{% else %}0{% endif %}%; background: #4A9EAD;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Profits Table -->
+    <div class="table-section">
+        <div class="section-header">
+            <h3>
+                <i class="fas fa-box-open"></i>
+                الأرباح حسب المنتج (أعلى 20 منتج)
+            </h3>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>اسم المنتج</th>
+                        <th>الكمية المباعة</th>
+                        <th>الإيرادات</th>
+                        <th>التكلفة</th>
+                        <th>الربح</th>
+                        <th>هامش الربح</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in product_profits %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ item.product_name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.revenue|floatformat:2 }} ر.س</td>
+                        <td>{{ item.cost|floatformat:2 }} ر.س</td>
+                        <td style="font-weight: 600;">
+                            {% if item.profit > 0 %}
+                            <span style="color: #27ae60;">+{{ item.profit|floatformat:2 }} ر.س</span>
+                            {% else %}
+                            <span style="color: #e74c3c;">{{ item.profit|floatformat:2 }} ر.س</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.revenue > 0 %}
+                            {% with margin=item.profit|floatformat:2|add:"0"|floatformat:0 %}
+                            {% with rev=item.revenue|floatformat:2|add:"0"|floatformat:0 %}
+                            {% widthratio item.profit item.revenue 100 %}%
+                            {% endwith %}
+                            {% endwith %}
+                            {% else %}
+                            0%
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" style="text-align: center; color: #999;">لا توجد بيانات</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot style="background: #f8f9fa; font-weight: 600;">
+                    <tr>
+                        <td colspan="3" style="text-align: left;">الإجمالي:</td>
+                        <td>{{ total_revenue|floatformat:2 }} ر.س</td>
+                        <td>{{ total_cost|floatformat:2 }} ر.س</td>
+                        <td>
+                            <span style="color: #27ae60;">+{{ total_profit|floatformat:2 }} ر.س</span>
+                        </td>
+                        <td>{{ profit_margin|floatformat:1 }}%</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+
+    <!-- Profit Analysis -->
+    <div class="analysis-section">
+        <div class="analysis-card">
+            <h3>
+                <i class="fas fa-lightbulb"></i>
+                تحليل الأرباح
+            </h3>
+            <div class="analysis-content">
+                <div class="analysis-item">
+                    <span class="analysis-label">معدل الربح لكل فاتورة:</span>
+                    <span class="analysis-value">
+                        {% if total_revenue > 0 %}
+                        {{ total_profit|floatformat:2 }} ر.س
+                        {% else %}
+                        0.00 ر.س
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="analysis-item">
+                    <span class="analysis-label">نسبة التكلفة من الإيرادات:</span>
+                    <span class="analysis-value">
+                        {% if total_revenue > 0 %}
+                        {% widthratio total_cost total_revenue 100 %}%
+                        {% else %}
+                        0%
+                        {% endif %}
+                    </span>
+                </div>
+                <div class="analysis-item">
+                    <span class="analysis-label">نسبة الربح من الإيرادات:</span>
+                    <span class="analysis-value">
+                        {{ profit_margin|floatformat:1 }}%
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <div class="analysis-card">
+            <h3>
+                <i class="fas fa-info-circle"></i>
+                ملاحظات
+            </h3>
+            <div class="analysis-content">
+                <ul class="notes-list">
+                    <li>
+                        {% if profit_margin > 30 %}
+                        <i class="fas fa-check-circle" style="color: #27ae60;"></i>
+                        هامش ربح ممتاز (أكثر من 30%)
+                        {% elif profit_margin > 15 %}
+                        <i class="fas fa-check-circle" style="color: #f39c12;"></i>
+                        هامش ربح جيد (15-30%)
+                        {% else %}
+                        <i class="fas fa-exclamation-triangle" style="color: #e74c3c;"></i>
+                        هامش ربح منخفض (أقل من 15%)
+                        {% endif %}
+                    </li>
+                    <li>
+                        <i class="fas fa-info-circle" style="color: #3498db;"></i>
+                        الأرباح محسوبة على أساس سعر التكلفة المسجل
+                    </li>
+                    <li>
+                        <i class="fas fa-info-circle" style="color: #3498db;"></i>
+                        الخدمات الإضافية غير محسوبة في التكلفة
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.profit-breakdown {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.breakdown-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.breakdown-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+}
+
+.breakdown-header i {
+    font-size: 1.5rem;
+}
+
+.breakdown-card.revenue .breakdown-header i {
+    color: #27ae60;
+}
+
+.breakdown-card.cost .breakdown-header i {
+    color: #e74c3c;
+}
+
+.breakdown-card.profit .breakdown-header i {
+    color: #4A9EAD;
+}
+
+.breakdown-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: #2c3e50;
+}
+
+.breakdown-amount {
+    font-size: 1.8rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin-bottom: 1rem;
+}
+
+.breakdown-bar {
+    height: 8px;
+    background: #ecf0f1;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bar-fill {
+    height: 100%;
+    transition: width 0.3s ease;
+}
+
+.analysis-section {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.analysis-card {
+    background: white;
+    padding: 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.analysis-card h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0 0 1rem 0;
+    color: #2c3e50;
+    font-size: 1.1rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.analysis-card h3 i {
+    color: #4A9EAD;
+}
+
+.analysis-content {
+    font-size: 0.95rem;
+}
+
+.analysis-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.analysis-item:last-child {
+    border-bottom: none;
+}
+
+.analysis-label {
+    color: #7f8c8d;
+}
+
+.analysis-value {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.notes-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.notes-list li {
+    padding: 0.75rem 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.notes-list li:last-child {
+    border-bottom: none;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Profit Summary Chart
+    const profitSummaryCtx = document.getElementById('profitSummaryChart');
+    
+    if (profitSummaryCtx) {
+        new Chart(profitSummaryCtx, {
+            type: 'bar',
+            data: {
+                labels: ['الإيرادات', 'التكاليف', 'الأرباح'],
+                datasets: [{
+                    data: [
+                        {{ total_revenue }},
+                        {{ total_cost }},
+                        {{ total_profit }}
+                    ],
+                    backgroundColor: [
+                        '#27ae60',
+                        '#e74c3c',
+                        '#4A9EAD'
+                    ],
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + ' ر.س';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

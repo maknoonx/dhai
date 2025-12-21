@@ -1,0 +1,376 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.item_name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/stock/product_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="product-detail-page">
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <a href="{% url 'stock:dashboard' %}">
+            <i class="fas fa-home"></i>
+            لوحة المخزون
+        </a>
+        <i class="fas fa-chevron-left"></i>
+        <a href="{% url 'stock:products' %}">المنتجات</a>
+        <i class="fas fa-chevron-left"></i>
+        <span>{{ product.item_name }}</span>
+    </div>
+
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>{{ product.item_name }}</h1>
+            <div class="product-badges">
+                <span class="badge {{ product.stock_status_color }}">
+                    {{ product.stock_status }}
+                </span>
+                {% if product.is_featured %}
+                <span class="badge featured">
+                    <i class="fas fa-star"></i>
+                    مميز
+                </span>
+                {% endif %}
+            </div>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-primary" onclick="showStockModal()">
+                <i class="fas fa-boxes"></i>
+                تعديل الكمية
+            </button>
+            <button class="btn btn-secondary" onclick="window.print()">
+                <i class="fas fa-print"></i>
+                طباعة
+            </button>
+            <a href="{% url 'stock:products' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="detail-grid">
+        <!-- Left Column -->
+        <div class="main-column">
+            <!-- Product Image -->
+            <div class="section-card">
+                <div class="product-image-large">
+                    {% if product.image %}
+                    <img src="{{ product.image.url }}" alt="{{ product.item_name }}">
+                    {% else %}
+                    <div class="no-image">
+                        <i class="fas fa-image"></i>
+                        <p>لا توجد صورة</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Barcode -->
+            <div class="section-card">
+                <h2 class="section-title">
+                    <i class="fas fa-barcode"></i>
+                    الباركود
+                </h2>
+                <div class="barcode-display">
+                    <svg id="barcodeCanvas"></svg>
+                    <p class="barcode-number">{{ product.barcode }}</p>
+                </div>
+            </div>
+
+            <!-- Stock Movements -->
+            <div class="section-card">
+                <h2 class="section-title">
+                    <i class="fas fa-exchange-alt"></i>
+                    حركة المخزون
+                </h2>
+                <div class="movements-table">
+                    {% for movement in movements %}
+                    <div class="movement-row">
+                        <div class="movement-icon {{ movement.movement_type_color }}">
+                            <i class="fas {{ movement.movement_type_icon }}"></i>
+                        </div>
+                        <div class="movement-info">
+                            <div class="movement-type">
+                                {{ movement.get_movement_type_display }}
+                            </div>
+                            <div class="movement-date">
+                                {{ movement.created_at|date:"Y-m-d H:i" }}
+                            </div>
+                            {% if movement.reference %}
+                            <div class="movement-reference">
+                                {{ movement.reference }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="movement-quantity">
+                            <span class="qty-change {{ movement.movement_type_color }}">
+                                {% if movement.movement_type == 'in' or movement.movement_type == 'return' %}+{% else %}-{% endif %}{{ movement.quantity }}
+                            </span>
+                        </div>
+                        <div class="movement-result">
+                            <span class="label">النتيجة:</span>
+                            <span class="value">{{ movement.new_quantity }}</span>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="empty-state-small">
+                        <i class="fas fa-inbox"></i>
+                        <p>لا توجد حركات</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="side-column">
+            <!-- Stock Info -->
+            <div class="section-card">
+                <h2 class="section-title">
+                    <i class="fas fa-box"></i>
+                    معلومات المخزون
+                </h2>
+                <div class="info-list">
+                    <div class="info-item highlight">
+                        <span class="label">الكمية المتوفرة</span>
+                        <span class="value big">{{ product.quantity }} قطعة</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">الحد الأدنى</span>
+                        <span class="value">{{ product.min_quantity }} قطعة</span>
+                    </div>
+                    {% if product.box_number %}
+                    <div class="info-item">
+                        <span class="label">رقم الصندوق</span>
+                        <span class="value">{{ product.box_number }}</span>
+                    </div>
+                    {% endif %}
+                    {% if product.sku %}
+                    <div class="info-item">
+                        <span class="label">SKU</span>
+                        <span class="value">{{ product.sku }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Prices -->
+            <div class="section-card">
+                <h2 class="section-title">
+                    <i class="fas fa-tag"></i>
+                    الأسعار والأرباح
+                </h2>
+                <div class="info-list">
+                    <div class="info-item">
+                        <span class="label">سعر التكلفة</span>
+                        <span class="value">{{ product.cost_price }} ريال</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">سعر البيع</span>
+                        <span class="value price">{{ product.selling_price }} ريال</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">هامش الربح</span>
+                        <span class="value profit">{{ product.profit_margin|floatformat:1 }}%</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">الربح للقطعة</span>
+                        <span class="value">{{ product.profit_amount }} ريال</span>
+                    </div>
+                    <div class="info-item highlight">
+                        <span class="label">القيمة الإجمالية</span>
+                        <span class="value big">{{ product.total_cost_value|floatformat:2 }} ريال</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category & Supplier -->
+            <div class="section-card">
+                <h2 class="section-title">
+                    <i class="fas fa-tags"></i>
+                    التصنيف والمورد
+                </h2>
+                <div class="info-list">
+                    {% if product.category %}
+                    <div class="info-item">
+                        <span class="label">التصنيف</span>
+                        <a href="{% url 'stock:categories' %}" class="value link">
+                            <i class="{{ product.category.icon }}"></i>
+                            {{ product.category.name }}
+                        </a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if product.supplier %}
+                    <div class="info-item">
+                        <span class="label">المورد</span>
+                        <a href="{% url 'stock:suppliers' %}" class="value link">
+                            <i class="fas fa-building"></i>
+                            {{ product.supplier.company_name }}
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Description -->
+            {% if product.description %}
+            <div class="section-card">
+                <h2 class="section-title">
+                    <i class="fas fa-align-right"></i>
+                    الوصف
+                </h2>
+                <p class="description-text">{{ product.description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Notes -->
+            {% if product.notes %}
+            <div class="section-card">
+                <h2 class="section-title">
+                    <i class="fas fa-sticky-note"></i>
+                    ملاحظات
+                </h2>
+                <p class="notes-text">{{ product.notes }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Dates -->
+            <div class="section-card">
+                <h2 class="section-title">
+                    <i class="fas fa-clock"></i>
+                    التواريخ
+                </h2>
+                <div class="info-list">
+                    <div class="info-item">
+                        <span class="label">تاريخ الإضافة</span>
+                        <span class="value">{{ product.created_at|date:"Y-m-d H:i" }}</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="label">آخر تحديث</span>
+                        <span class="value">{{ product.updated_at|date:"Y-m-d H:i" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stock Adjustment Modal -->
+<div id="stockModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>تعديل كمية المخزون</h2>
+            <button class="btn-close" onclick="closeStockModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form method="POST" action="#">
+            {% csrf_token %}
+            <div class="modal-body">
+                <div class="current-stock">
+                    <i class="fas fa-box"></i>
+                    الكمية الحالية: <strong>{{ product.quantity }}</strong> قطعة
+                </div>
+                
+                <div class="adjustment-type">
+                    <label class="radio-option">
+                        <input type="radio" name="adjustment_type" value="add" checked>
+                        <span class="radio-label add">
+                            <i class="fas fa-plus"></i>
+                            إضافة كمية
+                        </span>
+                    </label>
+                    <label class="radio-option">
+                        <input type="radio" name="adjustment_type" value="subtract">
+                        <span class="radio-label subtract">
+                            <i class="fas fa-minus"></i>
+                            خصم كمية
+                        </span>
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label for="quantity">الكمية <span class="required">*</span></label>
+                    <input type="number" 
+                           id="quantity" 
+                           name="quantity" 
+                           min="1" 
+                           required
+                           autocomplete="off"
+                           placeholder="أدخل الكمية">
+                </div>
+                
+                <div class="form-group">
+                    <label for="reference">المرجع</label>
+                    <input type="text" 
+                           id="reference" 
+                           name="reference"
+                           autocomplete="off"
+                           placeholder="مثال: فاتورة #123">
+                </div>
+                
+                <div class="form-group">
+                    <label for="notes">ملاحظات</label>
+                    <textarea id="notes" 
+                              name="notes" 
+                              rows="3"
+                              autocomplete="off"
+                              placeholder="ملاحظات إضافية..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-save"></i>
+                    حفظ التعديل
+                </button>
+                <button type="button" class="btn btn-cancel" onclick="closeStockModal()">
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script src="{% static 'js/stock/product_detail.js' %}"></script>
+<script>
+// Generate barcode
+JsBarcode("#barcodeCanvas", "{{ product.barcode }}", {
+    format: "CODE128",
+    width: 2,
+    height: 80,
+    displayValue: false
+});
+
+function showStockModal() {
+    document.getElementById('stockModal').classList.add('active');
+}
+
+function closeStockModal() {
+    document.getElementById('stockModal').classList.remove('active');
+}
+
+// Close on outside click
+document.getElementById('stockModal')?.addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeStockModal();
+    }
+});
+
+// Close on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeStockModal();
+    }
+});
+</script>
+{% endblock %}

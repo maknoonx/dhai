@@ -1,0 +1,358 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تقرير الإيرادات{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/reports/reports.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="report-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-dollar-sign"></i>
+                تقرير الإيرادات العام
+            </h1>
+            <p class="subtitle">من {{ date_from }} إلى {{ date_to }}</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'reports:dashboard' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة
+            </a>
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i>
+                طباعة
+            </button>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="filter-section">
+        <form method="GET" class="date-selector">
+            <label>من تاريخ:</label>
+            <input type="date" name="date_from" value="{{ date_from|date:'Y-m-d' }}">
+            
+            <label>إلى تاريخ:</label>
+            <input type="date" name="date_to" value="{{ date_to|date:'Y-m-d' }}">
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i>
+                بحث
+            </button>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+        <div class="summary-card sales">
+            <div class="card-icon">
+                <i class="fas fa-file-invoice-dollar"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_sales_count }}</h3>
+                <p>عدد الفواتير</p>
+            </div>
+        </div>
+
+        <div class="summary-card sales">
+            <div class="card-icon">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_subtotal|floatformat:2 }}</h3>
+                <p>المجموع الفرعي</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card returns">
+            <div class="card-icon">
+                <i class="fas fa-tag"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_discount|floatformat:2 }}</h3>
+                <p>الخصومات</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card purchases">
+            <div class="card-icon">
+                <i class="fas fa-percentage"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_tax|floatformat:2 }}</h3>
+                <p>الضريبة (15%)</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card payments">
+            <div class="card-icon">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_revenue|floatformat:2 }}</h3>
+                <p>الإيرادات الإجمالية</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card collected">
+            <div class="card-icon">
+                <i class="fas fa-check-double"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_paid|floatformat:2 }}</h3>
+                <p>المبالغ المحصلة</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card remaining">
+            <div class="card-icon">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_remaining|floatformat:2 }}</h3>
+                <p>المبالغ المتبقية</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-section">
+        <div class="chart-card" style="grid-column: 1 / -1;">
+            <div class="chart-header">
+                <h3>
+                    <i class="fas fa-chart-area"></i>
+                    الإيرادات الشهرية
+                </h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="monthlyRevenueChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>
+                    <i class="fas fa-credit-card"></i>
+                    طرق الدفع
+                </h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="paymentMethodsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>
+                    <i class="fas fa-layer-group"></i>
+                    الإيرادات حسب التصنيف
+                </h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="categoryRevenueChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Methods Table -->
+    <div class="table-section">
+        <div class="section-header">
+            <h3>
+                <i class="fas fa-wallet"></i>
+                تفاصيل طرق الدفع
+            </h3>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>طريقة الدفع</th>
+                    <th>المبلغ الإجمالي</th>
+                    <th>النسبة من الإجمالي</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for method in payment_methods %}
+                <tr>
+                    <td>
+                        {% if method.payment_method == 'cash' %}
+                        <i class="fas fa-money-bill"></i> نقدي
+                        {% elif method.payment_method == 'card' %}
+                        <i class="fas fa-credit-card"></i> بطاقة
+                        {% elif method.payment_method == 'transfer' %}
+                        <i class="fas fa-exchange-alt"></i> تحويل
+                        {% elif method.payment_method == 'mada' %}
+                        <i class="fas fa-credit-card"></i> مدى
+                        {% else %}
+                        {{ method.payment_method }}
+                        {% endif %}
+                    </td>
+                    <td>{{ method.total|floatformat:2 }} ر.س</td>
+                    <td>
+                        {% widthratio method.total total_paid 100 %}%
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #999;">لا توجد معاملات</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Category Revenue Table -->
+    <div class="table-section">
+        <div class="section-header">
+            <h3>
+                <i class="fas fa-tags"></i>
+                الإيرادات حسب التصنيف
+            </h3>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>التصنيف</th>
+                    <th>الإيرادات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for category in category_revenue %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ category.product__category__name|default:"غير مصنف" }}</td>
+                    <td>{{ category.total|floatformat:2 }} ر.س</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #999;">لا توجد بيانات</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Monthly Revenue Chart
+    const monthlyData = {{ monthly_revenue|safe }};
+    const monthlyCtx = document.getElementById('monthlyRevenueChart');
+    
+    if (monthlyCtx) {
+        new Chart(monthlyCtx, {
+            type: 'line',
+            data: {
+                labels: monthlyData.map(d => d.month),
+                datasets: [{
+                    label: 'الإيرادات (ر.س)',
+                    data: monthlyData.map(d => d.amount),
+                    borderColor: '#4A9EAD',
+                    backgroundColor: 'rgba(74, 158, 173, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + ' ر.س';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Payment Methods Chart
+    const paymentCtx = document.getElementById('paymentMethodsChart');
+    
+    if (paymentCtx) {
+        const methodLabels = {
+            'cash': 'نقدي',
+            'card': 'بطاقة',
+            'transfer': 'تحويل',
+            'mada': 'مدى',
+            'later': 'آجل'
+        };
+        
+        new Chart(paymentCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [{% for m in payment_methods %}methodLabels['{{ m.payment_method }}'] || '{{ m.payment_method }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                datasets: [{
+                    data: [{% for m in payment_methods %}{{ m.total }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                    backgroundColor: [
+                        '#4A9EAD',
+                        '#27ae60',
+                        '#f39c12',
+                        '#9b59b6',
+                        '#e74c3c'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    // Category Revenue Chart
+    const categoryCtx = document.getElementById('categoryRevenueChart');
+    
+    if (categoryCtx) {
+        new Chart(categoryCtx, {
+            type: 'bar',
+            data: {
+                labels: [{% for c in category_revenue|slice:":5" %}'{{ c.product__category__name|default:"غير مصنف"|truncatechars:15 }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'الإيرادات (ر.س)',
+                    data: [{% for c in category_revenue|slice:":5" %}{{ c.total }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                    backgroundColor: '#4A9EAD',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

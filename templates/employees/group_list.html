@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}المجموعات والصلاحيات{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/employees/employees.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="employees-page">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-user-shield"></i>
+                المجموعات والصلاحيات
+            </h1>
+            <p class="subtitle">{{ groups.count }} مجموعة</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'employees:list' %}" class="btn btn-outline">
+                <i class="fas fa-users"></i>
+                الموظفين
+            </a>
+            <a href="{% url 'employees:group_add' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                إضافة مجموعة
+            </a>
+        </div>
+    </div>
+
+    <!-- Groups Grid -->
+    <div class="groups-grid">
+        {% for group in groups %}
+        <div class="group-card">
+            <div class="group-header">
+                <div class="group-icon">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <div class="group-info">
+                    <h3>{{ group.name_arabic }}</h3>
+                    <p class="group-code">{{ group.name }}</p>
+                </div>
+            </div>
+
+            <div class="group-description">
+                {{ group.description|default:"لا يوجد وصف"|truncatewords:15 }}
+            </div>
+
+            <div class="group-stats">
+                <div class="stat-item">
+                    <i class="fas fa-users"></i>
+                    <span>{{ group.employees_count }} موظف</span>
+                </div>
+            </div>
+
+            <div class="group-permissions">
+                <h4>الصلاحيات:</h4>
+                <div class="permissions-list">
+                    {% if group.can_view_reports %}
+                    <span class="permission-badge"><i class="fas fa-check"></i> عرض التقارير</span>
+                    {% endif %}
+                    {% if group.can_manage_sales %}
+                    <span class="permission-badge"><i class="fas fa-check"></i> إدارة المبيعات</span>
+                    {% endif %}
+                    {% if group.can_manage_inventory %}
+                    <span class="permission-badge"><i class="fas fa-check"></i> إدارة المخزون</span>
+                    {% endif %}
+                    {% if group.can_manage_customers %}
+                    <span class="permission-badge"><i class="fas fa-check"></i> إدارة العملاء</span>
+                    {% endif %}
+                    {% if group.can_manage_suppliers %}
+                    <span class="permission-badge"><i class="fas fa-check"></i> إدارة الموردين</span>
+                    {% endif %}
+                    {% if group.can_view_financial %}
+                    <span class="permission-badge"><i class="fas fa-check"></i> عرض البيانات المالية</span>
+                    {% endif %}
+                    {% if group.can_manage_settings %}
+                    <span class="permission-badge"><i class="fas fa-check"></i> إدارة الإعدادات</span>
+                    {% endif %}
+                    
+                    {% if not group.can_view_reports and not group.can_manage_sales and not group.can_manage_inventory and not group.can_manage_customers and not group.can_manage_suppliers and not group.can_view_financial and not group.can_manage_settings %}
+                    <span class="no-permissions">لا توجد صلاحيات</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="group-actions">
+                <a href="{% url 'employees:group_detail' group.pk %}" class="btn-action btn-view" title="عرض">
+                    <i class="fas fa-eye"></i>
+                </a>
+                <a href="{% url 'employees:group_edit' group.pk %}" class="btn-action btn-edit" title="تعديل">
+                    <i class="fas fa-edit"></i>
+                </a>
+                <button onclick="confirmDelete({{ group.pk }}, '{{ group.name_arabic }}')" 
+                        class="btn-action btn-delete" 
+                        title="حذف">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <div class="no-data">
+            <i class="fas fa-user-shield"></i>
+            <p>لا توجد مجموعات</p>
+            <a href="{% url 'employees:group_add' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                إضافة مجموعة جديدة
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>تأكيد الحذف</h3>
+            <button class="btn-close" onclick="closeDeleteModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <form id="deleteForm" method="POST">
+            {% csrf_token %}
+            <div class="modal-body">
+                <p>هل أنت متأكد من حذف المجموعة <strong id="groupName"></strong>؟</p>
+                <p class="text-warning">سيتم إزالة جميع الموظفين من هذه المجموعة.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-danger">حذف</button>
+                <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">إلغاء</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+.groups-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.group-card {
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+}
+
+.group-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+    border-color: #4A9EAD;
+}
+
+.group-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.group-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(74, 158, 173, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #4A9EAD;
+}
+
+.group-info h3 {
+    margin: 0 0 0.25rem 0;
+    color: #2c3e50;
+    font-size: 1.2rem;
+}
+
+.group-code {
+    margin: 0;
+    color: #7f8c8d;
+    font-size: 0.85rem;
+}
+
+.group-description {
+    color: #495057;
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    line-height: 1.6;
+}
+
+.group-stats {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 0.75rem;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.stat-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #495057;
+    font-size: 0.9rem;
+}
+
+.stat-item i {
+    color: #4A9EAD;
+}
+
+.group-permissions h4 {
+    margin: 0 0 0.75rem 0;
+    color: #2c3e50;
+    font-size: 0.95rem;
+}
+
+.permissions-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.permission-badge {
+    padding: 0.35rem 0.75rem;
+    background: #d4edda;
+    color: #155724;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.permission-badge i {
+    font-size: 0.7rem;
+}
+
+.no-permissions {
+    color: #7f8c8d;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+.group-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e9ecef;
+}
+
+.btn-delete {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-delete:hover {
+    background: #c0392b;
+}
+
+.btn-danger {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c0392b;
+}
+
+.text-warning {
+    color: #f39c12;
+    font-size: 0.9rem;
+    margin-top: 0.5rem;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmDelete(groupId, groupName) {
+    const modal = document.getElementById('deleteModal');
+    const form = document.getElementById('deleteForm');
+    const nameElement = document.getElementById('groupName');
+    
+    form.action = `/employees/groups/${groupId}/delete/`;
+    nameElement.textContent = groupName;
+    
+    modal.style.display = 'flex';
+    modal.classList.add('active');
+}
+
+function closeDeleteModal() {
+    const modal = document.getElementById('deleteModal');
+    modal.style.display = 'none';
+    modal.classList.remove('active');
+}
+
+// Close modal on outside click
+document.getElementById('deleteModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeDeleteModal();
+    }
+});
+
+// Close on Escape
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        closeDeleteModal();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,345 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}لوحة التقارير{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/reports/reports.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="reports-dashboard">
+    <!-- Page Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-chart-line"></i>
+                لوحة التحكم والتقارير
+            </h1>
+            <p class="subtitle">من {{ date_from }} إلى {{ date_to }}</p>
+        </div>
+    </div>
+
+    <!-- Quick Report Buttons -->
+    <div class="quick-reports">
+        <a href="{% url 'reports:daily_balance' %}" class="report-btn primary">
+            <i class="fas fa-calendar-day"></i>
+            <span>الموازنة اليومية</span>
+        </a>
+        <a href="{% url 'reports:revenue' %}" class="report-btn success">
+            <i class="fas fa-dollar-sign"></i>
+            <span>تقرير الإيرادات</span>
+        </a>
+        <a href="{% url 'reports:inventory' %}" class="report-btn warning">
+            <i class="fas fa-boxes"></i>
+            <span>تقرير المخزون</span>
+        </a>
+        <a href="{% url 'reports:sales' %}" class="report-btn info">
+            <i class="fas fa-shopping-cart"></i>
+            <span>تقرير المبيعات</span>
+        </a>
+        <a href="{% url 'reports:profit' %}" class="report-btn purple">
+            <i class="fas fa-chart-pie"></i>
+            <span>تقرير الأرباح</span>
+        </a>
+        <a href="{% url 'reports:vat' %}" class="report-btn danger">
+            <i class="fas fa-percentage"></i>
+            <span>تقرير ضريبة القيمة المضافة</span>
+        </a>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="stats-grid">
+        <div class="stat-card sales">
+            <div class="stat-icon">
+                <i class="fas fa-shopping-bag"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_sales_count }}</h3>
+                <p>إجمالي المبيعات</p>
+                <span class="stat-amount">{{ total_sales_amount|floatformat:2 }} ر.س</span>
+            </div>
+        </div>
+
+        <div class="stat-card revenue">
+            <div class="stat-icon">
+                <i class="fas fa-money-bill-wave"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_paid|floatformat:2 }} ر.س</h3>
+                <p>المبالغ المحصلة</p>
+                <span class="stat-percent">{{ total_paid|floatformat:0 }}</span>
+            </div>
+        </div>
+
+        <div class="stat-card pending">
+            <div class="stat-icon">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_remaining|floatformat:2 }} ر.س</h3>
+                <p>المبالغ المتبقية</p>
+            </div>
+        </div>
+
+        <div class="stat-card products">
+            <div class="stat-icon">
+                <i class="fas fa-box"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_products }}</h3>
+                <p>المنتجات النشطة</p>
+                {% if low_stock_products > 0 %}
+                <span class="stat-warning">{{ low_stock_products }} منخفض</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="stat-card customers">
+            <div class="stat-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="stat-details">
+                <h3>{{ total_customers }}</h3>
+                <p>إجمالي العملاء</p>
+                <span class="stat-new">+{{ new_customers }} جديد</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="charts-section">
+        <!-- Daily Sales Chart -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>
+                    <i class="fas fa-chart-bar"></i>
+                    المبيعات اليومية (آخر 7 أيام)
+                </h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="dailySalesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Top Products Chart -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>
+                    <i class="fas fa-star"></i>
+                    أفضل المنتجات مبيعاً
+                </h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="topProductsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Categories Chart -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>
+                    <i class="fas fa-layer-group"></i>
+                    المبيعات حسب التصنيف
+                </h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="categoriesChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Order Status Chart -->
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>
+                    <i class="fas fa-clipboard-list"></i>
+                    حالات الطلبات
+                </h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="orderStatusChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Products Table -->
+    <div class="table-section">
+        <div class="section-header">
+            <h3>
+                <i class="fas fa-trophy"></i>
+                أكثر المنتجات طلباً
+            </h3>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>اسم المنتج</th>
+                    <th>الكمية المباعة</th>
+                    <th>إجمالي المبيعات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in top_products %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ product.product__item_name }}</td>
+                    <td>{{ product.total_quantity }}</td>
+                    <td>{{ product.total_amount|floatformat:2 }} ر.س</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" style="text-align: center; color: #999;">لا توجد بيانات</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Daily Sales Chart
+    const dailySalesData = {{ daily_sales|safe }};
+    const dailySalesCtx = document.getElementById('dailySalesChart');
+    
+    if (dailySalesCtx) {
+        new Chart(dailySalesCtx, {
+            type: 'line',
+            data: {
+                labels: dailySalesData.map(d => d.date_ar),
+                datasets: [{
+                    label: 'المبيعات (ر.س)',
+                    data: dailySalesData.map(d => d.amount),
+                    borderColor: '#4A9EAD',
+                    backgroundColor: 'rgba(74, 158, 173, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + ' ر.س';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Top Products Chart
+    const topProductsCtx = document.getElementById('topProductsChart');
+    
+    if (topProductsCtx) {
+        new Chart(topProductsCtx, {
+            type: 'bar',
+            data: {
+                labels: [{% for p in top_products %}'{{ p.product__item_name|truncatechars:20 }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'الكمية',
+                    data: [{% for p in top_products %}{{ p.total_quantity }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                    backgroundColor: '#4A9EAD',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // Categories Chart
+    const categoriesCtx = document.getElementById('categoriesChart');
+    
+    if (categoriesCtx) {
+        new Chart(categoriesCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [{% for c in top_categories %}'{{ c.product__category__name }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                datasets: [{
+                    data: [{% for c in top_categories %}{{ c.total_amount }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                    backgroundColor: [
+                        '#4A9EAD',
+                        '#27ae60',
+                        '#f39c12',
+                        '#e74c3c',
+                        '#9b59b6'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+
+    // Order Status Chart
+    const orderStatusCtx = document.getElementById('orderStatusChart');
+    
+    if (orderStatusCtx) {
+        const statusLabels = {
+            'created': 'تم الإنشاء',
+            'lab': 'في المعمل',
+            'ready': 'جاهز',
+            'received': 'تم الاستلام',
+            'completed': 'مكتمل',
+            'cancelled': 'ملغي'
+        };
+        
+        new Chart(orderStatusCtx, {
+            type: 'pie',
+            data: {
+                labels: [{% for s in order_status %}statusLabels['{{ s.status }}'] || '{{ s.status }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                datasets: [{
+                    data: [{% for s in order_status %}{{ s.count }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                    backgroundColor: [
+                        '#3498db',
+                        '#f39c12',
+                        '#9b59b6',
+                        '#27ae60',
+                        '#4A9EAD',
+                        '#e74c3c'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

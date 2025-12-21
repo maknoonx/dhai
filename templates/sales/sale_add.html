@@ -1,0 +1,359 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}فاتورة جديدة{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sales/sales.css' %}">
+<link rel="stylesheet" href="{% static 'css/sales/sale_add_extra.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="sale-add-page">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-plus-circle"></i>
+                فاتورة جديدة
+            </h1>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'sales:list' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة
+            </a>
+        </div>
+    </div>
+
+    <form id="saleForm" method="POST" class="sale-form">
+        {% csrf_token %}
+
+        <!-- Customer Selection -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-user"></i>
+                معلومات العميل
+            </h3>
+            
+            <!-- Selected Customer Display -->
+            <div id="selectedCustomerDisplay" class="selected-customer-box" style="display: none;">
+                <div class="customer-card">
+                    <div class="customer-card-header">
+                        <div class="customer-info">
+                            <h4 id="displayCustomerName"></h4>
+                            <p id="displayCustomerDetails"></p>
+                        </div>
+                        <button type="button" class="btn-remove-customer" onclick="removeCustomer()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Search Customer Button -->
+            <div id="searchCustomerBtn" class="form-group">
+                <button type="button" class="btn btn-select-customer" onclick="showCustomerSearchModal()">
+                    <i class="fas fa-search"></i>
+                    اختر العميل
+                </button>
+            </div>
+
+            <!-- Hidden input for customer_id -->
+            <input type="hidden" id="customer_id" name="customer_id" required>
+        </div>
+
+        <!-- Products Section -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-box"></i>
+                المنتجات
+            </h3>
+            
+            <!-- Product Search Button -->
+            <div class="product-search-section">
+                <button type="button" class="btn btn-add-product" onclick="showProductSearchModal()">
+                    <i class="fas fa-plus"></i>
+                    إضافة منتج
+                </button>
+            </div>
+
+            <!-- Selected Products Table -->
+            <div class="selected-products" id="selectedProducts">
+                <table class="products-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 35%">المنتج</th>
+                            <th style="width: 12%">السعر</th>
+                            <th style="width: 10%">الكمية</th>
+                            <th style="width: 12%">الإجمالي</th>
+                            <th style="width: 26%">قياس (اختياري)</th>
+                            <th style="width: 5%"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                                لم يتم إضافة منتجات
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Add Service Button -->
+            <button type="button" class="btn btn-outline" onclick="addService()">
+                <i class="fas fa-plus"></i>
+                إضافة خدمة إضافية
+            </button>
+        </div>
+
+        <!-- Order Details -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-info-circle"></i>
+                تفاصيل الطلب
+            </h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="delivery_date">تاريخ التسليم المتوقع</label>
+                    <input type="date" id="delivery_date" name="delivery_date">
+                </div>
+
+                <div class="form-group">
+                    <label for="laboratory_id">المعمل (اختياري)</label>
+                    <select id="laboratory_id" name="laboratory_id">
+                        <option value="">-- لا يوجد --</option>
+                        {% for lab in laboratories %}
+                        <option value="{{ lab.id }}">{{ lab.laboratory_code }} - {{ lab.company_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="prescription_notes">ملاحظات القياس</label>
+                    <textarea id="prescription_notes" 
+                              name="prescription_notes" 
+                              rows="2"
+                              placeholder="ملاحظات خاصة بالقياس..."></textarea>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="notes">ملاحظات عامة</label>
+                    <textarea id="notes" 
+                              name="notes" 
+                              rows="2"
+                              placeholder="أي ملاحظات إضافية..."></textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Payment Section -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-credit-card"></i>
+                الدفع
+            </h3>
+
+            <!-- Amount Summary -->
+            <div class="amount-summary">
+                <div class="amount-row">
+                    <span>المجموع الفرعي:</span>
+                    <span id="subtotalDisplay">0.00 ر.س</span>
+                </div>
+                <div class="amount-row">
+                    <span>الخصم:</span>
+                    <span>
+                        <input type="number" 
+                               id="discount" 
+                               name="discount" 
+                               value="0" 
+                               min="0" 
+                               step="0.01"
+                               onchange="calculateTotal()"> ر.س
+                    </span>
+                </div>
+                <div class="amount-row">
+                    <span>الضريبة (15%):</span>
+                    <span id="taxDisplay">0.00 ر.س</span>
+                </div>
+                <div class="amount-row total">
+                    <span>الإجمالي:</span>
+                    <span id="totalDisplay">0.00 ر.س</span>
+                </div>
+            </div>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="payment_method">طريقة الدفع</label>
+                    <select id="payment_method" name="payment_method">
+                        {% for method in payment_methods %}
+                        <option value="{{ method.0 }}">{{ method.1 }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="paid_amount">المبلغ المدفوع الآن</label>
+                    <input type="number" 
+                           id="paid_amount" 
+                           name="paid_amount" 
+                           value="0" 
+                           min="0" 
+                           step="0.01"
+                           placeholder="0.00">
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden Fields -->
+        <input type="hidden" id="products" name="products" value="[]">
+        <input type="hidden" id="services" name="services" value="[]">
+
+        <!-- Submit Buttons -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-large">
+                <i class="fas fa-save"></i>
+                حفظ الفاتورة
+            </button>
+            <a href="{% url 'sales:list' %}" class="btn btn-cancel btn-large">
+                إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Customer Search Modal -->
+<div id="customerSearchModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h2>اختيار العميل</h2>
+            <button class="btn-close" onclick="closeCustomerSearchModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <!-- Search Input -->
+            <div class="search-box-modal">
+                <i class="fas fa-search"></i>
+                <input type="text" 
+                       id="customerSearchInput" 
+                       placeholder="ابحث بالاسم أو رقم الجوال..."
+                       onkeyup="searchCustomers()">
+            </div>
+
+            <!-- Search Results -->
+            <div class="search-results-modal" id="customerSearchResults">
+                {% for customer in customers %}
+                <div class="customer-result-item" 
+                     data-id="{{ customer.id }}"
+                     data-customer-id="{{ customer.customer_id }}"
+                     data-name="{{ customer.name }}"
+                     data-phone="{{ customer.phone }}"
+                     data-email="{{ customer.email|default:'' }}"
+                     onclick="selectCustomer(this)">
+                    <div class="customer-result-info">
+                        <h4>{{ customer.name }}</h4>
+                        <p>
+                            <span class="customer-id">{{ customer.customer_id }}</span>
+                            <span class="customer-phone">{{ customer.phone }}</span>
+                            {% if customer.email %}
+                            <span class="customer-email">{{ customer.email }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                    <i class="fas fa-chevron-left"></i>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Product Search Modal -->
+<div id="productSearchModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h2>اختيار المنتج</h2>
+            <button class="btn-close" onclick="closeProductSearchModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <!-- Search Input -->
+            <div class="search-box-modal">
+                <i class="fas fa-search"></i>
+                <input type="text" 
+                       id="productSearchInput" 
+                       placeholder="ابحث بالاسم أو الباركود..."
+                       onkeyup="searchProducts()">
+            </div>
+
+            <!-- Search Results -->
+            <div class="search-results-modal" id="productSearchResults">
+                {% for product in products %}
+                <div class="product-result-item" 
+                     data-id="{{ product.id }}"
+                     data-name="{{ product.item_name }}"
+                     data-price="{{ product.selling_price }}"
+                     data-quantity="{{ product.quantity }}"
+                     data-barcode="{{ product.barcode }}"
+                     onclick="selectProduct(this)">
+                    <div class="product-result-info">
+                        <h4>{{ product.item_name }}</h4>
+                        <p>
+                            <span class="product-barcode">{{ product.barcode }}</span>
+                            <span class="product-price">{{ product.selling_price }} ر.س</span>
+                            <span class="product-stock {% if product.quantity <= 0 %}out-of-stock{% elif product.is_low_stock %}low-stock{% endif %}">
+                                متوفر: {{ product.quantity }}
+                            </span>
+                        </p>
+                    </div>
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Service Modal -->
+<div id="serviceModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>إضافة خدمة</h2>
+            <button class="btn-close" onclick="closeServiceModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="service_name">اسم الخدمة</label>
+                <input type="text" 
+                       id="service_name" 
+                       placeholder="مثال: ضغط العدسة، تركيب إطار">
+            </div>
+            <div class="form-group">
+                <label for="service_price">السعر</label>
+                <input type="number" 
+                       id="service_price" 
+                       min="0" 
+                       step="0.01"
+                       placeholder="0.00">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-primary" onclick="addServiceToList()">
+                <i class="fas fa-plus"></i>
+                إضافة
+            </button>
+            <button type="button" class="btn btn-cancel" onclick="closeServiceModal()">
+                إلغاء
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/sales/sale_add.js' %}"></script>
+{% endblock %}

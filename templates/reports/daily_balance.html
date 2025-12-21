@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}الموازنة اليومية{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/reports/reports.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="report-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-calendar-day"></i>
+                تقرير الموازنة اليومية
+            </h1>
+            <p class="subtitle">{{ report_date|date:"l, d F Y" }}</p>
+        </div>
+        
+        <div class="header-actions">
+            {% if perms.settings.view_companysettings %}
+            <a href="{% url 'reports:dashboard' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة
+            </a>
+            {% endif %}
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i>
+                طباعة
+            </button>
+        </div>
+    </div>
+
+    <!-- Date Selector -->
+    <div class="filter-section">
+        <form method="GET" class="date-selector">
+            <label>اختر التاريخ:</label>
+            <input type="date" 
+                   name="date" 
+                   value="{{ report_date|date:'Y-m-d' }}"
+                   onchange="this.form.submit()">
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+        <div class="summary-card sales">
+            <div class="card-icon">
+                <i class="fas fa-shopping-cart"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_sales_count }}</h3>
+                <p>عدد الفواتير</p>
+                <span class="card-amount">{{ total_sales_amount|floatformat:2 }} ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card payments">
+            <div class="card-icon">
+                <i class="fas fa-money-bill"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_payments|floatformat:2 }}</h3>
+                <p>إجمالي المدفوعات</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card collected">
+            <div class="card-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_paid|floatformat:2 }}</h3>
+                <p>المبالغ المحصلة</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card remaining">
+            <div class="card-icon">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_remaining|floatformat:2 }}</h3>
+                <p>المبالغ المتبقية</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card purchases">
+            <div class="card-icon">
+                <i class="fas fa-arrow-down"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ purchases_count }}</h3>
+                <p>المشتريات</p>
+            </div>
+        </div>
+
+        <div class="summary-card returns">
+            <div class="card-icon">
+                <i class="fas fa-undo"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ returns_count }}</h3>
+                <p>المرتجعات</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>
+                    <i class="fas fa-clock"></i>
+                    المبيعات بالساعة
+                </h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="hourlySalesChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>
+                    <i class="fas fa-credit-card"></i>
+                    طرق الدفع
+                </h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="paymentMethodsChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Methods Table -->
+    <div class="table-section">
+        <div class="section-header">
+            <h3>
+                <i class="fas fa-list"></i>
+                تفاصيل طرق الدفع
+            </h3>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>طريقة الدفع</th>
+                    <th>عدد المعاملات</th>
+                    <th>المبلغ الإجمالي</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for method in payment_methods %}
+                <tr>
+                    <td>
+                        {% if method.payment_method == 'cash' %}
+                        <i class="fas fa-money-bill"></i> نقدي
+                        {% elif method.payment_method == 'card' %}
+                        <i class="fas fa-credit-card"></i> بطاقة
+                        {% elif method.payment_method == 'transfer' %}
+                        <i class="fas fa-exchange-alt"></i> تحويل
+                        {% elif method.payment_method == 'mada' %}
+                        <i class="fas fa-credit-card"></i> مدى
+                        {% else %}
+                        {{ method.payment_method }}
+                        {% endif %}
+                    </td>
+                    <td>-</td>
+                    <td>{{ method.total|floatformat:2 }} ر.س</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="3" style="text-align: center; color: #999;">لا توجد معاملات</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Recent Sales -->
+    <div class="table-section">
+        <div class="section-header">
+            <h3>
+                <i class="fas fa-receipt"></i>
+                آخر الفواتير (20 فاتورة)
+            </h3>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>رقم الفاتورة</th>
+                    <th>العميل</th>
+                    <th>الوقت</th>
+                    <th>المبلغ</th>
+                    <th>المدفوع</th>
+                    <th>الحالة</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sale in sales_list %}
+                <tr>
+                    <td>{{ sale.order_number }}</td>
+                    <td>{{ sale.customer.name }}</td>
+                    <td>{{ sale.order_date|date:"H:i" }}</td>
+                    <td>{{ sale.total_amount|floatformat:2 }} ر.س</td>
+                    <td>{{ sale.paid_amount|floatformat:2 }} ر.س</td>
+                    <td>
+                        <span class="badge badge-{{ sale.get_payment_status_color }}">
+                            {{ sale.get_payment_status_display_ar }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" style="text-align: center; color: #999;">لا توجد فواتير</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Hourly Sales Chart
+    const hourlySalesData = {{ hourly_sales|safe }};
+    const hourlySalesCtx = document.getElementById('hourlySalesChart');
+    
+    if (hourlySalesCtx && hourlySalesData.length > 0) {
+        new Chart(hourlySalesCtx, {
+            type: 'bar',
+            data: {
+                labels: hourlySalesData.map(d => d.hour),
+                datasets: [{
+                    label: 'عدد الفواتير',
+                    data: hourlySalesData.map(d => d.count),
+                    backgroundColor: '#4A9EAD',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // Payment Methods Chart
+    const paymentMethodsCtx = document.getElementById('paymentMethodsChart');
+    
+    if (paymentMethodsCtx) {
+        const methodLabels = {
+            'cash': 'نقدي',
+            'card': 'بطاقة',
+            'transfer': 'تحويل',
+            'mada': 'مدى',
+            'later': 'آجل'
+        };
+        
+        new Chart(paymentMethodsCtx, {
+            type: 'doughnut',
+            data: {
+                labels: [{% for m in payment_methods %}methodLabels['{{ m.payment_method }}'] || '{{ m.payment_method }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                datasets: [{
+                    data: [{% for m in payment_methods %}{{ m.total }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                    backgroundColor: [
+                        '#4A9EAD',
+                        '#27ae60',
+                        '#f39c12',
+                        '#9b59b6',
+                        '#e74c3c'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

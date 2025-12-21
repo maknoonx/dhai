@@ -1,0 +1,561 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}ملف العميل - {{ customer.name }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/customers/customer_profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+    <!-- Back Button -->
+    <button class="btn-back" onclick="window.location.href='{% url 'customers:list' %}'">
+        <i class="fas fa-arrow-right"></i>
+        <span>العودة إلى قائمة العملاء</span>
+    </button>
+
+    <!-- Customer Info Card -->
+    <div class="info-card">
+        <div class="customer-header">
+            <div class="customer-avatar">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="customer-details">
+                <h1>{{ customer.name }}</h1>
+                <div class="customer-badges">
+                    <span class="badge badge-gender">{{ customer.gender }}</span>
+                    {% if customer.age %}
+                    <span class="badge badge-age">{{ customer.age }} سنة</span>
+                    {% endif %}
+                    <span class="badge badge-id">{{ customer.customer_id }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="contact-grid">
+            <div class="contact-item">
+                <i class="fas fa-phone"></i>
+                <div>
+                    <div class="contact-label">رقم الجوال</div>
+                    <div class="contact-value">{{ customer.phone }}</div>
+                </div>
+            </div>
+
+            {% if customer.email %}
+            <div class="contact-item">
+                <i class="fas fa-envelope"></i>
+                <div>
+                    <div class="contact-label">البريد الإلكتروني</div>
+                    <div class="contact-value">{{ customer.email }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if customer.address %}
+            <div class="contact-item">
+                <i class="fas fa-map-marker-alt"></i>
+                <div>
+                    <div class="contact-label">العنوان</div>
+                    <div class="contact-value">{{ customer.address }}</div>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="contact-item">
+                <i class="fas fa-calendar"></i>
+                <div>
+                    <div class="contact-label">تاريخ التسجيل</div>
+                    <div class="contact-value">{{ customer.join_date }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Eye Exam Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-title">
+                <i class="fas fa-eye"></i>
+                <h2>الفحص الطبي للنظر</h2>
+            </div>
+            {% if latest_exam %}
+            <button class="btn-edit-exam" onclick="showEditExamModal()">
+                <i class="fas fa-edit"></i>
+                <span>تعديل الفحص</span>
+            </button>
+            {% endif %}
+        </div>
+
+        {% if latest_exam %}
+        <!-- Eye Diagrams Display -->
+        <div class="eyes-display">
+            <div class="eye-diagram-display">
+                <div class="eye-visual-display right-eye-display">
+                    <div class="eye-shine"></div>
+                    <div class="iris-display">
+                        <div class="pupil-display"></div>
+                        <div class="eye-reflection"></div>
+                    </div>
+                </div>
+                <h3 class="eye-label">العين اليمنى</h3>
+            </div>
+            <div class="eye-diagram-display">
+                <div class="eye-visual-display left-eye-display">
+                    <div class="eye-shine"></div>
+                    <div class="iris-display">
+                        <div class="pupil-display"></div>
+                        <div class="eye-reflection"></div>
+                    </div>
+                </div>
+                <h3 class="eye-label">العين اليسرى</h3>
+            </div>
+        </div>
+
+        <div class="exam-grid">
+            <!-- Right Eye -->
+            <div class="eye-card">
+                <div class="eye-header">
+                    <div class="eye-icon-wrapper right-eye-color">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <h3>العين اليمنى</h3>
+                </div>
+                <div class="exam-details">
+                    <div class="exam-row">
+                        <span>القوة الكروية (Sphere)</span>
+                        <span class="value">{{ latest_exam.right_sphere|default:"-" }}</span>
+                    </div>
+                    <div class="exam-row">
+                        <span>القوة الأسطوانية (Cylinder)</span>
+                        <span class="value">{{ latest_exam.right_cylinder|default:"-" }}</span>
+                    </div>
+                    <div class="exam-row">
+                        <span>المحور (Axis)</span>
+                        <span class="value">{{ latest_exam.right_axis|default:"-" }}°</span>
+                    </div>
+                    <div class="exam-row">
+                        <span>القراءة (Add)</span>
+                        <span class="value">{{ latest_exam.right_add|default:"-" }}</span>
+                    </div>
+                    <div class="exam-row">
+                        <span>المسافة البؤرية (PD)</span>
+                        <span class="value">{{ latest_exam.right_pd|default:"-" }} مم</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Left Eye -->
+            <div class="eye-card">
+                <div class="eye-header">
+                    <div class="eye-icon-wrapper left-eye-color">
+                        <i class="fas fa-eye"></i>
+                    </div>
+                    <h3>العين اليسرى</h3>
+                </div>
+                <div class="exam-details">
+                    <div class="exam-row">
+                        <span>القوة الكروية (Sphere)</span>
+                        <span class="value">{{ latest_exam.left_sphere|default:"-" }}</span>
+                    </div>
+                    <div class="exam-row">
+                        <span>القوة الأسطوانية (Cylinder)</span>
+                        <span class="value">{{ latest_exam.left_cylinder|default:"-" }}</span>
+                    </div>
+                    <div class="exam-row">
+                        <span>المحور (Axis)</span>
+                        <span class="value">{{ latest_exam.left_axis|default:"-" }}°</span>
+                    </div>
+                    <div class="exam-row">
+                        <span>القراءة (Add)</span>
+                        <span class="value">{{ latest_exam.left_add|default:"-" }}</span>
+                    </div>
+                    <div class="exam-row">
+                        <span>المسافة البؤرية (PD)</span>
+                        <span class="value">{{ latest_exam.left_pd|default:"-" }} مم</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {% if latest_exam.notes %}
+        <div class="exam-notes">
+            <i class="fas fa-file-medical"></i>
+            <div>
+                <div class="notes-label">ملاحظات الفحص</div>
+                <p>{{ latest_exam.notes }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <div class="exam-date">
+            <i class="fas fa-calendar-check"></i>
+            <span>تاريخ الفحص: {{ latest_exam.exam_date }}</span>
+        </div>
+        {% else %}
+        <div class="no-exam">
+            <div class="no-exam-icon">
+                <i class="fas fa-eye-slash"></i>
+            </div>
+            <p>لا يوجد فحص طبي للنظر</p>
+            <button class="btn-add-exam" onclick="showAddExamModal()">
+                <i class="fas fa-plus"></i>
+                إضافة فحص نظر
+            </button>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Invoices Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-title">
+                <i class="fas fa-file-invoice"></i>
+                <h2>الفواتير والإحصائيات</h2>
+            </div>
+        </div>
+
+        <!-- Invoice Stats -->
+        <div class="invoice-stats">
+            <div class="stat-item stat-purple">
+                <div class="stat-label">إجمالي الفواتير</div>
+                <div class="stat-value">{{ invoice_stats.total|floatformat:0 }} ريال</div>
+            </div>
+            <div class="stat-item stat-green">
+                <div class="stat-label">المدفوع</div>
+                <div class="stat-value">{{ invoice_stats.paid|floatformat:0 }} ريال</div>
+            </div>
+            <div class="stat-item stat-orange">
+                <div class="stat-label">المعلق</div>
+                <div class="stat-value">{{ invoice_stats.pending|floatformat:0 }} ريال</div>
+            </div>
+            <div class="stat-item stat-blue">
+                <div class="stat-label">عدد الفواتير</div>
+                <div class="stat-value">{{ invoice_stats.count }}</div>
+            </div>
+        </div>
+
+        <!-- Invoices Table -->
+        {% if invoices %}
+        <div class="table-container">
+            <table class="invoices-table">
+                <thead>
+                    <tr>
+                        <th>رقم الفاتورة</th>
+                        <th>التاريخ</th>
+                        <th>العناصر</th>
+                        <th>المبلغ</th>
+                        <th>الحالة</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in invoices %}
+                    <tr>
+                        <td>{{ invoice.invoice_number }}</td>
+                        <td>{{ invoice.date }}</td>
+                        <td>-</td>
+                        <td class="amount">{{ invoice.total_amount|floatformat:0 }} ريال</td>
+                        <td>
+                            <span class="status status-{{ invoice.status }}">
+                                {% if invoice.status == 'paid' %}مدفوع{% elif invoice.status == 'pending' %}معلق{% else %}ملغي{% endif %}
+                            </span>
+                        </td>
+                        <td>
+                            <button class="btn-view-invoice">عرض التفاصيل</button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-data">
+            <i class="fas fa-inbox"></i>
+            <p>لا توجد فواتير</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Notifications Section -->
+    <div class="section-card">
+        <div class="section-header">
+            <div class="section-title">
+                <i class="fas fa-bell"></i>
+                <h2>الإشعارات والتواصل</h2>
+            </div>
+        </div>
+
+        <div class="notifications-grid">
+            <!-- Notification Settings -->
+            <div class="notification-settings">
+                <h3>خيارات الإشعارات</h3>
+                <form method="POST" action="{% url 'customers:notifications_update' customer.pk %}">
+                    {% csrf_token %}
+                    <div class="setting-item">
+                        <input type="checkbox" id="whatsapp" name="whatsapp" 
+                               {% if customer.notify_whatsapp %}checked{% endif %}>
+                        <label for="whatsapp">
+                            <i class="fab fa-whatsapp"></i>
+                            إرسال رسائل واتساب للعميل
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <input type="checkbox" id="sms" name="sms" 
+                               {% if customer.notify_sms %}checked{% endif %}>
+                        <label for="sms">
+                            <i class="fas fa-sms"></i>
+                            إرسال رسائل SMS
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <input type="checkbox" id="email" name="email" 
+                               {% if customer.notify_email %}checked{% endif %}>
+                        <label for="email">
+                            <i class="fas fa-envelope"></i>
+                            إرسال بريد إلكتروني
+                        </label>
+                    </div>
+                    <button type="submit" class="btn-save">
+                        <i class="fas fa-save"></i>
+                        حفظ الإعدادات
+                    </button>
+                </form>
+            </div>
+
+            <!-- Notification History -->
+            <div class="notification-history">
+                <h3>سجل الإشعارات</h3>
+                <div class="notifications-list">
+                    {% for notification in notifications %}
+                    <div class="notification-item">
+                        <i class="fas fa-paper-plane notification-icon-{{ notification.get_type_color }}"></i>
+                        <div class="notification-content">
+                            <div class="notification-title">{{ notification.get_message_type_display }}</div>
+                            <div class="notification-meta">
+                                تم الإرسال عبر {{ notification.get_notification_type_display }} - 
+                                {{ notification.sent_at|date:"Y-m-d H:i" }}
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="no-notifications">
+                        <i class="fas fa-bell-slash"></i>
+                        <p>لا توجد إشعارات</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Eye Exam Modal -->
+<div id="examModal" class="modal">
+    <div class="modal-content modal-large">
+        <div class="modal-header">
+            <h2 id="examModalTitle">{% if latest_exam %}تعديل الفحص الطبي للنظر{% else %}إضافة فحص نظر جديد{% endif %}</h2>
+            <button class="btn-close" onclick="closeExamModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form method="POST" action="{% if latest_exam %}{% url 'customers:eye_exam_edit' latest_exam.pk %}{% else %}{% url 'customers:eye_exam_add' customer.pk %}{% endif %}">
+            {% csrf_token %}
+            <div class="modal-body">
+                <!-- Eye Diagrams -->
+                <div class="eye-diagrams-modal">
+                    <div class="eye-diagram-container">
+                        <h3 class="eye-title">
+                            <i class="fas fa-eye"></i>
+                            العين اليمنى
+                        </h3>
+                        <div class="eye-visual-modal right-eye-modal">
+                            <div class="eye-outer">
+                                <div class="eye-white">
+                                    <div class="iris-modal right-iris">
+                                        <div class="pupil-modal">
+                                            <div class="reflection-dot"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="eye-diagram-container">
+                        <h3 class="eye-title">
+                            <i class="fas fa-eye"></i>
+                            العين اليسرى
+                        </h3>
+                        <div class="eye-visual-modal left-eye-modal">
+                            <div class="eye-outer">
+                                <div class="eye-white">
+                                    <div class="iris-modal left-iris">
+                                        <div class="pupil-modal">
+                                            <div class="reflection-dot"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Eye Details -->
+                <div class="exam-section">
+                    <h3 class="section-subtitle">
+                        <div class="eye-icon-wrapper right-eye-color">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        تفاصيل العين اليمنى
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="right_sphere">القوة الكروية (Sphere)</label>
+                            <input type="text" 
+                                   name="right_sphere" 
+                                   id="right_sphere"
+                                   value="{{ latest_exam.right_sphere|default:'' }}" 
+                                   placeholder="مثال: -2.00"
+                                   autocomplete="off">
+                            <small>القوة الكروية لتصحيح قصر أو طول النظر</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="right_cylinder">القوة الأسطوانية (Cylinder)</label>
+                            <input type="text" 
+                                   name="right_cylinder" 
+                                   id="right_cylinder"
+                                   value="{{ latest_exam.right_cylinder|default:'' }}" 
+                                   placeholder="مثال: -0.75"
+                                   autocomplete="off">
+                            <small>القوة الأسطوانية لتصحيح الاستجماتيزم</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="right_axis">المحور (Axis)</label>
+                            <input type="text" 
+                                   name="right_axis" 
+                                   id="right_axis"
+                                   value="{{ latest_exam.right_axis|default:'' }}" 
+                                   placeholder="مثال: 180"
+                                   autocomplete="off">
+                            <small>المحور بالدرجات (0-180)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="right_add">القراءة (Add)</label>
+                            <input type="text" 
+                                   name="right_add" 
+                                   id="right_add"
+                                   value="{{ latest_exam.right_add|default:'' }}" 
+                                   placeholder="مثال: +1.50"
+                                   autocomplete="off">
+                            <small>إضافة للقراءة (للنظارات متعددة البؤر)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="right_pd">المسافة البؤرية (PD)</label>
+                            <input type="text" 
+                                   name="right_pd" 
+                                   id="right_pd"
+                                   value="{{ latest_exam.right_pd|default:'' }}" 
+                                   placeholder="مثال: 32"
+                                   autocomplete="off">
+                            <small>المسافة بالملليمتر</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Left Eye Details -->
+                <div class="exam-section">
+                    <h3 class="section-subtitle">
+                        <div class="eye-icon-wrapper left-eye-color">
+                            <i class="fas fa-eye"></i>
+                        </div>
+                        تفاصيل العين اليسرى
+                    </h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="left_sphere">القوة الكروية (Sphere)</label>
+                            <input type="text" 
+                                   name="left_sphere" 
+                                   id="left_sphere"
+                                   value="{{ latest_exam.left_sphere|default:'' }}" 
+                                   placeholder="مثال: -2.25"
+                                   autocomplete="off">
+                            <small>القوة الكروية لتصحيح قصر أو طول النظر</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="left_cylinder">القوة الأسطوانية (Cylinder)</label>
+                            <input type="text" 
+                                   name="left_cylinder" 
+                                   id="left_cylinder"
+                                   value="{{ latest_exam.left_cylinder|default:'' }}" 
+                                   placeholder="مثال: -0.50"
+                                   autocomplete="off">
+                            <small>القوة الأسطوانية لتصحيح الاستجماتيزم</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="left_axis">المحور (Axis)</label>
+                            <input type="text" 
+                                   name="left_axis" 
+                                   id="left_axis"
+                                   value="{{ latest_exam.left_axis|default:'' }}" 
+                                   placeholder="مثال: 175"
+                                   autocomplete="off">
+                            <small>المحور بالدرجات (0-180)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="left_add">القراءة (Add)</label>
+                            <input type="text" 
+                                   name="left_add" 
+                                   id="left_add"
+                                   value="{{ latest_exam.left_add|default:'' }}" 
+                                   placeholder="مثال: +1.50"
+                                   autocomplete="off">
+                            <small>إضافة للقراءة (للنظارات متعددة البؤر)</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="left_pd">المسافة البؤرية (PD)</label>
+                            <input type="text" 
+                                   name="left_pd" 
+                                   id="left_pd"
+                                   value="{{ latest_exam.left_pd|default:'' }}" 
+                                   placeholder="مثال: 32"
+                                   autocomplete="off">
+                            <small>المسافة بالملليمتر</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="form-group">
+                    <label for="notes">
+                        <i class="fas fa-sticky-note"></i>
+                        ملاحظات الفحص
+                    </label>
+                    <textarea name="notes" 
+                              id="notes"
+                              rows="4" 
+                              placeholder="أضف أي ملاحظات إضافية عن الفحص..."
+                              autocomplete="off">{{ latest_exam.notes|default:'' }}</textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="submit" class="btn-submit">
+                    <i class="fas fa-save"></i>
+                    <span>حفظ الفحص</span>
+                </button>
+                <button type="button" class="btn-cancel" onclick="closeExamModal()">
+                    <i class="fas fa-times"></i>
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/customers/customer_profile.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تعديل الفاتورة {{ sale.order_number }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sales/sales.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="sale-add-page">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-edit"></i>
+                تعديل الفاتورة {{ sale.order_number }}
+            </h1>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'sales:detail' sale.pk %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة
+            </a>
+        </div>
+    </div>
+
+    <form method="POST" class="sale-form">
+        {% csrf_token %}
+
+        <!-- Order Status -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-clipboard-list"></i>
+                حالة الطلب
+            </h3>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="status">حالة الطلب <span class="required">*</span></label>
+                    <select id="status" name="status" required>
+                        {% for s in status_choices %}
+                        <option value="{{ s.0 }}" {% if sale.status == s.0 %}selected{% endif %}>
+                            {{ s.1 }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="delivery_date">تاريخ التسليم المتوقع</label>
+                    <input type="date" 
+                           id="delivery_date" 
+                           name="delivery_date" 
+                           value="{{ sale.delivery_date|date:'Y-m-d' }}">
+                </div>
+
+                <div class="form-group">
+                    <label for="laboratory_id">المعمل (اختياري)</label>
+                    <select id="laboratory_id" name="laboratory_id">
+                        <option value="">-- لا يوجد --</option>
+                        {% for lab in laboratories %}
+                        <option value="{{ lab.id }}" 
+                                {% if sale.laboratory_id == lab.id %}selected{% endif %}>
+                            {{ lab.laboratory_code }} - {{ lab.company_name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Notes -->
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-sticky-note"></i>
+                الملاحظات
+            </h3>
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label for="prescription_notes">ملاحظات القياس</label>
+                    <textarea id="prescription_notes" 
+                              name="prescription_notes" 
+                              rows="3">{{ sale.prescription_notes }}</textarea>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="notes">ملاحظات عامة</label>
+                    <textarea id="notes" 
+                              name="notes" 
+                              rows="3">{{ sale.notes }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submit Buttons -->
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-large">
+                <i class="fas fa-save"></i>
+                حفظ التعديلات
+            </button>
+            <a href="{% url 'sales:detail' sale.pk %}" class="btn btn-cancel btn-large">
+                إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

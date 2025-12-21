@@ -1,0 +1,309 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}تقرير المبيعات{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/reports/reports.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="report-page">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-shopping-cart"></i>
+                تقرير المبيعات التفصيلي
+            </h1>
+            <p class="subtitle">من {{ date_from }} إلى {{ date_to }}</p>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'reports:dashboard' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة
+            </a>
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i>
+                طباعة
+            </button>
+        </div>
+    </div>
+
+    <!-- Date Filter -->
+    <div class="filter-section">
+        <form method="GET" class="date-selector">
+            <label>من تاريخ:</label>
+            <input type="date" name="date_from" value="{{ date_from|date:'Y-m-d' }}">
+            
+            <label>إلى تاريخ:</label>
+            <input type="date" name="date_to" value="{{ date_to|date:'Y-m-d' }}">
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i>
+                بحث
+            </button>
+        </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid">
+        <div class="summary-card sales">
+            <div class="card-icon">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_count }}</h3>
+                <p>عدد الفواتير</p>
+            </div>
+        </div>
+
+        <div class="summary-card payments">
+            <div class="card-icon">
+                <i class="fas fa-coins"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_amount|floatformat:2 }}</h3>
+                <p>إجمالي المبيعات</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card collected">
+            <div class="card-icon">
+                <i class="fas fa-calculator"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ average_amount|floatformat:2 }}</h3>
+                <p>متوسط قيمة الفاتورة</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+
+        <div class="summary-card purchases">
+            <div class="card-icon">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="card-content">
+                <h3>{{ total_paid|floatformat:2 }}</h3>
+                <p>المبالغ المدفوعة</p>
+                <span class="card-note">ر.س</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="charts-row">
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>
+                    <i class="fas fa-box"></i>
+                    أفضل المنتجات مبيعاً
+                </h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="topProductsChart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <h3>
+                    <i class="fas fa-users"></i>
+                    أفضل العملاء
+                </h3>
+            </div>
+            <div class="chart-body">
+                <canvas id="topCustomersChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Products Table -->
+    <div class="table-section">
+        <div class="section-header">
+            <h3>
+                <i class="fas fa-star"></i>
+                أفضل المنتجات مبيعاً (أعلى 10)
+            </h3>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>اسم المنتج</th>
+                    <th>الباركود</th>
+                    <th>الكمية المباعة</th>
+                    <th>إجمالي المبيعات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in top_products %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ product.product__item_name }}</td>
+                    <td><code>{{ product.product__barcode }}</code></td>
+                    <td style="font-weight: 600;">{{ product.total_quantity }}</td>
+                    <td>{{ product.total_amount|floatformat:2 }} ر.س</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: #999;">لا توجد مبيعات</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Top Customers Table -->
+    <div class="table-section">
+        <div class="section-header">
+            <h3>
+                <i class="fas fa-user-tie"></i>
+                أفضل العملاء (أعلى 10)
+            </h3>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>رقم العميل</th>
+                    <th>اسم العميل</th>
+                    <th>عدد الطلبات</th>
+                    <th>إجمالي المشتريات</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in top_customers %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ customer.customer__customer_id }}</td>
+                    <td>{{ customer.customer__name }}</td>
+                    <td style="font-weight: 600;">{{ customer.total_orders }}</td>
+                    <td>{{ customer.total_amount|floatformat:2 }} ر.س</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="text-align: center; color: #999;">لا توجد بيانات</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Sales List -->
+    <div class="table-section">
+        <div class="section-header">
+            <h3>
+                <i class="fas fa-list"></i>
+                قائمة الفواتير (آخر 100 فاتورة)
+            </h3>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>رقم الفاتورة</th>
+                        <th>التاريخ</th>
+                        <th>العميل</th>
+                        <th>المجموع الفرعي</th>
+                        <th>الخصم</th>
+                        <th>الضريبة</th>
+                        <th>الإجمالي</th>
+                        <th>المدفوع</th>
+                        <th>الحالة</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for sale in sales %}
+                    <tr>
+                        <td>
+                            <a href="{% url 'sales:detail' sale.pk %}" style="color: #4A9EAD; text-decoration: none;">
+                                {{ sale.order_number }}
+                            </a>
+                        </td>
+                        <td>{{ sale.order_date|date:"Y-m-d H:i" }}</td>
+                        <td>{{ sale.customer.name }}</td>
+                        <td>{{ sale.subtotal|floatformat:2 }} ر.س</td>
+                        <td>{{ sale.discount|floatformat:2 }} ر.س</td>
+                        <td>{{ sale.tax|floatformat:2 }} ر.س</td>
+                        <td style="font-weight: 600;">{{ sale.total_amount|floatformat:2 }} ر.س</td>
+                        <td>{{ sale.paid_amount|floatformat:2 }} ر.س</td>
+                        <td>
+                            <span class="badge badge-{{ sale.get_payment_status_color }}">
+                                {{ sale.get_payment_status_display_ar }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="9" style="text-align: center; color: #999;">لا توجد فواتير</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    // Top Products Chart
+    const topProductsCtx = document.getElementById('topProductsChart');
+    
+    if (topProductsCtx) {
+        new Chart(topProductsCtx, {
+            type: 'bar',
+            data: {
+                labels: [{% for p in top_products|slice:":5" %}'{{ p.product__item_name|truncatechars:20 }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'الكمية المباعة',
+                    data: [{% for p in top_products|slice:":5" %}{{ p.total_quantity }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                    backgroundColor: '#4A9EAD',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+
+    // Top Customers Chart
+    const topCustomersCtx = document.getElementById('topCustomersChart');
+    
+    if (topCustomersCtx) {
+        new Chart(topCustomersCtx, {
+            type: 'bar',
+            data: {
+                labels: [{% for c in top_customers|slice:":5" %}'{{ c.customer__name|truncatechars:20 }}'{% if not forloop.last %},{% endif %}{% endfor %}],
+                datasets: [{
+                    label: 'إجمالي المشتريات (ر.س)',
+                    data: [{% for c in top_customers|slice:":5" %}{{ c.total_amount }}{% if not forloop.last %},{% endif %}{% endfor %}],
+                    backgroundColor: '#27ae60',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}
