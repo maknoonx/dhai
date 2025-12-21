@@ -3,13 +3,17 @@ Django settings for Optics Management System
 """
 from pathlib import Path
 import os
+import environ
 
+env = environ.Env()
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
+
 # Security settings
 SECRET_KEY = 'django-insecure-aq9+7!jqzsfn+ce++k23fk$6qgbp(t=jjypuag3xw&x@3pbvhg'
-DEBUG = True
+DEBUG = False
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
@@ -26,8 +30,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
-    "storages",
+    'cloudinary_storage',
+    'cloudinary',
     
     # Local apps
     'customers',
@@ -119,8 +123,18 @@ STATICFILES_DIRS = [
 ]
 
 # Media files
+MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': env('CLOUD_NAME'),
+    'API_KEY': env('CLOUD_API_KEY'),
+    'API_SECRET': env('CLOUD_API_SECRET')
+}
+
+# Default primary key field type
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 
@@ -154,32 +168,3 @@ STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
-# ==========================
-# Supabase Storage (S3-Compatible)
-# ==========================
-
-# Supabase Project S3 values
-AWS_ACCESS_KEY_ID = "8fb7c01269042adee2ce4485688909e7"
-AWS_SECRET_ACCESS_KEY = "1bcf8d752643117480613a61d21b52173946622be7d0862a0fb4a9c9838fbc22"
-
-AWS_STORAGE_BUCKET_NAME = "media"
-AWS_S3_REGION_NAME = "ap-northeast-2"
-
-# Supabase S3 endpoint — استخدمي الرابط الذي في لوحة Supabase
-AWS_S3_ENDPOINT_URL = "https://xenkgkmzuinpgmswxajx.storage.supabase.co/storage/v1/s3"
-
-# إعدادات S3 الضرورية لـ Supabase
-AWS_S3_SIGNATURE_VERSION = "s3v4"
-AWS_S3_ADDRESSING_STYLE = "path"
-AWS_DEFAULT_ACL = None
-AWS_QUERYSTRING_AUTH = False
-AWS_S3_FILE_OVERWRITE = False
-
-# استخدمي التخزين عبر django-storages
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
-
-# رابط الوصول العام للملفات في bucket
-MEDIA_URL = (
-    "https://xenkgkmzuinpgmswxajx.storage.supabase.co/"
-    "storage/v1/object/public/media/"
-)

@@ -24,9 +24,9 @@
         <!-- Logo Section -->
         <div class="sidebar-logo">
             <div class="logo-container">
-                {% if company_settings.logo %}
-                <img src="{{ company_settings.logo.url }}" alt="{{ company_settings.company_name_ar }}" class="logo-image">
-              {% else %}
+                {% if company_logo %}
+                <img src="{{ company_logo }}" alt="{{ company_name }}" class="logo-image">
+                {% else %}
                 <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"></path>
                     <circle cx="12" cy="12" r="3"></circle>
