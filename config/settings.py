@@ -3,23 +3,16 @@ Django settings for Optics Management System
 """
 from pathlib import Path
 import os
-import environ
 
-env = environ.Env()
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
-
 # Security settings
 SECRET_KEY = 'django-insecure-aq9+7!jqzsfn+ce++k23fk$6qgbp(t=jjypuag3xw&x@3pbvhg'
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://dhaioptics.com",
-    "https://www.dhaioptics.com",
-]
+CSRF_TRUSTED_ORIGINS = [ "https://dhaioptics.com", "https://www.dhaioptics.com", ]
 
 
 # Application definition
@@ -30,9 +23,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+        # Cloudinary (media only)
     'cloudinary_storage',
     'cloudinary',
-    
     # Local apps
     'customers',
     'sales',
@@ -127,14 +120,18 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
+# =========================
+# Cloudinary (MEDIA uploads)
+# =========================
+
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': env('CLOUD_NAME'),
-    'API_KEY': env('CLOUD_API_KEY'),
-    'API_SECRET': env('CLOUD_API_SECRET')
+    "CLOUD_NAME": "dlcrl9zqo",
+    "API_KEY": "169288288777135",
+    "API_SECRET": "5OAmNiDdI_PMLn0NS0OsNbNQTic",
 }
 
-# Default primary key field type
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+# If your Django is < 4.2, use DEFAULT_FILE_STORAGE (works for ImageField)
+DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 
 
@@ -166,5 +163,7 @@ MESSAGE_TAGS = {
 
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
-STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 
+# WhiteNoise
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
