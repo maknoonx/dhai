@@ -9,5 +9,5 @@ def company_settings(request):
     return {
         'company_settings': settings,
         'company_name': settings.company_name_ar or 'اسم المؤسسة',
-        "company_logo": logo_url,
+        'company_logo': settings.logo.url if settings.logo else None,
     }
