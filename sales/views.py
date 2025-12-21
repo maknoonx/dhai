@@ -467,35 +467,50 @@ def debit_note(request, pk):
 
 from django.http import HttpResponse
 from django.template.loader import render_to_string
-from weasyprint import HTML
+from customers.models import EyeExam  # إذا EyeExam فعلاً هنا
 from customers.models import Customer, EyeExam
 from settings.models import CompanySettings
+# --- PDF Eye Exam Print (Safe for Railway) ---
+# Place this near the bottom of sales/views.py (or anywhere in the file).
+# IMPORTANT:
+# 1) Do NOT keep "from weasyprint import HTML" at module level.
+# 2) Ensure EyeExam import path is correct for your project.
+
+from django.template.loader import render_to_string
 
 @login_required
 def print_eye_exam(request, invoice_id):
-    """طباعة فحص العين للعميل المرتبط بالفاتورة"""
-    
-    # الحصول على الفاتورة
+    """طباعة فحص العين للعميل المرتبط بالفاتورة (PDF عند توفر WeasyPrint)"""
+
+    # 1) الحصول على الفاتورة
     sale = get_object_or_404(Sale, pk=invoice_id)
     customer = sale.customer
-    
-    # التحقق من وجود عميل
+
     if not customer:
         messages.error(request, 'هذه الفاتورة غير مرتبطة بعميل')
         return redirect('sales:detail', pk=invoice_id)
-    
-    # الحصول على آخر فحص للعميل
-    eye_exam = customer.eye_exams.first()
-    
+
+    # 2) جلب آخر فحص للعميل
+    # عدّل مسار EyeExam إذا كان في تطبيق آخر
+    try:
+        from customers.models import EyeExam
+    except Exception:
+        # إذا EyeExam غير موجود أو في تطبيق آخر، لا نكسر النظام
+        messages.error(request, 'نموذج فحص العين (EyeExam) غير متوفر أو مساره غير صحيح')
+        return redirect('sales:detail', pk=invoice_id)
+
+    # إذا كان عندك related_name مختلف عدله هنا
+    # الافتراضي: customer.eye_exams.first()
+    eye_exam = getattr(customer, "eye_exams", None)
+    eye_exam = eye_exam.first() if eye_exam is not None else None
+
     if not eye_exam:
         messages.error(request, 'لا يوجد فحص عين مسجل لهذا العميل')
         return redirect('sales:detail', pk=invoice_id)
-    
-    # الحصول على إعدادات الشركة مع قيم افتراضية
+
+    # 3) إعداد بيانات الشركة (مع قيم افتراضية)
     try:
         company_settings = CompanySettings.get_settings()
-        
-        # بيانات الشركة مع قيم افتراضية
         company_data = {
             'company_name': company_settings.company_name_ar or 'محل النظارات الحديثة',
             'company_name_en': company_settings.company_name_en or 'Modern Optics',
@@ -506,11 +521,10 @@ def print_eye_exam(request, invoice_id):
             'commercial_register': company_settings.commercial_register or '1010000000',
             'unified_number': company_settings.unified_number or '7000000000',
             'location_url': company_settings.location_url or '',
-            'logo': company_settings.logo.url if company_settings.logo else None,
+            'logo': company_settings.logo.url if getattr(company_settings, "logo", None) else None,
             'owner_name': company_settings.owner_name or 'المدير العام',
         }
-    except Exception as e:
-        # في حالة عدم وجود إعدادات، استخدم القيم الافتراضية
+    except Exception:
         company_data = {
             'company_name': 'محل النظارات الحديثة',
             'company_name_en': 'Modern Optics',
@@ -524,30 +538,41 @@ def print_eye_exam(request, invoice_id):
             'logo': None,
             'owner_name': 'المدير العام',
         }
-    
-    # إعداد البيانات للقالب
+
+    # 4) إعداد السياق للقالب
     context = {
         'customer': customer,
         'eye_exam': eye_exam,
         'invoice': sale,
         'print_date': timezone.now(),
-        # بيانات الشركة
         'company': company_data,
-        # للتوافق مع القالب القديم
+
+        # للتوافق مع قوالب قديمة
         'company_name': company_data['company_name'],
         'company_phone': company_data['phone'],
         'company_address': company_data['address'],
     }
-    
-    # تحويل القالب إلى HTML
+
+    # 5) HTML من القالب
     html_string = render_to_string('sales/eye_exam_print.html', context)
-    
-    # تحويل إلى PDF
-    html = HTML(string=html_string, base_url=request.build_absolute_uri())
-    pdf = html.write_pdf()
-    
-    # إرجاع PDF
+
+    # 6) تحويل إلى PDF (Lazy import لتجنب كسر تشغيل السيرفر على Railway)
+    try:
+        from weasyprint import HTML
+    except Exception:
+        # خيار 1: رجّع HTML بدل PDF (مفيد للطباعة من المتصفح)
+        # return HttpResponse(html_string)
+
+        # خيار 2: رسالة واضحة
+        return HttpResponse(
+            "PDF generation is temporarily unavailable on the server (WeasyPrint dependencies missing).",
+            status=503
+        )
+
+    pdf = HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf()
+
+    # 7) إرجاع PDF
+    filename = f"eye_exam_{getattr(customer, 'customer_id', customer.pk)}.pdf"
     response = HttpResponse(pdf, content_type='application/pdf')
-    response['Content-Disposition'] = f'inline; filename="eye_exam_{customer.customer_id}.pdf"'
-    
+    response['Content-Disposition'] = f'inline; filename="{filename}"'
     return response
