@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/stock/product_detail.css' %}">
+<link rel="stylesheet" href="{% static 'css/stock/barcode_print.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -38,6 +39,10 @@
             </div>
         </div>
         <div class="header-actions">
+            <button class="btn btn-print-barcode" onclick="printBarcodeFromDetail()">
+                <i class="fas fa-print"></i>
+                طباعة الباركود
+            </button>
             <button class="btn btn-primary" onclick="showStockModal()">
                 <i class="fas fa-boxes"></i>
                 تعديل الكمية
@@ -341,6 +346,7 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script src="{% static 'js/stock/barcode_print.js' %}"></script>
 <script src="{% static 'js/stock/product_detail.js' %}"></script>
 <script>
 // Generate barcode

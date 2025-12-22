@@ -5,6 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/stock/products_list.css' %}">
+<link rel="stylesheet" href="{% static 'css/stock/barcode_print.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -19,6 +20,10 @@
             <p class="subtitle">إجمالي {{ products|length }} منتج</p>
         </div>
         <div class="header-actions">
+            <button class="btn btn-print-all" onclick="printAllVisibleBarcodes()">
+                <i class="fas fa-print"></i>
+                طباعة جميع الباركودات
+            </button>
             <button class="btn btn-primary" onclick="showAddModal()">
                 <i class="fas fa-plus"></i>
                 إضافة منتج
@@ -165,6 +170,10 @@
                     <i class="fas fa-eye"></i>
                     <span>عرض</span>
                 </a>
+                <button class="btn-action print" onclick="printSingleBarcode('{{ product.barcode }}', '{{ product.item_name }}')">
+                    <i class="fas fa-print"></i>
+                    <span>باركود</span>
+                </button>
                 <button class="btn-action secondary" onclick="showEditModal({{ product.pk }})">
                     <i class="fas fa-edit"></i>
                     <span>تعديل</span>
@@ -411,5 +420,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script src="{% static 'js/stock/barcode_print.js' %}"></script>
 <script src="{% static 'js/stock/products.js' %}"></script>
 {% endblock %}
