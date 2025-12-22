@@ -1,0 +1,90 @@
+/* Barcode Print Button Styles */
+
+.btn-print-barcode {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-print-barcode:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.btn-print-barcode i {
+    font-size: 1rem;
+}
+
+/* Small version for action buttons */
+.btn-action.print {
+    background: #8B5CF6;
+    color: white;
+}
+
+.btn-action.print:hover {
+    background: #7C3AED;
+}
+
+/* Print all button */
+.btn-print-all {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-print-all:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.btn-print-all i {
+    font-size: 1rem;
+}
+
+/* Loading state */
+.btn-print-barcode.loading,
+.btn-print-all.loading {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.btn-print-barcode.loading i,
+.btn-print-all.loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .btn-print-barcode,
+    .btn-print-all {
+        width: 100%;
+        justify-content: center;
+    }
+}
