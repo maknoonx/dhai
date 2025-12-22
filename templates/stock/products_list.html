@@ -170,7 +170,7 @@
                     <i class="fas fa-eye"></i>
                     <span>عرض</span>
                 </a>
-                <button class="btn-action print" onclick="printSingleBarcode('{{ product.barcode }}', '{{ product.item_name }}')">
+                <button class="btn-action print" onclick="printSingleBarcode('{{ product.barcode }}', '{{ product.item_name }}', '{{ product.selling_price|floatformat:2 }}')">
                     <i class="fas fa-print"></i>
                     <span>باركود</span>
                 </button>
@@ -424,3 +424,6 @@
 <script src="{% static 'js/stock/barcode_print.js' %}"></script>
 <script src="{% static 'js/stock/products.js' %}"></script>
 {% endblock %}
+
+
+
