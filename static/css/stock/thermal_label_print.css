@@ -1,0 +1,162 @@
+/* Thermal Label Print Button Styles */
+
+.btn-print-thermal {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-print-thermal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.btn-print-thermal i {
+    font-size: 1rem;
+}
+
+/* Backward compatibility - keep old class names */
+.btn-print-barcode {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-print-barcode:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+/* Small version for action buttons */
+.btn-action.print {
+    background: #8B5CF6;
+    color: white;
+}
+
+.btn-action.print:hover {
+    background: #7C3AED;
+}
+
+/* Print all button */
+.btn-print-all {
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.btn-print-all:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.btn-print-all i {
+    font-size: 1rem;
+}
+
+/* Loading state */
+.btn-print-thermal.loading,
+.btn-print-barcode.loading,
+.btn-print-all.loading {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+.btn-print-thermal.loading i,
+.btn-print-barcode.loading i,
+.btn-print-all.loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Thermal label preview styles (optional - for testing) */
+.thermal-label-preview {
+    width: 72mm;
+    height: 11mm;
+    border: 1px solid #ddd;
+    display: flex;
+    background: white;
+    margin: 10px auto;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.thermal-label-preview .left-tail {
+    width: 30mm;
+    background: #f9f9f9;
+    border-left: 1px dashed #ccc;
+}
+
+.thermal-label-preview .middle-panel,
+.thermal-label-preview .right-panel {
+    width: 21mm;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5mm;
+}
+
+.thermal-label-preview .middle-box,
+.thermal-label-preview .right-box {
+    width: 100%;
+    height: 100%;
+    border: 1.5px solid #000;
+    border-radius: 1.5mm;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .btn-print-thermal,
+    .btn-print-barcode,
+    .btn-print-all {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Print media styles */
+@media print {
+    .btn-print-thermal,
+    .btn-print-barcode,
+    .btn-print-all,
+    .thermal-label-preview {
+        display: none;
+    }
+}

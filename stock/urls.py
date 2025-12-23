@@ -41,3 +41,5 @@ path('laboratory/<int:pk>/details/', views.laboratory_detail_json, name='laborat
 
 
 ]
+
+

@@ -735,3 +735,96 @@ def laboratory_detail_json(request, pk):
     return JsonResponse(data)
 
 
+
+# في ملف stock/views.py
+# استبدل دالة products_list بهذه النسخة المحدثة:
+
+@login_required
+def products_list(request):
+    """قائمة المنتجات"""
+    
+    search_query = request.GET.get('search', '')
+    category_id = request.GET.get('category', '')
+    status = request.GET.get('status', '')
+    
+    products = Product.objects.select_related('category', 'supplier').filter(is_active=True)
+    
+    if search_query:
+        products = products.filter(
+            Q(item_name__icontains=search_query) |
+            Q(barcode__icontains=search_query)
+        )
+    
+    if category_id:
+        products = products.filter(category_id=category_id)
+    
+    if status == 'low':
+        products = products.filter(quantity__lte=F('min_quantity'), quantity__gt=0)
+    elif status == 'out':
+        products = products.filter(quantity=0)
+    
+    products = products.order_by('-created_at')
+    
+    categories = Category.objects.filter(is_active=True)
+    suppliers = Supplier.objects.filter(is_active=True)
+    
+    # Get logo URL from settings app (if available)
+    logo_url = '/static/images/logo.png'  # Default logo
+    try:
+        from settings.models import GeneralSettings
+        settings = GeneralSettings.objects.first()
+        if settings and settings.logo:
+            logo_url = settings.logo.url
+    except:
+        pass
+    
+    # Calculate stats
+    total = products.count()
+    low_stock = products.filter(quantity__lte=F('min_quantity'), quantity__gt=0).count()
+    out_of_stock = products.filter(quantity=0).count()
+    
+    context = {
+        'products': products,
+        'categories': categories,
+        'suppliers': suppliers,
+        'search_query': search_query,
+        'category_id': category_id,
+        'status': status,
+        'logo_url': logo_url,
+        'stats': {
+            'total': total,
+            'low_stock': low_stock,
+            'out_of_stock': out_of_stock,
+        }
+    }
+    
+    return render(request, 'stock/products_list.html', context)
+
+
+# استبدل أيضاً دالة product_detail بهذه النسخة المحدثة:
+
+@login_required
+def product_detail(request, pk):
+    """تفاصيل المنتج"""
+    
+    product = get_object_or_404(Product, pk=pk)
+    movements = product.movements.all()[:20]
+    
+    # Get logo URL from settings app (if available)
+    logo_url = '/static/images/logo.png'  # Default logo
+    try:
+        from settings.models import GeneralSettings
+        settings = GeneralSettings.objects.first()
+        if settings and settings.logo:
+            logo_url = settings.logo.url
+    except:
+        pass
+    
+    context = {
+        'product': product,
+        'movements': movements,
+        'logo_url': logo_url,
+    }
+    
+    return render(request, 'stock/product_detail.html', context)
+

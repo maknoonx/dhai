@@ -5,7 +5,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/stock/products_list.css' %}">
-<link rel="stylesheet" href="{% static 'css/stock/barcode_print.css' %}">
+<link rel="stylesheet" href="{% static 'css/stock/thermal_label_print.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -17,12 +17,12 @@
                 <i class="fas fa-boxes"></i>
                 إدارة المنتجات
             </h1>
-            <p class="subtitle">إجمالي {{ products|length }} منتج</p>
+            <p class="subtitle">إجمالي {{ stats.total }} منتج</p>
         </div>
         <div class="header-actions">
-            <button class="btn btn-print-all" onclick="printAllVisibleBarcodes()">
+            <button class="btn btn-print-all" onclick="printAllVisibleThermalLabels()">
                 <i class="fas fa-print"></i>
-                طباعة جميع الباركودات
+                طباعة جميع الملصقات
             </button>
             <button class="btn btn-primary" onclick="showAddModal()">
                 <i class="fas fa-plus"></i>
@@ -170,9 +170,9 @@
                     <i class="fas fa-eye"></i>
                     <span>عرض</span>
                 </a>
-                <button class="btn-action print" onclick="printSingleBarcode('{{ product.barcode }}', '{{ product.item_name }}', '{{ product.selling_price|floatformat:2 }}')">
+                <button class="btn-action print" onclick="printThermalLabel('{{ product.barcode }}', '{{ product.item_name }}', '{{ product.selling_price|floatformat:2 }}', '{{ logo_url }}')">
                     <i class="fas fa-print"></i>
-                    <span>باركود</span>
+                    <span>ملصق</span>
                 </button>
                 <button class="btn-action secondary" onclick="showEditModal({{ product.pk }})">
                     <i class="fas fa-edit"></i>
@@ -417,13 +417,16 @@
         </form>
     </div>
 </div>
+
+<!-- Hidden data for JavaScript -->
+<script>
+    // Pass logo URL to JavaScript
+    window.LOGO_URL = '{{ logo_url }}';
+</script>
 {% endblock %}
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-<script src="{% static 'js/stock/barcode_print.js' %}"></script>
+<script src="{% static 'js/stock/barcode_thermal_print.js' %}"></script>
 <script src="{% static 'js/stock/products.js' %}"></script>
 {% endblock %}
-
-
-
