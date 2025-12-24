@@ -1,19 +1,19 @@
 // Barcode Printing Functionality
 
 /**
- * طباعة باركود منتج واحد
+ * طباعة باركود منتج واحد - أقسام متساوية
  */
-function printSingleBarcode(barcode, productName) {
+function printSingleBarcode(barcode, productName, price = '') {
     // Create print window
-    const printWindow = window.open('', '_blank', 'width=800,height=600');
+    const printWindow = window.open('', '_blank', 'width=400,height=300');
     
-    // Generate barcode HTML
+    // Generate barcode HTML with equal sections, no product name
     const html = `
         <!DOCTYPE html>
         <html dir="rtl" lang="ar">
         <head>
             <meta charset="UTF-8">
-            <title>طباعة الباركود - ${productName}</title>
+            <title>باركود - ${barcode}</title>
             <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
             <style>
                 * {
@@ -22,81 +22,141 @@ function printSingleBarcode(barcode, productName) {
                     box-sizing: border-box;
                 }
                 
+                @page {
+                    size: 60mm 40mm;
+                    margin: 2mm;
+                }
+                
                 body {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    padding: 20px;
+                    font-family: Arial, sans-serif;
                     background: white;
+                    width: 60mm;
+                    height: 40mm;
+                    margin: 0 auto;
+                    padding: 2mm;
+                }
+                
+                .barcode-label {
+                    width: 100%;
+                    height: 100%;
+                    border: 1px solid #000;
+                    display: flex;
+                    background: white;
+                }
+                
+                /* القسم الأيمن: الباركود فقط */
+                .right-section {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    padding: 2mm;
+                    border-left: 1px solid #ddd;
                 }
                 
                 .barcode-container {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    justify-content: center;
-                    min-height: 100vh;
-                    page-break-after: always;
-                }
-                
-                .barcode-label {
-                    border: 2px dashed #4A9EAD;
-                    padding: 30px;
-                    border-radius: 12px;
-                    background: white;
-                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-                    text-align: center;
-                }
-                
-                .product-name {
-                    font-size: 20px;
-                    font-weight: bold;
-                    color: #2c3e50;
-                    margin-bottom: 20px;
-                    text-align: center;
+                    width: 100%;
                 }
                 
                 .barcode-svg {
-                    margin: 20px 0;
+                    width: 100%;
+                    max-width: 26mm;
                 }
                 
                 .barcode-number {
                     font-family: 'Courier New', monospace;
-                    font-size: 18px;
-                    font-weight: 600;
-                    color: #2c3e50;
-                    margin-top: 15px;
-                    letter-spacing: 2px;
+                    font-size: 7pt;
+                    font-weight: bold;
+                    color: #000;
+                    margin-top: 2mm;
+                    letter-spacing: 0.3px;
+                    text-align: center;
                 }
                 
-                .print-date {
-                    margin-top: 20px;
-                    font-size: 12px;
-                    color: #7f8c8d;
+                /* القسم الأيسر: الشعار والسعر */
+                .left-section {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 2mm;
+                }
+                
+                .logo-container {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    flex: 1;
+                }
+                
+                .logo {
+                    max-width: 24mm;
+                    max-height: 18mm;
+                    object-fit: contain;
+                }
+                
+                .price-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    flex: 1;
+                    border-top: 1px solid #ddd;
+                    width: 100%;
+                    padding-top: 2mm;
+                }
+                
+                .price {
+                    font-size: 12pt;
+                    font-weight: bold;
+                    color: #000;
                     text-align: center;
+                }
+                
+                .price-label {
+                    font-size: 7pt;
+                    color: #666;
+                    margin-top: 1mm;
                 }
                 
                 @media print {
                     body {
                         padding: 0;
-                    }
-                    
-                    .barcode-container {
-                        min-height: auto;
+                        margin: 0;
                     }
                     
                     .barcode-label {
-                        border: 2px solid #4A9EAD;
-                        box-shadow: none;
+                        border: 1px solid #000;
                     }
                 }
             </style>
         </head>
         <body>
-            <div class="barcode-container">
-                <div class="barcode-label">
-                    <div class="product-name">${productName}</div>
-                    <svg class="barcode-svg" id="barcode"></svg>
-                    <div class="barcode-number">${barcode}</div>
-                    <div class="print-date">تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')}</div>
+            <div class="barcode-label">
+                <!-- القسم الأيمن: الباركود فقط -->
+                <div class="right-section">
+                    <div class="barcode-container">
+                        <svg class="barcode-svg" id="barcode"></svg>
+                        <div class="barcode-number">${barcode}</div>
+                    </div>
+                </div>
+                
+                <!-- القسم الأيسر: الشعار والسعر -->
+                <div class="left-section">
+                    <div class="logo-container">
+                        <img src="/static/images/logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
+                    </div>
+                    ${price ? `
+                    <div class="price-container">
+                        <div class="price">${price}</div>
+                        <div class="price-label">ر.س</div>
+                    </div>
+                    ` : ''}
                 </div>
             </div>
             
@@ -104,18 +164,16 @@ function printSingleBarcode(barcode, productName) {
                 // Generate barcode
                 JsBarcode("#barcode", "${barcode}", {
                     format: "CODE128",
-                    width: 3,
-                    height: 100,
+                    width: 1.5,
+                    height: 35,
                     displayValue: false,
-                    margin: 10
+                    margin: 0
                 });
                 
                 // Auto print after barcode is generated
                 window.onload = function() {
                     setTimeout(function() {
                         window.print();
-                        // Optional: close window after print
-                        // window.onafterprint = function() { window.close(); };
                     }, 500);
                 };
             </script>
@@ -128,7 +186,7 @@ function printSingleBarcode(barcode, productName) {
 }
 
 /**
- * طباعة باركودات متعددة
+ * طباعة باركودات متعددة - أقسام متساوية
  */
 function printMultipleBarcodes(products) {
     if (!products || products.length === 0) {
@@ -137,7 +195,7 @@ function printMultipleBarcodes(products) {
     }
     
     // Create print window
-    const printWindow = window.open('', '_blank', 'width=1200,height=800');
+    const printWindow = window.open('', '_blank', 'width=1000,height=800');
     
     // Generate barcodes HTML
     let barcodesHTML = '';
@@ -145,9 +203,26 @@ function printMultipleBarcodes(products) {
         barcodesHTML += `
             <div class="barcode-item">
                 <div class="barcode-label">
-                    <div class="product-name">${product.name}</div>
-                    <svg class="barcode-svg" id="barcode-${index}"></svg>
-                    <div class="barcode-number">${product.barcode}</div>
+                    <!-- القسم الأيمن: الباركود فقط -->
+                    <div class="right-section">
+                        <div class="barcode-container">
+                            <svg class="barcode-svg" id="barcode-${index}"></svg>
+                            <div class="barcode-number">${product.barcode}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- القسم الأيسر: الشعار والسعر -->
+                    <div class="left-section">
+                        <div class="logo-container">
+                            <img src="/static/images/logo.png" alt="Logo" class="logo" onerror="this.style.display='none'">
+                        </div>
+                        ${product.price ? `
+                        <div class="price-container">
+                            <div class="price">${product.price}</div>
+                            <div class="price-label">ر.س</div>
+                        </div>
+                        ` : ''}
+                    </div>
                 </div>
             </div>
         `;
@@ -167,89 +242,149 @@ function printMultipleBarcodes(products) {
                     box-sizing: border-box;
                 }
                 
+                @page {
+                    size: A4;
+                    margin: 10mm;
+                }
+                
                 body {
-                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                    padding: 20px;
+                    font-family: Arial, sans-serif;
                     background: #f5f5f5;
+                    padding: 10mm;
                 }
                 
                 .header {
                     text-align: center;
-                    margin-bottom: 30px;
-                    padding: 20px;
+                    margin-bottom: 10mm;
+                    padding: 5mm;
                     background: white;
-                    border-radius: 12px;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    border-radius: 8px;
                 }
                 
                 .header h1 {
-                    color: #4A9EAD;
-                    margin-bottom: 10px;
+                    font-size: 18pt;
+                    color: #2c3e50;
+                    margin-bottom: 3mm;
                 }
                 
                 .header p {
+                    font-size: 10pt;
                     color: #7f8c8d;
-                    font-size: 14px;
                 }
                 
                 .barcodes-grid {
                     display: grid;
                     grid-template-columns: repeat(3, 1fr);
-                    gap: 20px;
-                    margin-bottom: 30px;
+                    gap: 5mm;
                 }
                 
                 .barcode-item {
                     page-break-inside: avoid;
+                    break-inside: avoid;
                 }
                 
                 .barcode-label {
-                    border: 2px dashed #4A9EAD;
-                    padding: 20px;
-                    border-radius: 12px;
+                    width: 100%;
+                    height: 40mm;
+                    border: 1px solid #000;
+                    display: flex;
                     background: white;
-                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-                    text-align: center;
                 }
                 
-                .product-name {
-                    font-size: 16px;
-                    font-weight: bold;
-                    color: #2c3e50;
-                    margin-bottom: 15px;
-                    min-height: 40px;
+                /* القسم الأيمن: الباركود فقط */
+                .right-section {
+                    flex: 1;
                     display: flex;
-                    align-items: center;
+                    flex-direction: column;
                     justify-content: center;
+                    align-items: center;
+                    padding: 2mm;
+                    border-left: 1px solid #ddd;
+                }
+                
+                .barcode-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    width: 100%;
                 }
                 
                 .barcode-svg {
-                    margin: 15px 0;
+                    width: 100%;
+                    max-width: 26mm;
                 }
                 
                 .barcode-number {
                     font-family: 'Courier New', monospace;
-                    font-size: 14px;
-                    font-weight: 600;
-                    color: #2c3e50;
-                    margin-top: 10px;
-                    letter-spacing: 1px;
+                    font-size: 6pt;
+                    font-weight: bold;
+                    color: #000;
+                    margin-top: 2mm;
+                    letter-spacing: 0.3px;
+                    text-align: center;
+                }
+                
+                /* القسم الأيسر: الشعار والسعر */
+                .left-section {
+                    flex: 1;
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 2mm;
+                }
+                
+                .logo-container {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    flex: 1;
+                }
+                
+                .logo {
+                    max-width: 22mm;
+                    max-height: 16mm;
+                    object-fit: contain;
+                }
+                
+                .price-container {
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    flex: 1;
+                    border-top: 1px solid #ddd;
+                    width: 100%;
+                    padding-top: 2mm;
+                }
+                
+                .price {
+                    font-size: 11pt;
+                    font-weight: bold;
+                    color: #000;
+                    text-align: center;
+                }
+                
+                .price-label {
+                    font-size: 6pt;
+                    color: #666;
+                    margin-top: 1mm;
                 }
                 
                 .footer {
                     text-align: center;
-                    margin-top: 30px;
-                    padding: 20px;
+                    margin-top: 10mm;
+                    padding: 5mm;
                     background: white;
-                    border-radius: 12px;
+                    border-radius: 8px;
+                    font-size: 9pt;
                     color: #7f8c8d;
-                    font-size: 12px;
                 }
                 
                 @media print {
                     body {
-                        padding: 10px;
                         background: white;
+                        padding: 0;
                     }
                     
                     .header,
@@ -258,24 +393,15 @@ function printMultipleBarcodes(products) {
                     }
                     
                     .barcodes-grid {
-                        gap: 15px;
+                        gap: 3mm;
                     }
-                    
-                    .barcode-label {
-                        border: 2px solid #4A9EAD;
-                        box-shadow: none;
-                    }
-                }
-                
-                @page {
-                    margin: 1cm;
                 }
             </style>
         </head>
         <body>
             <div class="header">
                 <h1>باركودات المنتجات</h1>
-                <p>إجمالي المنتجات: ${products.length} | تاريخ الطباعة: ${new Date().toLocaleDateString('ar-SA')}</p>
+                <p>إجمالي: ${products.length} منتج | ${new Date().toLocaleDateString('ar-SA')}</p>
             </div>
             
             <div class="barcodes-grid">
@@ -291,10 +417,10 @@ function printMultipleBarcodes(products) {
                 ${products.map((product, index) => `
                     JsBarcode("#barcode-${index}", "${product.barcode}", {
                         format: "CODE128",
-                        width: 2,
-                        height: 60,
+                        width: 1.5,
+                        height: 35,
                         displayValue: false,
-                        margin: 5
+                        margin: 0
                     });
                 `).join('\n')}
                 
@@ -323,11 +449,18 @@ function printAllVisibleBarcodes() {
     productCards.forEach(card => {
         const name = card.querySelector('.product-name')?.textContent.trim();
         const barcode = card.querySelector('.product-barcode')?.textContent.trim();
+        const priceElement = card.querySelector('.product-price, .value.price');
+        let price = '';
+        
+        if (priceElement) {
+            price = priceElement.textContent.trim().replace('ريال', '').replace('ر.س', '').trim();
+        }
         
         if (name && barcode) {
             products.push({
                 name: name,
-                barcode: barcode
+                barcode: barcode,
+                price: price
             });
         }
     });
@@ -347,12 +480,19 @@ function printBarcodeFromDetail() {
     const productName = document.querySelector('.page-header h1')?.textContent.trim();
     const barcodeNumber = document.querySelector('.barcode-number')?.textContent.trim();
     
+    // محاولة جلب السعر من صفحة التفاصيل
+    let price = '';
+    const priceElement = document.querySelector('.info-item .value.price, .selling-price');
+    if (priceElement) {
+        price = priceElement.textContent.trim().replace('ريال', '').replace('ر.س', '').trim();
+    }
+    
     if (!productName || !barcodeNumber) {
         alert('خطأ في جلب بيانات المنتج');
         return;
     }
     
-    printSingleBarcode(barcodeNumber, productName);
+    printSingleBarcode(barcodeNumber, productName, price);
 }
 
 // Export functions
