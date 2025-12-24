@@ -477,10 +477,13 @@ from settings.models import CompanySettings
 # 2) Ensure EyeExam import path is correct for your project.
 
 from django.template.loader import render_to_string
+# === تحديثات مطلوبة على sales/views.py ===
+
+# استبدل دالة print_eye_exam بالكود التالي:
 
 @login_required
 def print_eye_exam(request, invoice_id):
-    """طباعة فحص العين للعميل المرتبط بالفاتورة (PDF عند توفر WeasyPrint)"""
+    """طباعة فحص العين للعميل المرتبط بالفاتورة (HTML للطباعة من المتصفح)"""
 
     # 1) الحصول على الفاتورة
     sale = get_object_or_404(Sale, pk=invoice_id)
@@ -491,16 +494,6 @@ def print_eye_exam(request, invoice_id):
         return redirect('sales:detail', pk=invoice_id)
 
     # 2) جلب آخر فحص للعميل
-    # عدّل مسار EyeExam إذا كان في تطبيق آخر
-    try:
-        from customers.models import EyeExam
-    except Exception:
-        # إذا EyeExam غير موجود أو في تطبيق آخر، لا نكسر النظام
-        messages.error(request, 'نموذج فحص العين (EyeExam) غير متوفر أو مساره غير صحيح')
-        return redirect('sales:detail', pk=invoice_id)
-
-    # إذا كان عندك related_name مختلف عدله هنا
-    # الافتراضي: customer.eye_exams.first()
     eye_exam = getattr(customer, "eye_exams", None)
     eye_exam = eye_exam.first() if eye_exam is not None else None
 
@@ -546,33 +539,11 @@ def print_eye_exam(request, invoice_id):
         'invoice': sale,
         'print_date': timezone.now(),
         'company': company_data,
-
         # للتوافق مع قوالب قديمة
         'company_name': company_data['company_name'],
         'company_phone': company_data['phone'],
         'company_address': company_data['address'],
     }
 
-    # 5) HTML من القالب
-    html_string = render_to_string('sales/eye_exam_print.html', context)
-
-    # 6) تحويل إلى PDF (Lazy import لتجنب كسر تشغيل السيرفر على Railway)
-    try:
-        from weasyprint import HTML
-    except Exception:
-        # خيار 1: رجّع HTML بدل PDF (مفيد للطباعة من المتصفح)
-        # return HttpResponse(html_string)
-
-        # خيار 2: رسالة واضحة
-        return HttpResponse(
-            "PDF generation is temporarily unavailable on the server (WeasyPrint dependencies missing).",
-            status=503
-        )
-
-    pdf = HTML(string=html_string, base_url=request.build_absolute_uri()).write_pdf()
-
-    # 7) إرجاع PDF
-    filename = f"eye_exam_{getattr(customer, 'customer_id', customer.pk)}.pdf"
-    response = HttpResponse(pdf, content_type='application/pdf')
-    response['Content-Disposition'] = f'inline; filename="{filename}"'
-    return response
+    # 5) إرجاع HTML مباشرة للطباعة من المتصفح
+    return render(request, 'sales/eye_exam_print.html', context)

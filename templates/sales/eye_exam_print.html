@@ -312,6 +312,27 @@
             color: #2c3e50;
         }
         
+        /* Print button - hidden when printing */
+        .print-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            padding: 15px 30px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14pt;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            z-index: 1000;
+        }
+        
+        .print-button:hover {
+            background: #5568d3;
+        }
+        
         /* Print Styles */
         @media print {
             body {
@@ -321,6 +342,14 @@
             
             .container {
                 padding: 0;
+            }
+            
+            .print-button {
+                display: none !important;
+            }
+            
+            .watermark {
+                opacity: 0.05;
             }
         }
         
@@ -338,6 +367,11 @@
     </style>
 </head>
 <body>
+    <!-- Print Button -->
+    <button class="print-button" onclick="window.print()">
+        🖨️ طباعة
+    </button>
+
     <div class="watermark">فحص عين</div>
     
     <div class="container">
@@ -516,5 +550,19 @@
             </p>
         </div>
     </div>
+
+    <!-- JavaScript للطباعة التلقائية عند الحاجة -->
+    <script>
+        // إضافة دعم Ctrl+P للطباعة
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'p') {
+                e.preventDefault();
+                window.print();
+            }
+        });
+
+        // يمكنك تفعيل الطباعة التلقائية عند تحميل الصفحة بإزالة التعليق عن السطر التالي:
+        // window.onload = function() { window.print(); };
+    </script>
 </body>
 </html>
