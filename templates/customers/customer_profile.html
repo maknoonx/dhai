@@ -5,6 +5,64 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/customers/customer_profile.css' %}">
+<style>
+/* Additional Styles for Two-Column Layout */
+.eyes-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    margin-bottom: 2rem;
+}
+
+.eye-details-column {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 2px solid #e0e0e0;
+}
+
+.eye-details-column h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: #333;
+}
+
+.pd-field {
+    background: #fff3e6;
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 2px solid #FFB547;
+    margin-bottom: 1.5rem;
+}
+
+.pd-field label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #FF9500;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.pd-field input {
+    border-color: #FFB547 !important;
+}
+
+.pd-field input:focus {
+    border-color: #FF9500 !important;
+    box-shadow: 0 0 0 3px rgba(255, 181, 71, 0.2) !important;
+}
+
+@media (max-width: 768px) {
+    .eyes-details-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 {% endblock %}
 
 {% block content %}
@@ -123,24 +181,20 @@
                 </div>
                 <div class="exam-details">
                     <div class="exam-row">
-                        <span>القوة الكروية (Sphere)</span>
-                        <span class="value">{{ latest_exam.right_sphere|default:"-" }}</span>
-                    </div>
-                    <div class="exam-row">
-                        <span>القوة الأسطوانية (Cylinder)</span>
-                        <span class="value">{{ latest_exam.right_cylinder|default:"-" }}</span>
+                        <span>القراءة (Add)</span>
+                        <span class="value">{{ latest_exam.right_add|default:"-" }}</span>
                     </div>
                     <div class="exam-row">
                         <span>المحور (Axis)</span>
                         <span class="value">{{ latest_exam.right_axis|default:"-" }}°</span>
                     </div>
                     <div class="exam-row">
-                        <span>القراءة (Add)</span>
-                        <span class="value">{{ latest_exam.right_add|default:"-" }}</span>
+                        <span>القوة الأسطوانية (Cylinder)</span>
+                        <span class="value">{{ latest_exam.right_cylinder|default:"-" }}</span>
                     </div>
                     <div class="exam-row">
-                        <span>المسافة البؤرية (PD)</span>
-                        <span class="value">{{ latest_exam.right_pd|default:"-" }} مم</span>
+                        <span>القوة الكروية (Sphere)</span>
+                        <span class="value">{{ latest_exam.right_sphere|default:"-" }}</span>
                     </div>
                 </div>
             </div>
@@ -155,26 +209,31 @@
                 </div>
                 <div class="exam-details">
                     <div class="exam-row">
-                        <span>القوة الكروية (Sphere)</span>
-                        <span class="value">{{ latest_exam.left_sphere|default:"-" }}</span>
-                    </div>
-                    <div class="exam-row">
-                        <span>القوة الأسطوانية (Cylinder)</span>
-                        <span class="value">{{ latest_exam.left_cylinder|default:"-" }}</span>
+                        <span>القراءة (Add)</span>
+                        <span class="value">{{ latest_exam.left_add|default:"-" }}</span>
                     </div>
                     <div class="exam-row">
                         <span>المحور (Axis)</span>
                         <span class="value">{{ latest_exam.left_axis|default:"-" }}°</span>
                     </div>
                     <div class="exam-row">
-                        <span>القراءة (Add)</span>
-                        <span class="value">{{ latest_exam.left_add|default:"-" }}</span>
+                        <span>القوة الأسطوانية (Cylinder)</span>
+                        <span class="value">{{ latest_exam.left_cylinder|default:"-" }}</span>
                     </div>
                     <div class="exam-row">
-                        <span>المسافة البؤرية (PD)</span>
-                        <span class="value">{{ latest_exam.left_pd|default:"-" }} مم</span>
+                        <span>القوة الكروية (Sphere)</span>
+                        <span class="value">{{ latest_exam.left_sphere|default:"-" }}</span>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <!-- PD Single Row -->
+        <div class="exam-notes" style="background: #fff3e6; border: 2px solid #FFB547;">
+            <i class="fas fa-ruler-horizontal" style="color: #FF9500;"></i>
+            <div>
+                <div class="notes-label" style="color: #FF9500;">المسافة البؤرية (PD)</div>
+                <p style="color: #FF9500; font-weight: 600;">{{ latest_exam.right_pd|default:"-" }} مم</p>
             </div>
         </div>
 
@@ -363,7 +422,7 @@
         <form method="POST" action="{% if latest_exam %}{% url 'customers:eye_exam_edit' latest_exam.pk %}{% else %}{% url 'customers:eye_exam_add' customer.pk %}{% endif %}">
             {% csrf_token %}
             <div class="modal-body">
-                <!-- Eye Diagrams -->
+                <!-- Eye Diagrams Side by Side -->
                 <div class="eye-diagrams-modal">
                     <div class="eye-diagram-container">
                         <h3 class="eye-title">
@@ -402,34 +461,25 @@
                     </div>
                 </div>
 
-                <!-- Right Eye Details -->
-                <div class="exam-section">
-                    <h3 class="section-subtitle">
-                        <div class="eye-icon-wrapper right-eye-color">
-                            <i class="fas fa-eye"></i>
-                        </div>
-                        تفاصيل العين اليمنى
-                    </h3>
-                    <div class="form-grid">
+                <!-- Eyes Details Side by Side -->
+                <div class="eyes-details-grid">
+                    <!-- Right Eye Details -->
+                    <div class="eye-details-column">
+                        <h3>
+                            <div class="eye-icon-wrapper right-eye-color">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            تفاصيل العين اليمنى
+                        </h3>
                         <div class="form-group">
-                            <label for="right_sphere">القوة الكروية (Sphere)</label>
+                            <label for="right_add">القراءة (Add)</label>
                             <input type="text" 
-                                   name="right_sphere" 
-                                   id="right_sphere"
-                                   value="{{ latest_exam.right_sphere|default:'' }}" 
-                                   placeholder="مثال: -2.00"
+                                   name="right_add" 
+                                   id="right_add"
+                                   value="{{ latest_exam.right_add|default:'' }}" 
+                                   placeholder="مثال: +1.50"
                                    autocomplete="off">
-                            <small>القوة الكروية لتصحيح قصر أو طول النظر</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="right_cylinder">القوة الأسطوانية (Cylinder)</label>
-                            <input type="text" 
-                                   name="right_cylinder" 
-                                   id="right_cylinder"
-                                   value="{{ latest_exam.right_cylinder|default:'' }}" 
-                                   placeholder="مثال: -0.75"
-                                   autocomplete="off">
-                            <small>القوة الأسطوانية لتصحيح الاستجماتيزم</small>
+                            <small>إضافة للقراءة (للنظارات متعددة البؤر)</small>
                         </div>
                         <div class="form-group">
                             <label for="right_axis">المحور (Axis)</label>
@@ -442,56 +492,44 @@
                             <small>المحور بالدرجات (0-180)</small>
                         </div>
                         <div class="form-group">
-                            <label for="right_add">القراءة (Add)</label>
+                            <label for="right_cylinder">القوة الأسطوانية (Cylinder)</label>
                             <input type="text" 
-                                   name="right_add" 
-                                   id="right_add"
-                                   value="{{ latest_exam.right_add|default:'' }}" 
-                                   placeholder="مثال: +1.50"
+                                   name="right_cylinder" 
+                                   id="right_cylinder"
+                                   value="{{ latest_exam.right_cylinder|default:'' }}" 
+                                   placeholder="مثال: -0.75"
                                    autocomplete="off">
-                            <small>إضافة للقراءة (للنظارات متعددة البؤر)</small>
+                            <small>القوة الأسطوانية لتصحيح الاستجماتيزم</small>
                         </div>
                         <div class="form-group">
-                            <label for="right_pd">المسافة البؤرية (PD)</label>
+                            <label for="right_sphere">القوة الكروية (Sphere)</label>
                             <input type="text" 
-                                   name="right_pd" 
-                                   id="right_pd"
-                                   value="{{ latest_exam.right_pd|default:'' }}" 
-                                   placeholder="مثال: 32"
-                                   autocomplete="off">
-                            <small>المسافة بالملليمتر</small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Left Eye Details -->
-                <div class="exam-section">
-                    <h3 class="section-subtitle">
-                        <div class="eye-icon-wrapper left-eye-color">
-                            <i class="fas fa-eye"></i>
-                        </div>
-                        تفاصيل العين اليسرى
-                    </h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label for="left_sphere">القوة الكروية (Sphere)</label>
-                            <input type="text" 
-                                   name="left_sphere" 
-                                   id="left_sphere"
-                                   value="{{ latest_exam.left_sphere|default:'' }}" 
-                                   placeholder="مثال: -2.25"
+                                   name="right_sphere" 
+                                   id="right_sphere"
+                                   value="{{ latest_exam.right_sphere|default:'' }}" 
+                                   placeholder="مثال: -2.00"
                                    autocomplete="off">
                             <small>القوة الكروية لتصحيح قصر أو طول النظر</small>
                         </div>
+                    </div>
+
+                    <!-- Left Eye Details -->
+                    <div class="eye-details-column">
+                        <h3>
+                            <div class="eye-icon-wrapper left-eye-color">
+                                <i class="fas fa-eye"></i>
+                            </div>
+                            تفاصيل العين اليسرى
+                        </h3>
                         <div class="form-group">
-                            <label for="left_cylinder">القوة الأسطوانية (Cylinder)</label>
+                            <label for="left_add">القراءة (Add)</label>
                             <input type="text" 
-                                   name="left_cylinder" 
-                                   id="left_cylinder"
-                                   value="{{ latest_exam.left_cylinder|default:'' }}" 
-                                   placeholder="مثال: -0.50"
+                                   name="left_add" 
+                                   id="left_add"
+                                   value="{{ latest_exam.left_add|default:'' }}" 
+                                   placeholder="مثال: +1.50"
                                    autocomplete="off">
-                            <small>القوة الأسطوانية لتصحيح الاستجماتيزم</small>
+                            <small>إضافة للقراءة (للنظارات متعددة البؤر)</small>
                         </div>
                         <div class="form-group">
                             <label for="left_axis">المحور (Axis)</label>
@@ -504,26 +542,41 @@
                             <small>المحور بالدرجات (0-180)</small>
                         </div>
                         <div class="form-group">
-                            <label for="left_add">القراءة (Add)</label>
+                            <label for="left_cylinder">القوة الأسطوانية (Cylinder)</label>
                             <input type="text" 
-                                   name="left_add" 
-                                   id="left_add"
-                                   value="{{ latest_exam.left_add|default:'' }}" 
-                                   placeholder="مثال: +1.50"
+                                   name="left_cylinder" 
+                                   id="left_cylinder"
+                                   value="{{ latest_exam.left_cylinder|default:'' }}" 
+                                   placeholder="مثال: -0.50"
                                    autocomplete="off">
-                            <small>إضافة للقراءة (للنظارات متعددة البؤر)</small>
+                            <small>القوة الأسطوانية لتصحيح الاستجماتيزم</small>
                         </div>
                         <div class="form-group">
-                            <label for="left_pd">المسافة البؤرية (PD)</label>
+                            <label for="left_sphere">القوة الكروية (Sphere)</label>
                             <input type="text" 
-                                   name="left_pd" 
-                                   id="left_pd"
-                                   value="{{ latest_exam.left_pd|default:'' }}" 
-                                   placeholder="مثال: 32"
+                                   name="left_sphere" 
+                                   id="left_sphere"
+                                   value="{{ latest_exam.left_sphere|default:'' }}" 
+                                   placeholder="مثال: -2.25"
                                    autocomplete="off">
-                            <small>المسافة بالملليمتر</small>
+                            <small>القوة الكروية لتصحيح قصر أو طول النظر</small>
                         </div>
                     </div>
+                </div>
+
+                <!-- PD - Single Field -->
+                <div class="form-group pd-field">
+                    <label for="pd_value">
+                        <i class="fas fa-ruler-horizontal"></i>
+                        المسافة البؤرية (PD)
+                    </label>
+                    <input type="text" 
+                           name="pd_value" 
+                           id="pd_value"
+                           value="{{ latest_exam.right_pd|default:'' }}" 
+                           placeholder="مثال: 64 أو 32/32"
+                           autocomplete="off">
+                    <small>المسافة البؤرية بالملليمتر (يمكن كتابتها لكلا العينين معاً أو منفصلة)</small>
                 </div>
 
                 <!-- Notes -->

@@ -16,6 +16,8 @@ from decimal import Decimal
 
 from .models import Product, Category, Supplier, StockMovement, Laboratory
 
+# في ملف stock/views.py
+# استبدل دالة dashboard بهذا الكود المصلح:
 
 @login_required
 def dashboard(request):
@@ -47,39 +49,46 @@ def dashboard(request):
     )['total'] or Decimal('0')
     
     # ==========================================
-    # إحصائيات التصنيفات
+    # إحصائيات التصنيفات - تم إصلاح التعارض
     # ==========================================
+    categories_raw = Category.objects.filter(is_active=True).annotate(
+        products_count_value=Count('products', filter=Q(products__is_active=True)),
+        total_quantity_value=Sum('products__quantity', filter=Q(products__is_active=True))
+    ).order_by('-products_count_value')[:5]
     
-    categories_stats = Category.objects.filter(is_active=True).annotate(
-        products_count=Count('products', filter=Q(products__is_active=True)),
-        total_quantity=Sum('products__quantity', filter=Q(products__is_active=True))
-    ).order_by('-products_count')[:5]  # أفضل 5 تصنيفات
+    # تحويل النتائج إلى قائمة من القواميس لتجنب التعارض
+    categories_stats = []
+    for cat in categories_raw:
+        categories_stats.append({
+            'id': cat.id,
+            'name': cat.name,
+            'icon': cat.icon,
+            'color': cat.color,
+            'products_count': cat.products_count_value,
+            'total_quantity': cat.total_quantity_value or 0,
+        })
     
     # ==========================================
-    # آخر حركات المخزون (فعلية من قاعدة البيانات)
+    # آخر حركات المخزون
     # ==========================================
-    
     recent_movements = StockMovement.objects.select_related(
         'product', 
         'product__category'
-    ).order_by('-created_at')[:10]  # آخر 10 حركات
+    ).order_by('-created_at')[:10]
     
     # ==========================================
     # الموردين النشطين
     # ==========================================
-    
     active_suppliers = Supplier.objects.filter(is_active=True).count()
     
     # ==========================================
     # المعامل النشطة
     # ==========================================
-    
     active_laboratories = Laboratory.objects.filter(is_active=True).count()
     
     # ==========================================
     # السياق (Context)
     # ==========================================
-    
     context = {
         # الإحصائيات
         'total_products': total_products,
@@ -90,9 +99,9 @@ def dashboard(request):
         'active_laboratories': active_laboratories,
         
         # المنتجات منخفضة المخزون (للعرض)
-        'low_stock_products': low_stock_products[:5],  # أول 5 فقط
+        'low_stock_products': low_stock_products[:5],
         
-        # التصنيفات
+        # التصنيفات (كقواميس بدون تعارض)
         'categories_stats': categories_stats,
         
         # الحركات الفعلية
@@ -100,8 +109,6 @@ def dashboard(request):
     }
     
     return render(request, 'stock/dashboard.html', context)
-
-
 @login_required
 def products_list(request):
     """قائمة المنتجات"""

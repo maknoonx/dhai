@@ -264,3 +264,64 @@ class Payment(models.Model):
     
     def __str__(self):
         return f"دفعة {self.amount} ريال - {self.sale.order_number}"
+    
+
+
+    # إضافة هذا الكود إلى ملف sales/models.py
+
+from django.db import models
+from django.core.validators import MinValueValidator
+
+class Service(models.Model):
+    """نموذج الخدمات"""
+    
+    service_code = models.CharField('رمز الخدمة', max_length=50, unique=True)
+    service_name = models.CharField('اسم الخدمة', max_length=200)
+    
+    # التكلفة (اختياري)
+    cost = models.DecimalField(
+        'التكلفة',
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True,
+        validators=[MinValueValidator(0)],
+        help_text='تكلفة الخدمة (اختياري)'
+    )
+    
+    # السعر
+    price = models.DecimalField(
+        'السعر',
+        max_digits=10,
+        decimal_places=2,
+        validators=[MinValueValidator(0)]
+    )
+    
+    # حالة الخدمة
+    is_active = models.BooleanField('نشط', default=True)
+    
+    # معلومات إضافية
+    description = models.TextField('الوصف', blank=True)
+    created_at = models.DateTimeField('تاريخ الإنشاء', auto_now_add=True)
+    updated_at = models.DateTimeField('تاريخ التحديث', auto_now=True)
+    created_by = models.CharField('أنشئ بواسطة', max_length=100, blank=True)
+    
+    class Meta:
+        verbose_name = 'خدمة'
+        verbose_name_plural = 'الخدمات'
+        ordering = ['service_name']
+    
+    def __str__(self):
+        return f"{self.service_code} - {self.service_name}"
+    
+    def get_profit(self):
+        """حساب الربح"""
+        if self.cost:
+            return self.price - self.cost
+        return None
+    
+    def get_profit_percentage(self):
+        """نسبة الربح"""
+        if self.cost and self.cost > 0:
+            return ((self.price - self.cost) / self.cost) * 100
+        return None

@@ -4,6 +4,9 @@ from django.utils import timezone
 from django.db.models import F, Sum
 
 
+# في ملف stock/models.py
+# استبدل نموذج Category بهذا الكود المصلح:
+
 class Category(models.Model):
     """التصنيفات"""
     
@@ -23,13 +26,11 @@ class Category(models.Model):
     def __str__(self):
         return self.name
     
-    @property
-    def products_count(self):
+    def get_products_count(self):
         """عدد المنتجات في التصنيف"""
         return self.products.filter(is_active=True).count()
     
-    @property
-    def total_quantity(self):
+    def get_total_quantity(self):
         """إجمالي الكمية في التصنيف"""
         return self.products.filter(is_active=True).aggregate(
             total=Sum('quantity')

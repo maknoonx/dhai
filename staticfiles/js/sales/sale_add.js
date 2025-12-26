@@ -1,10 +1,10 @@
-// Sale Add JavaScript - Fixed Version
+// Sale Add JavaScript - مع دعم الخدمات
 
 let selectedProducts = [];
 let selectedServices = [];
 let selectedCustomer = null;
 
-// ============== Customer Search Functions ==============
+// ============== Customer Functions ==============
 
 function showCustomerSearchModal() {
     document.getElementById('customerSearchModal').classList.add('active');
@@ -16,7 +16,6 @@ function closeCustomerSearchModal() {
     document.getElementById('customerSearchModal').classList.remove('active');
     document.getElementById('customerSearchModal').style.display = 'none';
     document.getElementById('customerSearchInput').value = '';
-    // Reset search results
     const results = document.querySelectorAll('.customer-result-item');
     results.forEach(item => item.style.display = 'flex');
 }
@@ -36,7 +35,6 @@ function searchCustomers() {
 }
 
 function selectCustomer(element) {
-    // Get data from element attributes
     const id = element.getAttribute('data-id');
     const customerId = element.getAttribute('data-customer-id');
     const name = element.getAttribute('data-name');
@@ -45,10 +43,7 @@ function selectCustomer(element) {
     
     selectedCustomer = { id, customerId, name, phone, email };
     
-    // Update hidden input
     document.getElementById('customer_id').value = id;
-    
-    // Show selected customer
     document.getElementById('displayCustomerName').textContent = name;
     document.getElementById('displayCustomerDetails').textContent = `${customerId} | ${phone}${email ? ' | ' + email : ''}`;
     
@@ -65,7 +60,7 @@ function removeCustomer() {
     document.getElementById('searchCustomerBtn').style.display = 'block';
 }
 
-// ============== Product Search Functions ==============
+// ============== Product Functions ==============
 
 function showProductSearchModal() {
     document.getElementById('productSearchModal').classList.add('active');
@@ -77,7 +72,6 @@ function closeProductSearchModal() {
     document.getElementById('productSearchModal').classList.remove('active');
     document.getElementById('productSearchModal').style.display = 'none';
     document.getElementById('productSearchInput').value = '';
-    // Reset search results
     const results = document.querySelectorAll('.product-result-item');
     results.forEach(item => item.style.display = 'flex');
 }
@@ -97,29 +91,23 @@ function searchProducts() {
 }
 
 function selectProduct(element) {
-    // Get data from element attributes
     const id = parseInt(element.getAttribute('data-id'));
     const name = element.getAttribute('data-name');
     const price = parseFloat(element.getAttribute('data-price'));
     const quantity = parseInt(element.getAttribute('data-quantity'));
     const barcode = element.getAttribute('data-barcode');
     
-    console.log('Product selected:', { id, name, price, quantity, barcode }); // Debug
-    
-    // Check if product is already added
     if (selectedProducts.find(p => p.id === id)) {
         alert('هذا المنتج مضاف مسبقاً');
         return;
     }
     
-    // Check if product is out of stock
     if (quantity <= 0) {
         if (!confirm('هذا المنتج غير متوفر في المخزون. هل تريد المتابعة؟')) {
             return;
         }
     }
     
-    // Add to list
     selectedProducts.push({
         id: id,
         name: name,
@@ -127,27 +115,80 @@ function selectProduct(element) {
         price: price,
         quantity: 1,
         available: quantity,
-        prescription_right: '',
-        prescription_left: ''
+        type: 'product'
     });
     
-    console.log('Products list:', selectedProducts); // Debug
-    
-    // Update display
     updateProductsTable();
     calculateTotal();
     
     closeProductSearchModal();
 }
 
-// Update Products Table
+// ============== Service Functions ==============
+
+function showServiceSearchModal() {
+    document.getElementById('serviceSearchModal').classList.add('active');
+    document.getElementById('serviceSearchModal').style.display = 'flex';
+    document.getElementById('serviceSearchInput').focus();
+}
+
+function closeServiceSearchModal() {
+    document.getElementById('serviceSearchModal').classList.remove('active');
+    document.getElementById('serviceSearchModal').style.display = 'none';
+    document.getElementById('serviceSearchInput').value = '';
+    const results = document.querySelectorAll('.service-result-item');
+    results.forEach(item => item.style.display = 'flex');
+}
+
+function searchServices() {
+    const query = document.getElementById('serviceSearchInput').value.toLowerCase().trim();
+    const results = document.querySelectorAll('.service-result-item');
+    
+    results.forEach(item => {
+        const text = item.textContent.toLowerCase();
+        if (text.includes(query)) {
+            item.style.display = 'flex';
+        } else {
+            item.style.display = 'none';
+        }
+    });
+}
+
+function selectService(element) {
+    const id = parseInt(element.getAttribute('data-id'));
+    const code = element.getAttribute('data-code');
+    const name = element.getAttribute('data-name');
+    const price = parseFloat(element.getAttribute('data-price'));
+    
+    if (selectedServices.find(s => s.id === id)) {
+        alert('هذه الخدمة مضافة مسبقاً');
+        return;
+    }
+    
+    selectedServices.push({
+        id: id,
+        code: code,
+        name: name,
+        price: price,
+        quantity: 1,
+        type: 'service'
+    });
+    
+    updateProductsTable();
+    calculateTotal();
+    
+    closeServiceSearchModal();
+}
+
+// ============== Update Table ==============
+
 function updateProductsTable() {
     const tbody = document.getElementById('productsTableBody');
     
     if (selectedProducts.length === 0 && selectedServices.length === 0) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                <td colspan="5" style="text-align: center; padding: 2rem; color: #7f8c8d;">
                     لم يتم إضافة منتجات أو خدمات
                 </td>
             </tr>
@@ -162,7 +203,10 @@ function updateProductsTable() {
         html += `
             <tr>
                 <td>
-                    <div style="font-weight: 600;">${product.name}</div>
+                    <div style="font-weight: 600;">
+                        <i class="fas fa-box" style="color: #4A9EAD; margin-left: 5px;"></i>
+                        ${product.name}
+                    </div>
                     <small style="color: #7f8c8d;">${product.barcode}</small>
                 </td>
                 <td>
@@ -184,18 +228,6 @@ function updateProductsTable() {
                 </td>
                 <td style="font-weight: 600; color: #4A9EAD;">${(product.price * product.quantity).toFixed(2)} ر.س</td>
                 <td>
-                    <input type="text"
-                           placeholder="قياس يمنى"
-                           value="${product.prescription_right}"
-                           onchange="updateProductPrescription(${index}, 'right', this.value)"
-                           style="width: 100%; padding: 0.4rem; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 3px;">
-                    <input type="text"
-                           placeholder="قياس يسرى"
-                           value="${product.prescription_left}"
-                           onchange="updateProductPrescription(${index}, 'left', this.value)"
-                           style="width: 100%; padding: 0.4rem; border: 1px solid #ddd; border-radius: 6px;">
-                </td>
-                <td>
                     <button type="button" 
                             class="btn-remove" 
                             onclick="removeProduct(${index})"
@@ -210,10 +242,13 @@ function updateProductsTable() {
     // Services
     selectedServices.forEach((service, index) => {
         html += `
-            <tr style="background: #f8f9fa;">
+            <tr style="background: #f0f4ff;">
                 <td>
-                    <div style="font-weight: 600;">${service.name}</div>
-                    <small style="color: #7f8c8d;">خدمة إضافية</small>
+                    <div style="font-weight: 600;">
+                        <i class="fas fa-concierge-bell" style="color: #667eea; margin-left: 5px;"></i>
+                        ${service.name}
+                    </div>
+                    <small style="color: #7f8c8d;">${service.code}</small>
                 </td>
                 <td>
                     <input type="number" 
@@ -223,9 +258,14 @@ function updateProductsTable() {
                            onchange="updateServicePrice(${index}, this.value)"
                            style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px;">
                 </td>
-                <td style="text-align: center;">1</td>
-                <td style="font-weight: 600; color: #4A9EAD;">${service.price.toFixed(2)} ر.س</td>
-                <td style="text-align: center;">-</td>
+                <td style="text-align: center;">
+                    <input type="number" 
+                           value="${service.quantity}" 
+                           min="1"
+                           onchange="updateServiceQuantity(${index}, this.value)"
+                           style="width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 6px;">
+                </td>
+                <td style="font-weight: 600; color: #667eea;">${(service.price * service.quantity).toFixed(2)} ر.س</td>
                 <td>
                     <button type="button" 
                             class="btn-remove" 
@@ -241,14 +281,14 @@ function updateProductsTable() {
     tbody.innerHTML = html;
 }
 
-// Update Product Price
+// ============== Update Functions ==============
+
 function updateProductPrice(index, price) {
     selectedProducts[index].price = parseFloat(price) || 0;
     updateProductsTable();
     calculateTotal();
 }
 
-// Update Product Quantity
 function updateProductQuantity(index, quantity) {
     const qty = parseInt(quantity) || 1;
     const available = selectedProducts[index].available;
@@ -264,16 +304,6 @@ function updateProductQuantity(index, quantity) {
     calculateTotal();
 }
 
-// Update Product Prescription
-function updateProductPrescription(index, eye, value) {
-    if (eye === 'right') {
-        selectedProducts[index].prescription_right = value;
-    } else {
-        selectedProducts[index].prescription_left = value;
-    }
-}
-
-// Remove Product
 function removeProduct(index) {
     if (confirm('هل تريد حذف هذا المنتج؟')) {
         selectedProducts.splice(index, 1);
@@ -282,14 +312,18 @@ function removeProduct(index) {
     }
 }
 
-// Update Service Price
 function updateServicePrice(index, price) {
     selectedServices[index].price = parseFloat(price) || 0;
     updateProductsTable();
     calculateTotal();
 }
 
-// Remove Service
+function updateServiceQuantity(index, quantity) {
+    selectedServices[index].quantity = parseInt(quantity) || 1;
+    updateProductsTable();
+    calculateTotal();
+}
+
 function removeService(index) {
     if (confirm('هل تريد حذف هذه الخدمة؟')) {
         selectedServices.splice(index, 1);
@@ -298,50 +332,9 @@ function removeService(index) {
     }
 }
 
-// ============== Service Functions ==============
-
-const serviceModal = document.getElementById('serviceModal');
-
-function addService() {
-    document.getElementById('service_name').value = '';
-    document.getElementById('service_price').value = '';
-    serviceModal.classList.add('active');
-    serviceModal.style.display = 'flex';
-}
-
-function closeServiceModal() {
-    serviceModal.classList.remove('active');
-    serviceModal.style.display = 'none';
-}
-
-function addServiceToList() {
-    const name = document.getElementById('service_name').value.trim();
-    const price = parseFloat(document.getElementById('service_price').value) || 0;
-    
-    if (!name) {
-        alert('الرجاء إدخال اسم الخدمة');
-        return;
-    }
-    
-    if (price <= 0) {
-        alert('الرجاء إدخال سعر صحيح');
-        return;
-    }
-    
-    selectedServices.push({
-        name: name,
-        price: price
-    });
-    
-    updateProductsTable();
-    calculateTotal();
-    closeServiceModal();
-}
-
 // ============== Calculate Total ==============
 
 function calculateTotal() {
-    // Subtotal
     let subtotal = 0;
     
     selectedProducts.forEach(product => {
@@ -349,20 +342,14 @@ function calculateTotal() {
     });
     
     selectedServices.forEach(service => {
-        subtotal += service.price;
+        subtotal += service.price * service.quantity;
     });
     
-    // Discount
     const discount = parseFloat(document.getElementById('discount')?.value || 0);
-    
-    // Tax (15%)
     const taxableAmount = subtotal - discount;
     const tax = taxableAmount > 0 ? taxableAmount * 0.15 : 0;
-    
-    // Total
     const total = subtotal - discount + tax;
     
-    // Update display
     document.getElementById('subtotalDisplay').textContent = subtotal.toFixed(2) + ' ر.س';
     document.getElementById('taxDisplay').textContent = tax.toFixed(2) + ' ر.س';
     document.getElementById('totalDisplay').textContent = total.toFixed(2) + ' ر.س';
@@ -373,69 +360,54 @@ function calculateTotal() {
 const saleForm = document.getElementById('saleForm');
 
 saleForm?.addEventListener('submit', function(e) {
-    // Validate customer
     if (!selectedCustomer) {
         e.preventDefault();
         alert('الرجاء اختيار العميل');
         return false;
     }
     
-    // Validate products/services
     if (selectedProducts.length === 0 && selectedServices.length === 0) {
         e.preventDefault();
         alert('الرجاء إضافة منتج أو خدمة واحدة على الأقل');
         return false;
     }
     
-    // Prepare data
     const productsData = selectedProducts.map(p => ({
         product_id: p.id,
         quantity: p.quantity,
-        unit_price: p.price,
-        prescription_right: p.prescription_right,
-        prescription_left: p.prescription_left
+        unit_price: p.price
     }));
     
     const servicesData = selectedServices.map(s => ({
+        service_id: s.id,
         name: s.name,
-        price: s.price
+        price: s.price,
+        quantity: s.quantity
     }));
     
-    // Set hidden fields
     document.getElementById('products').value = JSON.stringify(productsData);
     document.getElementById('services').value = JSON.stringify(servicesData);
-    
-    console.log('Submitting products:', productsData); // Debug
-    console.log('Submitting services:', servicesData); // Debug
 });
 
-// ============== Modal Close Events ==============
+// ============== Modal Events ==============
 
-// Close modals on outside click
 document.getElementById('customerSearchModal')?.addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeCustomerSearchModal();
-    }
+    if (e.target === this) closeCustomerSearchModal();
 });
 
 document.getElementById('productSearchModal')?.addEventListener('click', function(e) {
-    if (e.target === this) {
-        closeProductSearchModal();
-    }
+    if (e.target === this) closeProductSearchModal();
 });
 
-serviceModal?.addEventListener('click', function(e) {
-    if (e.target === serviceModal) {
-        closeServiceModal();
-    }
+document.getElementById('serviceSearchModal')?.addEventListener('click', function(e) {
+    if (e.target === this) closeServiceSearchModal();
 });
 
-// Close on Escape
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeCustomerSearchModal();
         closeProductSearchModal();
-        closeServiceModal();
+        closeServiceSearchModal();
     }
 });
 
@@ -444,5 +416,5 @@ document.addEventListener('keydown', function(e) {
 document.addEventListener('DOMContentLoaded', function() {
     updateProductsTable();
     calculateTotal();
-    console.log('Sale Add JS loaded');
+    console.log('Sale Add JS loaded with services support');
 });

@@ -1,3 +1,5 @@
+# تحديث ملف sales/urls.py - أضف هذه المسارات
+
 from django.urls import path
 from . import views
 
@@ -25,6 +27,12 @@ urlpatterns = [
     
     # API
     path('api/product/<int:pk>/', views.get_product_info, name='get_product_info'),
-
     path('<int:invoice_id>/print-eye-exam/', views.print_eye_exam, name='print_eye_exam'),
+    
+    # ===== الخدمات =====
+    path('services/', views.service_list, name='service_list'),
+    path('services/add/', views.service_add, name='service_add'),
+    path('services/<int:pk>/edit/', views.service_edit, name='service_edit'),
+    path('services/<int:pk>/delete/', views.service_delete, name='service_delete'),
+    path('api/service/<int:pk>/', views.get_service_info, name='get_service_info'),
 ]

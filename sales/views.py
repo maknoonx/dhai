@@ -85,6 +85,8 @@ def sale_list(request):
     return render(request, 'sales/sale_list.html', context)
 
 
+# تحديث دالة sale_add في ملف sales/views.py
+
 @login_required
 def sale_add(request):
     """إضافة فاتورة جديدة"""
@@ -124,7 +126,7 @@ def sale_add(request):
                 notes=notes,
                 prescription_notes=prescription_notes,
                 payment_method=payment_method,
-                paid_amount=0,  # سيتم التحديث لاحقاً
+                paid_amount=0,
                 discount=discount,
                 created_by=request.user.username if request.user.is_authenticated else 'System'
             )
@@ -147,9 +149,7 @@ def sale_add(request):
                     sale=sale,
                     product=product,
                     quantity=quantity,
-                    unit_price=unit_price,
-                    prescription_right=item.get('prescription_right', ''),
-                    prescription_left=item.get('prescription_left', '')
+                    unit_price=unit_price
                 )
                 
                 subtotal += sale_item.total_price
@@ -158,22 +158,34 @@ def sale_add(request):
                 product.quantity -= quantity
                 product.save()
             
-            # الخدمات الإضافية
+            # الخدمات
             services_data = json.loads(request.POST.get('services', '[]'))
-            for service in services_data:
-                service_name = service['name']
-                service_price = Decimal(service['price'])
+            for service_data in services_data:
+                # إذا كانت الخدمة من قائمة الخدمات المحفوظة
+                if 'service_id' in service_data:
+                    try:
+                        service = Service.objects.get(pk=service_data['service_id'])
+                        service_name = service.service_name
+                        service_price = Decimal(service_data['price'])
+                        quantity = int(service_data.get('quantity', 1))
+                    except Service.DoesNotExist:
+                        continue
+                else:
+                    # خدمة مخصصة
+                    service_name = service_data['name']
+                    service_price = Decimal(service_data['price'])
+                    quantity = int(service_data.get('quantity', 1))
                 
                 # إنشاء عنصر خدمة
                 SaleItem.objects.create(
                     sale=sale,
-                    product=None,  # الخدمات ليس لها منتج
-                    quantity=1,
+                    product=None,
+                    quantity=quantity,
                     unit_price=service_price,
                     service_name=service_name
                 )
                 
-                subtotal += service_price
+                subtotal += (service_price * quantity)
             
             # حساب الضريبة (15%)
             tax = subtotal * Decimal('0.15')
@@ -205,16 +217,17 @@ def sale_add(request):
     customers = Customer.objects.all().order_by('name')
     products = Product.objects.filter(is_active=True).select_related('category')
     laboratories = Laboratory.objects.filter(is_active=True)
+    services = Service.objects.filter(is_active=True).order_by('service_name')
     
     context = {
         'customers': customers,
         'products': products,
         'laboratories': laboratories,
+        'services': services,
         'payment_methods': Sale.PAYMENT_METHODS,
     }
     
     return render(request, 'sales/sale_add.html', context)
-
 
 @login_required
 def sale_detail(request, pk):
@@ -547,3 +560,145 @@ def print_eye_exam(request, invoice_id):
 
     # 5) إرجاع HTML مباشرة للطباعة من المتصفح
     return render(request, 'sales/eye_exam_print.html', context)
+
+
+
+
+# إضافة هذه الدوال إلى ملف sales/views.py
+
+from .models import Service
+
+@login_required
+def service_list(request):
+    """عرض قائمة الخدمات"""
+    
+    # البحث
+    search_query = request.GET.get('search', '')
+    
+    services = Service.objects.all()
+    
+    if search_query:
+        services = services.filter(
+            Q(service_code__icontains=search_query) |
+            Q(service_name__icontains=search_query)
+        )
+    
+    services = services.order_by('service_name')
+    
+    # الإحصائيات
+    total_services = services.count()
+    active_services = services.filter(is_active=True).count()
+    
+    context = {
+        'services': services,
+        'search_query': search_query,
+        'total_services': total_services,
+        'active_services': active_services,
+    }
+    
+    return render(request, 'sales/service_list.html', context)
+
+
+@login_required
+def service_add(request):
+    """إضافة خدمة جديدة"""
+    
+    if request.method == 'POST':
+        try:
+            service_name = request.POST.get('service_name')
+            cost = request.POST.get('cost') or None
+            price = request.POST.get('price')
+            description = request.POST.get('description', '')
+            
+            # توليد رمز الخدمة
+            last_service = Service.objects.order_by('-id').first()
+            if last_service and last_service.service_code:
+                try:
+                    last_number = int(last_service.service_code.split('-')[1])
+                    new_number = last_number + 1
+                except:
+                    new_number = 1
+            else:
+                new_number = 1
+            service_code = f'SRV-{new_number:05d}'
+            
+            # إنشاء الخدمة
+            service = Service.objects.create(
+                service_code=service_code,
+                service_name=service_name,
+                cost=cost,
+                price=price,
+                description=description,
+                created_by=request.user.username if request.user.is_authenticated else 'System'
+            )
+            
+            messages.success(request, f'تم إضافة الخدمة {service_code} بنجاح')
+            return redirect('sales:service_list')
+            
+        except Exception as e:
+            messages.error(request, f'حدث خطأ: {str(e)}')
+    
+    return render(request, 'sales/service_add.html')
+
+
+@login_required
+def service_edit(request, pk):
+    """تعديل خدمة"""
+    
+    service = get_object_or_404(Service, pk=pk)
+    
+    if request.method == 'POST':
+        try:
+            service.service_name = request.POST.get('service_name')
+            service.cost = request.POST.get('cost') or None
+            service.price = request.POST.get('price')
+            service.description = request.POST.get('description', '')
+            service.is_active = request.POST.get('is_active') == 'on'
+            
+            service.save()
+            
+            messages.success(request, 'تم تحديث الخدمة بنجاح')
+            return redirect('sales:service_list')
+            
+        except Exception as e:
+            messages.error(request, f'حدث خطأ: {str(e)}')
+    
+    context = {
+        'service': service,
+    }
+    
+    return render(request, 'sales/service_edit.html', context)
+
+
+@login_required
+def service_delete(request, pk):
+    """حذف خدمة"""
+    
+    service = get_object_or_404(Service, pk=pk)
+    
+    if request.method == 'POST':
+        service_code = service.service_code
+        service.delete()
+        
+        messages.success(request, f'تم حذف الخدمة {service_code} بنجاح')
+        return redirect('sales:service_list')
+    
+    return redirect('sales:service_list')
+
+
+@login_required
+def get_service_info(request, pk):
+    """الحصول على معلومات الخدمة (API)"""
+    
+    service = get_object_or_404(Service, pk=pk)
+    
+    data = {
+        'id': service.id,
+        'service_code': service.service_code,
+        'service_name': service.service_name,
+        'cost': float(service.cost) if service.cost else 0,
+        'price': float(service.price),
+        'is_active': service.is_active,
+    }
+    
+    return JsonResponse(data)

@@ -35,7 +35,6 @@
                 معلومات العميل
             </h3>
             
-            <!-- Selected Customer Display -->
             <div id="selectedCustomerDisplay" class="selected-customer-box" style="display: none;">
                 <div class="customer-card">
                     <div class="customer-card-header">
@@ -50,7 +49,6 @@
                 </div>
             </div>
 
-            <!-- Search Customer Button -->
             <div id="searchCustomerBtn" class="form-group">
                 <button type="button" class="btn btn-select-customer" onclick="showCustomerSearchModal()">
                     <i class="fas fa-search"></i>
@@ -58,53 +56,47 @@
                 </button>
             </div>
 
-            <!-- Hidden input for customer_id -->
             <input type="hidden" id="customer_id" name="customer_id" required>
         </div>
 
-        <!-- Products Section -->
+        <!-- Products & Services Section -->
         <div class="form-section">
             <h3 class="section-title">
-                <i class="fas fa-box"></i>
-                المنتجات
+                <i class="fas fa-shopping-cart"></i>
+                المنتجات والخدمات
             </h3>
             
-            <!-- Product Search Button -->
             <div class="product-search-section">
                 <button type="button" class="btn btn-add-product" onclick="showProductSearchModal()">
-                    <i class="fas fa-plus"></i>
+                    <i class="fas fa-box"></i>
                     إضافة منتج
+                </button>
+                <button type="button" class="btn btn-add-product" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);" onclick="showServiceSearchModal()">
+                    <i class="fas fa-concierge-bell"></i>
+                    إضافة خدمة
                 </button>
             </div>
 
-            <!-- Selected Products Table -->
             <div class="selected-products" id="selectedProducts">
                 <table class="products-table">
                     <thead>
                         <tr>
-                            <th style="width: 35%">المنتج</th>
-                            <th style="width: 12%">السعر</th>
-                            <th style="width: 10%">الكمية</th>
-                            <th style="width: 12%">الإجمالي</th>
-                            <th style="width: 26%">قياس (اختياري)</th>
+                            <th style="width: 40%">العنصر</th>
+                            <th style="width: 20%">السعر</th>
+                            <th style="width: 15%">الكمية</th>
+                            <th style="width: 20%">الإجمالي</th>
                             <th style="width: 5%"></th>
                         </tr>
                     </thead>
                     <tbody id="productsTableBody">
                         <tr>
-                            <td colspan="6" style="text-align: center; padding: 2rem; color: #7f8c8d;">
-                                لم يتم إضافة منتجات
+                            <td colspan="5" style="text-align: center; padding: 2rem; color: #7f8c8d;">
+                                لم يتم إضافة منتجات أو خدمات
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-
-            <!-- Add Service Button -->
-            <button type="button" class="btn btn-outline" onclick="addService()">
-                <i class="fas fa-plus"></i>
-                إضافة خدمة إضافية
-            </button>
         </div>
 
         <!-- Order Details -->
@@ -154,7 +146,6 @@
                 الدفع
             </h3>
 
-            <!-- Amount Summary -->
             <div class="amount-summary">
                 <div class="amount-row">
                     <span>المجموع الفرعي:</span>
@@ -205,11 +196,9 @@
             </div>
         </div>
 
-        <!-- Hidden Fields -->
         <input type="hidden" id="products" name="products" value="[]">
         <input type="hidden" id="services" name="services" value="[]">
 
-        <!-- Submit Buttons -->
         <div class="form-actions">
             <button type="submit" class="btn btn-primary btn-large">
                 <i class="fas fa-save"></i>
@@ -232,7 +221,6 @@
             </button>
         </div>
         <div class="modal-body">
-            <!-- Search Input -->
             <div class="search-box-modal">
                 <i class="fas fa-search"></i>
                 <input type="text" 
@@ -241,7 +229,6 @@
                        onkeyup="searchCustomers()">
             </div>
 
-            <!-- Search Results -->
             <div class="search-results-modal" id="customerSearchResults">
                 {% for customer in customers %}
                 <div class="customer-result-item" 
@@ -279,7 +266,6 @@
             </button>
         </div>
         <div class="modal-body">
-            <!-- Search Input -->
             <div class="search-box-modal">
                 <i class="fas fa-search"></i>
                 <input type="text" 
@@ -288,7 +274,6 @@
                        onkeyup="searchProducts()">
             </div>
 
-            <!-- Search Results -->
             <div class="search-results-modal" id="productSearchResults">
                 {% for product in products %}
                 <div class="product-result-item" 
@@ -316,39 +301,43 @@
     </div>
 </div>
 
-<!-- Add Service Modal -->
-<div id="serviceModal" class="modal">
-    <div class="modal-content">
+<!-- Service Search Modal -->
+<div id="serviceSearchModal" class="modal">
+    <div class="modal-content modal-large">
         <div class="modal-header">
-            <h2>إضافة خدمة</h2>
-            <button class="btn-close" onclick="closeServiceModal()">
+            <h2>اختيار الخدمة</h2>
+            <button class="btn-close" onclick="closeServiceSearchModal()">
                 <i class="fas fa-times"></i>
             </button>
         </div>
         <div class="modal-body">
-            <div class="form-group">
-                <label for="service_name">اسم الخدمة</label>
+            <div class="search-box-modal">
+                <i class="fas fa-search"></i>
                 <input type="text" 
-                       id="service_name" 
-                       placeholder="مثال: ضغط العدسة، تركيب إطار">
+                       id="serviceSearchInput" 
+                       placeholder="ابحث عن الخدمة..."
+                       onkeyup="searchServices()">
             </div>
-            <div class="form-group">
-                <label for="service_price">السعر</label>
-                <input type="number" 
-                       id="service_price" 
-                       min="0" 
-                       step="0.01"
-                       placeholder="0.00">
+
+            <div class="search-results-modal" id="serviceSearchResults">
+                {% for service in services %}
+                <div class="service-result-item" 
+                     data-id="{{ service.id }}"
+                     data-code="{{ service.service_code }}"
+                     data-name="{{ service.service_name }}"
+                     data-price="{{ service.price }}"
+                     onclick="selectService(this)">
+                    <div class="product-result-info">
+                        <h4>{{ service.service_name }}</h4>
+                        <p>
+                            <span class="product-barcode">{{ service.service_code }}</span>
+                            <span class="product-price">{{ service.price }} ر.س</span>
+                        </p>
+                    </div>
+                    <i class="fas fa-plus-circle"></i>
+                </div>
+                {% endfor %}
             </div>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-primary" onclick="addServiceToList()">
-                <i class="fas fa-plus"></i>
-                إضافة
-            </button>
-            <button type="button" class="btn btn-cancel" onclick="closeServiceModal()">
-                إلغاء
-            </button>
         </div>
     </div>
 </div>

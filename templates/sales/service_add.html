@@ -1,0 +1,90 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}خدمة جديدة{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sales/sales.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="sale-add-page">
+    <div class="page-header">
+        <div class="header-content">
+            <h1>
+                <i class="fas fa-plus-circle"></i>
+                خدمة جديدة
+            </h1>
+        </div>
+        <div class="header-actions">
+            <a href="{% url 'sales:service_list' %}" class="btn btn-outline">
+                <i class="fas fa-arrow-right"></i>
+                عودة
+            </a>
+        </div>
+    </div>
+
+    <form method="POST" class="sale-form">
+        {% csrf_token %}
+
+        <div class="form-section">
+            <h3 class="section-title">
+                <i class="fas fa-info-circle"></i>
+                معلومات الخدمة
+            </h3>
+            
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="service_name">اسم الخدمة <span class="required">*</span></label>
+                    <input type="text" 
+                           id="service_name" 
+                           name="service_name" 
+                           required
+                           placeholder="مثال: ضغط العدسة، تركيب إطار">
+                </div>
+
+                <div class="form-group">
+                    <label for="cost">التكلفة (اختياري)</label>
+                    <input type="number" 
+                           id="cost" 
+                           name="cost" 
+                           min="0" 
+                           step="0.01"
+                           placeholder="0.00">
+                    <small>تكلفة تقديم الخدمة (للحسابات الداخلية)</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="price">السعر <span class="required">*</span></label>
+                    <input type="number" 
+                           id="price" 
+                           name="price" 
+                           required
+                           min="0" 
+                           step="0.01"
+                           placeholder="0.00">
+                    <small>سعر الخدمة للعميل</small>
+                </div>
+
+                <div class="form-group full-width">
+                    <label for="description">الوصف</label>
+                    <textarea id="description" 
+                              name="description" 
+                              rows="3"
+                              placeholder="وصف تفصيلي للخدمة (اختياري)"></textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-large">
+                <i class="fas fa-save"></i>
+                حفظ الخدمة
+            </button>
+            <a href="{% url 'sales:service_list' %}" class="btn btn-cancel btn-large">
+                إلغاء
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

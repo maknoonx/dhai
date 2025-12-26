@@ -226,6 +226,9 @@ def customer_notifications_update(request, pk):
     return redirect('customers:profile', pk=pk)
 
 
+# في ملف customers/views.py
+# استبدل دوال eye_exam_add و eye_exam_edit بهذا الكود:
+
 @login_required
 def eye_exam_add(request, customer_pk):
     """إضافة فحص نظر"""
@@ -233,21 +236,24 @@ def eye_exam_add(request, customer_pk):
     customer = get_object_or_404(Customer, pk=customer_pk)
     
     if request.method == 'POST':
+        # الحصول على قيمة PD الواحدة وحفظها في كلا العينين
+        pd_value = request.POST.get('pd_value', '')
+        
         exam = EyeExam(
             customer=customer,
             exam_date=request.POST.get('exam_date', timezone.now().date()),
             # Right eye
-            right_sphere=request.POST.get('right_sphere', ''),
-            right_cylinder=request.POST.get('right_cylinder', ''),
-            right_axis=request.POST.get('right_axis', ''),
             right_add=request.POST.get('right_add', ''),
-            right_pd=request.POST.get('right_pd', ''),
+            right_axis=request.POST.get('right_axis', ''),
+            right_cylinder=request.POST.get('right_cylinder', ''),
+            right_sphere=request.POST.get('right_sphere', ''),
+            right_pd=pd_value,  # نفس القيمة للعين اليمنى
             # Left eye
-            left_sphere=request.POST.get('left_sphere', ''),
-            left_cylinder=request.POST.get('left_cylinder', ''),
-            left_axis=request.POST.get('left_axis', ''),
             left_add=request.POST.get('left_add', ''),
-            left_pd=request.POST.get('left_pd', ''),
+            left_axis=request.POST.get('left_axis', ''),
+            left_cylinder=request.POST.get('left_cylinder', ''),
+            left_sphere=request.POST.get('left_sphere', ''),
+            left_pd=pd_value,  # نفس القيمة للعين اليسرى
             # Notes
             notes=request.POST.get('notes', ''),
         )
@@ -268,19 +274,22 @@ def eye_exam_edit(request, pk):
     exam = get_object_or_404(EyeExam, pk=pk)
     
     if request.method == 'POST':
+        # الحصول على قيمة PD الواحدة وحفظها في كلا العينين
+        pd_value = request.POST.get('pd_value', '')
+        
         exam.exam_date = request.POST.get('exam_date', exam.exam_date)
         # Right eye
-        exam.right_sphere = request.POST.get('right_sphere', '')
-        exam.right_cylinder = request.POST.get('right_cylinder', '')
-        exam.right_axis = request.POST.get('right_axis', '')
         exam.right_add = request.POST.get('right_add', '')
-        exam.right_pd = request.POST.get('right_pd', '')
+        exam.right_axis = request.POST.get('right_axis', '')
+        exam.right_cylinder = request.POST.get('right_cylinder', '')
+        exam.right_sphere = request.POST.get('right_sphere', '')
+        exam.right_pd = pd_value
         # Left eye
-        exam.left_sphere = request.POST.get('left_sphere', '')
-        exam.left_cylinder = request.POST.get('left_cylinder', '')
-        exam.left_axis = request.POST.get('left_axis', '')
         exam.left_add = request.POST.get('left_add', '')
-        exam.left_pd = request.POST.get('left_pd', '')
+        exam.left_axis = request.POST.get('left_axis', '')
+        exam.left_cylinder = request.POST.get('left_cylinder', '')
+        exam.left_sphere = request.POST.get('left_sphere', '')
+        exam.left_pd = pd_value
         # Notes
         exam.notes = request.POST.get('notes', '')
         
@@ -291,6 +300,8 @@ def eye_exam_edit(request, pk):
             messages.error(request, f'حدث خطأ: {str(e)}')
     
     return redirect('customers:profile', pk=exam.customer.pk)
+
+
 
 
 @login_required
