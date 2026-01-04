@@ -1,6 +1,6 @@
-// Thermal Label Barcode Printing System
+// Thermal Label Barcode Printing System - FIXED POSITIONING
 // Label specifications: 72mm (W) × 11mm (H)
-// Left tail (blank): 30mm | Middle panel (logo+price): 21mm | Right panel (barcode): 21mm
+// Adjusted layout: Left tail (blank): 35mm | Middle panel (logo+price): 18mm | Right panel (barcode): 19mm
 
 /**
  * Print single thermal label for a product
@@ -49,22 +49,22 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                     background: white;
                 }
                 
-                /* Left tail - completely blank for sticking */
+                /* Left tail - completely blank - INCREASED to 35mm */
                 .left-tail {
-                    width: 30mm;
+                    width: 35mm;
                     height: 11mm;
                     background: white;
                     /* No content, no border - completely blank */
                 }
                 
-                /* Middle panel - Logo and Price */
+                /* Middle panel - Logo and Price - REDUCED to 18mm */
                 .middle-panel {
-                    width: 21mm;
+                    width: 18mm;
                     height: 11mm;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 0.5mm;
+                    padding: 0.4mm;
                 }
                 
                 .middle-box {
@@ -78,31 +78,31 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                     align-items: center;
                     justify-content: center;
                     gap: 0.3mm;
-                    padding: 0.5mm;
+                    padding: 0.4mm;
                 }
                 
                 .logo {
-                    max-width: 12mm;
-                    max-height: 5mm;
+                    max-width: 11mm;
+                    max-height: 4.5mm;
                     object-fit: contain;
                 }
                 
                 .price {
-                    font-size: 8pt;
+                    font-size: 7.5pt;
                     font-weight: bold;
                     color: #000;
                     text-align: center;
                     white-space: nowrap;
                 }
                 
-                /* Right panel - Barcode */
+                /* Right panel - Barcode - REDUCED to 19mm */
                 .right-panel {
-                    width: 21mm;
+                    width: 19mm;
                     height: 11mm;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 0.5mm;
+                    padding: 0.4mm;
                 }
                 
                 .right-box {
@@ -116,7 +116,7 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                     align-items: center;
                     justify-content: center;
                     gap: 0.2mm;
-                    padding: 0.5mm;
+                    padding: 0.4mm;
                 }
                 
                 .barcode-container {
@@ -128,13 +128,13 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                 }
                 
                 .barcode-svg {
-                    width: 18mm;
+                    width: 17mm;
                     height: 6mm;
                 }
                 
                 .barcode-text {
                     font-family: 'Courier New', monospace;
-                    font-size: 5pt;
+                    font-size: 4.5pt;
                     font-weight: bold;
                     color: #000;
                     text-align: center;
@@ -156,10 +156,10 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
         </head>
         <body>
             <div class="thermal-label">
-                <!-- Left tail - completely blank -->
+                <!-- Left tail - completely blank - NOW 35mm -->
                 <div class="left-tail"></div>
                 
-                <!-- Middle panel - Logo and Price -->
+                <!-- Middle panel - Logo and Price - NOW 18mm -->
                 <div class="middle-panel">
                     <div class="middle-box">
                         <img src="${logoUrl}" alt="Logo" class="logo" onerror="this.style.display='none'">
@@ -167,7 +167,7 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                     </div>
                 </div>
                 
-                <!-- Right panel - Barcode -->
+                <!-- Right panel - Barcode - NOW 19mm -->
                 <div class="right-panel">
                     <div class="right-box">
                         <div class="barcode-container">
@@ -311,21 +311,21 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     break-inside: avoid;
                 }
                 
-                /* Left tail - completely blank */
+                /* Left tail - completely blank - 35mm */
                 .left-tail {
-                    width: 30mm;
+                    width: 35mm;
                     height: 11mm;
                     background: white;
                 }
                 
-                /* Middle panel - Logo and Price */
+                /* Middle panel - Logo and Price - 18mm */
                 .middle-panel {
-                    width: 21mm;
+                    width: 18mm;
                     height: 11mm;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 0.5mm;
+                    padding: 0.4mm;
                 }
                 
                 .middle-box {
@@ -339,31 +339,31 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     align-items: center;
                     justify-content: center;
                     gap: 0.3mm;
-                    padding: 0.5mm;
+                    padding: 0.4mm;
                 }
                 
                 .logo {
-                    max-width: 12mm;
-                    max-height: 5mm;
+                    max-width: 11mm;
+                    max-height: 4.5mm;
                     object-fit: contain;
                 }
                 
                 .price {
-                    font-size: 8pt;
+                    font-size: 7.5pt;
                     font-weight: bold;
                     color: #000;
                     text-align: center;
                     white-space: nowrap;
                 }
                 
-                /* Right panel - Barcode */
+                /* Right panel - Barcode - 19mm */
                 .right-panel {
-                    width: 21mm;
+                    width: 19mm;
                     height: 11mm;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 0.5mm;
+                    padding: 0.4mm;
                 }
                 
                 .right-box {
@@ -377,7 +377,7 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     align-items: center;
                     justify-content: center;
                     gap: 0.2mm;
-                    padding: 0.5mm;
+                    padding: 0.4mm;
                 }
                 
                 .barcode-container {
@@ -389,13 +389,13 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                 }
                 
                 .barcode-svg {
-                    width: 18mm;
+                    width: 17mm;
                     height: 6mm;
                 }
                 
                 .barcode-text {
                     font-family: 'Courier New', monospace;
-                    font-size: 5pt;
+                    font-size: 4.5pt;
                     font-weight: bold;
                     color: #000;
                     text-align: center;
@@ -541,4 +541,4 @@ window.printMultipleThermalLabels = printMultipleThermalLabels;
 window.printAllVisibleThermalLabels = printAllVisibleThermalLabels;
 window.printThermalLabelFromDetail = printThermalLabelFromDetail;
 
-console.log('Thermal label printing system loaded successfully');
+console.log('Thermal label printing system (FIXED POSITIONING) loaded successfully');
