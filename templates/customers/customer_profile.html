@@ -6,60 +6,140 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/customers/customer_profile.css' %}">
 <style>
-/* Additional Styles for Two-Column Layout */
-.eyes-details-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 2rem;
-    margin-bottom: 2rem;
+/* Prescription Table Styles */
+.prescription-table-wrapper {
+    margin: 2rem 0;
+    background: white;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
-.eye-details-column {
+.prescription-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+
+.prescription-table thead {
     background: #f8f9fa;
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 2px solid #e0e0e0;
 }
 
-.eye-details-column h3 {
-    font-size: 1.125rem;
+.prescription-table th {
+    padding: 1rem;
+    font-size: 0.875rem;
     font-weight: 600;
-    margin-bottom: 1.5rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    color: #333;
+    color: #666;
+    border: 1px solid #e0e0e0;
 }
 
-.pd-field {
+.prescription-table td {
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    font-size: 0.875rem;
+}
+
+.prescription-table .eye-label {
+    font-weight: 600;
+    background: #f8f9fa;
+    text-align: left;
+    padding-right: 1.5rem;
+}
+
+.prescription-table .exam-value {
+    color: #1a1a1a;
+    font-weight: 500;
+}
+
+.prescription-table .pd-label {
+    text-align: left;
+    padding: 1rem 1.5rem;
     background: #fff3e6;
-    padding: 1.5rem;
-    border-radius: 12px;
-    border: 2px solid #FFB547;
-    margin-bottom: 1.5rem;
+    font-size: 0.875rem;
 }
 
-.pd-field label {
-    display: flex;
+.prescription-table .pd-label strong {
+    color: #FF9500;
+}
+
+/* Modal Table Styles */
+.exam-form-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+}
+
+.exam-form-table th,
+.exam-form-table td {
+    padding: 1rem;
+    border: 1px solid #e0e0e0;
+    text-align: center;
+}
+
+.exam-form-table thead {
+    background: #f8f9fa;
+}
+
+.exam-form-table th {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #666;
+}
+
+.exam-form-table .eye-row-label {
+    font-weight: 600;
+    background: #f8f9fa;
+    text-align: left;
+    padding-right: 1.5rem;
+}
+
+.exam-form-table input {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    text-align: center;
+    font-size: 0.875rem;
+}
+
+.exam-form-table input:focus {
+    outline: none;
+    border-color: #4A9EAD;
+    box-shadow: 0 0 0 2px rgba(74, 158, 173, 0.1);
+}
+
+.ipd-row {
+    background: #fff3e6;
+}
+
+.ipd-row td {
+    text-align: left;
+    padding: 1rem 1.5rem;
+}
+
+.ipd-row label {
+    display: inline-flex;
     align-items: center;
     gap: 0.5rem;
     color: #FF9500;
-    font-size: 1rem;
-    font-weight: 700;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
 }
 
-.pd-field input {
-    border-color: #FFB547 !important;
+.ipd-row input {
+    max-width: 200px;
 }
 
-.pd-field input:focus {
-    border-color: #FF9500 !important;
-    box-shadow: 0 0 0 3px rgba(255, 181, 71, 0.2) !important;
-}
-
+/* Responsive */
 @media (max-width: 768px) {
-    .eyes-details-grid {
-        grid-template-columns: 1fr;
+    .prescription-table-wrapper,
+    .exam-form-table {
+        overflow-x: auto;
+    }
+    
+    .prescription-table,
+    .exam-form-table {
+        min-width: 600px;
     }
 }
 </style>
@@ -134,8 +214,8 @@
     <div class="section-card">
         <div class="section-header">
             <div class="section-title">
-                <i class="fas fa-eye"></i>
-                <h2>الفحص الطبي للنظر</h2>
+                <i class="fas fa-glasses"></i>
+                <h2>الفحص الطبي للنظر - Glasses Prescription</h2>
             </div>
             {% if latest_exam %}
             <button class="btn-edit-exam" onclick="showEditExamModal()">
@@ -146,95 +226,46 @@
         </div>
 
         {% if latest_exam %}
-        <!-- Eye Diagrams Display -->
-        <div class="eyes-display">
-            <div class="eye-diagram-display">
-                <div class="eye-visual-display right-eye-display">
-                    <div class="eye-shine"></div>
-                    <div class="iris-display">
-                        <div class="pupil-display"></div>
-                        <div class="eye-reflection"></div>
-                    </div>
-                </div>
-                <h3 class="eye-label">العين اليمنى</h3>
-            </div>
-            <div class="eye-diagram-display">
-                <div class="eye-visual-display left-eye-display">
-                    <div class="eye-shine"></div>
-                    <div class="iris-display">
-                        <div class="pupil-display"></div>
-                        <div class="eye-reflection"></div>
-                    </div>
-                </div>
-                <h3 class="eye-label">العين اليسرى</h3>
-            </div>
-        </div>
-
-        <div class="exam-grid">
-            <!-- Right Eye -->
-            <div class="eye-card">
-                <div class="eye-header">
-                    <div class="eye-icon-wrapper right-eye-color">
-                        <i class="fas fa-eye"></i>
-                    </div>
-                    <h3>العين اليمنى</h3>
-                </div>
-                <div class="exam-details">
-                    <div class="exam-row">
-                        <span>القراءة (Add)</span>
-                        <span class="value">{{ latest_exam.right_add|default:"-" }}</span>
-                    </div>
-                    <div class="exam-row">
-                        <span>المحور (Axis)</span>
-                        <span class="value">{{ latest_exam.right_axis|default:"-" }}°</span>
-                    </div>
-                    <div class="exam-row">
-                        <span>القوة الأسطوانية (Cylinder)</span>
-                        <span class="value">{{ latest_exam.right_cylinder|default:"-" }}</span>
-                    </div>
-                    <div class="exam-row">
-                        <span>القوة الكروية (Sphere)</span>
-                        <span class="value">{{ latest_exam.right_sphere|default:"-" }}</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Left Eye -->
-            <div class="eye-card">
-                <div class="eye-header">
-                    <div class="eye-icon-wrapper left-eye-color">
-                        <i class="fas fa-eye"></i>
-                    </div>
-                    <h3>العين اليسرى</h3>
-                </div>
-                <div class="exam-details">
-                    <div class="exam-row">
-                        <span>القراءة (Add)</span>
-                        <span class="value">{{ latest_exam.left_add|default:"-" }}</span>
-                    </div>
-                    <div class="exam-row">
-                        <span>المحور (Axis)</span>
-                        <span class="value">{{ latest_exam.left_axis|default:"-" }}°</span>
-                    </div>
-                    <div class="exam-row">
-                        <span>القوة الأسطوانية (Cylinder)</span>
-                        <span class="value">{{ latest_exam.left_cylinder|default:"-" }}</span>
-                    </div>
-                    <div class="exam-row">
-                        <span>القوة الكروية (Sphere)</span>
-                        <span class="value">{{ latest_exam.left_sphere|default:"-" }}</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- PD Single Row -->
-        <div class="exam-notes" style="background: #fff3e6; border: 2px solid #FFB547;">
-            <i class="fas fa-ruler-horizontal" style="color: #FF9500;"></i>
-            <div>
-                <div class="notes-label" style="color: #FF9500;">المسافة البؤرية (PD)</div>
-                <p style="color: #FF9500; font-weight: 600;">{{ latest_exam.right_pd|default:"-" }} مم</p>
-            </div>
+        <!-- Prescription Table -->
+        <div class="prescription-table-wrapper">
+            <table class="prescription-table">
+                <thead>
+                    <tr>
+                        <th style="width: 100px;"></th>
+                        <th>Sphere</th>
+                        <th>Cylinder</th>
+                        <th>Axis</th>
+                        <th>Distance acuity</th>
+                        <th>Near acuity</th>
+                        <th>Reading addition</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td class="eye-label">Right</td>
+                        <td class="exam-value">{{ latest_exam.right_sphere|default:"-" }}</td>
+                        <td class="exam-value">{{ latest_exam.right_cylinder|default:"-" }}</td>
+                        <td class="exam-value">{{ latest_exam.right_axis|default:"-" }}°</td>
+                        <td class="exam-value">-</td>
+                        <td class="exam-value">-</td>
+                        <td class="exam-value">{{ latest_exam.right_add|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="eye-label">Left</td>
+                        <td class="exam-value">{{ latest_exam.left_sphere|default:"-" }}</td>
+                        <td class="exam-value">{{ latest_exam.left_cylinder|default:"-" }}</td>
+                        <td class="exam-value">{{ latest_exam.left_axis|default:"-" }}°</td>
+                        <td class="exam-value">-</td>
+                        <td class="exam-value">-</td>
+                        <td class="exam-value">{{ latest_exam.left_add|default:"-" }}</td>
+                    </tr>
+                    <tr>
+                        <td class="pd-label" colspan="7">
+                            <strong>IPD:</strong> {{ latest_exam.right_pd|default:"-" }} mm
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
         </div>
 
         {% if latest_exam.notes %}
@@ -422,165 +453,131 @@
         <form method="POST" action="{% if latest_exam %}{% url 'customers:eye_exam_edit' latest_exam.pk %}{% else %}{% url 'customers:eye_exam_add' customer.pk %}{% endif %}">
             {% csrf_token %}
             <div class="modal-body">
-                <!-- Eye Diagrams Side by Side -->
-                <div class="eye-diagrams-modal">
-                    <div class="eye-diagram-container">
-                        <h3 class="eye-title">
-                            <i class="fas fa-eye"></i>
-                            العين اليمنى
-                        </h3>
-                        <div class="eye-visual-modal right-eye-modal">
-                            <div class="eye-outer">
-                                <div class="eye-white">
-                                    <div class="iris-modal right-iris">
-                                        <div class="pupil-modal">
-                                            <div class="reflection-dot"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="eye-diagram-container">
-                        <h3 class="eye-title">
-                            <i class="fas fa-eye"></i>
-                            العين اليسرى
-                        </h3>
-                        <div class="eye-visual-modal left-eye-modal">
-                            <div class="eye-outer">
-                                <div class="eye-white">
-                                    <div class="iris-modal left-iris">
-                                        <div class="pupil-modal">
-                                            <div class="reflection-dot"></div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Eyes Details Side by Side -->
-                <div class="eyes-details-grid">
-                    <!-- Right Eye Details -->
-                    <div class="eye-details-column">
-                        <h3>
-                            <div class="eye-icon-wrapper right-eye-color">
-                                <i class="fas fa-eye"></i>
-                            </div>
-                            تفاصيل العين اليمنى
-                        </h3>
-                        <div class="form-group">
-                            <label for="right_add">القراءة (Add)</label>
-                            <input type="text" 
-                                   name="right_add" 
-                                   id="right_add"
-                                   value="{{ latest_exam.right_add|default:'' }}" 
-                                   placeholder="مثال: +1.50"
-                                   autocomplete="off">
-                            <small>إضافة للقراءة (للنظارات متعددة البؤر)</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="right_axis">المحور (Axis)</label>
-                            <input type="text" 
-                                   name="right_axis" 
-                                   id="right_axis"
-                                   value="{{ latest_exam.right_axis|default:'' }}" 
-                                   placeholder="مثال: 180"
-                                   autocomplete="off">
-                            <small>المحور بالدرجات (0-180)</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="right_cylinder">القوة الأسطوانية (Cylinder)</label>
-                            <input type="text" 
-                                   name="right_cylinder" 
-                                   id="right_cylinder"
-                                   value="{{ latest_exam.right_cylinder|default:'' }}" 
-                                   placeholder="مثال: -0.75"
-                                   autocomplete="off">
-                            <small>القوة الأسطوانية لتصحيح الاستجماتيزم</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="right_sphere">القوة الكروية (Sphere)</label>
-                            <input type="text" 
-                                   name="right_sphere" 
-                                   id="right_sphere"
-                                   value="{{ latest_exam.right_sphere|default:'' }}" 
-                                   placeholder="مثال: -2.00"
-                                   autocomplete="off">
-                            <small>القوة الكروية لتصحيح قصر أو طول النظر</small>
-                        </div>
-                    </div>
-
-                    <!-- Left Eye Details -->
-                    <div class="eye-details-column">
-                        <h3>
-                            <div class="eye-icon-wrapper left-eye-color">
-                                <i class="fas fa-eye"></i>
-                            </div>
-                            تفاصيل العين اليسرى
-                        </h3>
-                        <div class="form-group">
-                            <label for="left_add">القراءة (Add)</label>
-                            <input type="text" 
-                                   name="left_add" 
-                                   id="left_add"
-                                   value="{{ latest_exam.left_add|default:'' }}" 
-                                   placeholder="مثال: +1.50"
-                                   autocomplete="off">
-                            <small>إضافة للقراءة (للنظارات متعددة البؤر)</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="left_axis">المحور (Axis)</label>
-                            <input type="text" 
-                                   name="left_axis" 
-                                   id="left_axis"
-                                   value="{{ latest_exam.left_axis|default:'' }}" 
-                                   placeholder="مثال: 175"
-                                   autocomplete="off">
-                            <small>المحور بالدرجات (0-180)</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="left_cylinder">القوة الأسطوانية (Cylinder)</label>
-                            <input type="text" 
-                                   name="left_cylinder" 
-                                   id="left_cylinder"
-                                   value="{{ latest_exam.left_cylinder|default:'' }}" 
-                                   placeholder="مثال: -0.50"
-                                   autocomplete="off">
-                            <small>القوة الأسطوانية لتصحيح الاستجماتيزم</small>
-                        </div>
-                        <div class="form-group">
-                            <label for="left_sphere">القوة الكروية (Sphere)</label>
-                            <input type="text" 
-                                   name="left_sphere" 
-                                   id="left_sphere"
-                                   value="{{ latest_exam.left_sphere|default:'' }}" 
-                                   placeholder="مثال: -2.25"
-                                   autocomplete="off">
-                            <small>القوة الكروية لتصحيح قصر أو طول النظر</small>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- PD - Single Field -->
-                <div class="form-group pd-field">
-                    <label for="pd_value">
-                        <i class="fas fa-ruler-horizontal"></i>
-                        المسافة البؤرية (PD)
-                    </label>
-                    <input type="text" 
-                           name="pd_value" 
-                           id="pd_value"
-                           value="{{ latest_exam.right_pd|default:'' }}" 
-                           placeholder="مثال: 64 أو 32/32"
-                           autocomplete="off">
-                    <small>المسافة البؤرية بالملليمتر (يمكن كتابتها لكلا العينين معاً أو منفصلة)</small>
-                </div>
+                <h3 style="margin-bottom: 1rem;">Glasses Prescription</h3>
+                
+                <!-- Exam Table -->
+                <table class="exam-form-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 100px;"></th>
+                            <th>Sphere</th>
+                            <th>Cylinder</th>
+                            <th>Axis</th>
+                            <th>Distance acuity</th>
+                            <th>Near acuity</th>
+                            <th>Reading addition</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="eye-row-label">Right</td>
+                            <td>
+                                <input type="text" 
+                                       name="right_sphere" 
+                                       value="{{ latest_exam.right_sphere|default:'' }}" 
+                                       placeholder="+1.25"
+                                       autocomplete="off">
+                            </td>
+                            <td>
+                                <input type="text" 
+                                       name="right_cylinder" 
+                                       value="{{ latest_exam.right_cylinder|default:'' }}" 
+                                       placeholder="0.50"
+                                       autocomplete="off">
+                            </td>
+                            <td>
+                                <input type="text" 
+                                       name="right_axis" 
+                                       value="{{ latest_exam.right_axis|default:'' }}" 
+                                       placeholder="5°"
+                                       autocomplete="off">
+                            </td>
+                            <td>
+                                <input type="text" 
+                                       name="right_distance" 
+                                       value="" 
+                                       placeholder="20/20"
+                                       autocomplete="off">
+                            </td>
+                            <td>
+                                <input type="text" 
+                                       name="right_near" 
+                                       value="" 
+                                       placeholder="20/20"
+                                       autocomplete="off">
+                            </td>
+                            <td>
+                                <input type="text" 
+                                       name="right_add" 
+                                       value="{{ latest_exam.right_add|default:'' }}" 
+                                       placeholder="+2.00"
+                                       autocomplete="off">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="eye-row-label">Left</td>
+                            <td>
+                                <input type="text" 
+                                       name="left_sphere" 
+                                       value="{{ latest_exam.left_sphere|default:'' }}" 
+                                       placeholder="+1.50"
+                                       autocomplete="off">
+                            </td>
+                            <td>
+                                <input type="text" 
+                                       name="left_cylinder" 
+                                       value="{{ latest_exam.left_cylinder|default:'' }}" 
+                                       placeholder="0.50"
+                                       autocomplete="off">
+                            </td>
+                            <td>
+                                <input type="text" 
+                                       name="left_axis" 
+                                       value="{{ latest_exam.left_axis|default:'' }}" 
+                                       placeholder="165°"
+                                       autocomplete="off">
+                            </td>
+                            <td>
+                                <input type="text" 
+                                       name="left_distance" 
+                                       value="" 
+                                       placeholder="20/20"
+                                       autocomplete="off">
+                            </td>
+                            <td>
+                                <input type="text" 
+                                       name="left_near" 
+                                       value="" 
+                                       placeholder="20/20"
+                                       autocomplete="off">
+                            </td>
+                            <td>
+                                <input type="text" 
+                                       name="left_add" 
+                                       value="{{ latest_exam.left_add|default:'' }}" 
+                                       placeholder="+2.00"
+                                       autocomplete="off">
+                            </td>
+                        </tr>
+                        <tr class="ipd-row">
+                            <td colspan="7">
+                                <label for="pd_value">
+                                    <i class="fas fa-ruler-horizontal"></i>
+                                    IPD (المسافة البؤرية)
+                                </label>
+                                <input type="text" 
+                                       name="pd_value" 
+                                       id="pd_value"
+                                       value="{{ latest_exam.right_pd|default:'' }}" 
+                                       placeholder="58 mm"
+                                       autocomplete="off">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
 
                 <!-- Notes -->
-                <div class="form-group">
+                <div class="form-group" style="margin-top: 2rem;">
                     <label for="notes">
                         <i class="fas fa-sticky-note"></i>
                         ملاحظات الفحص
@@ -589,7 +586,8 @@
                               id="notes"
                               rows="4" 
                               placeholder="أضف أي ملاحظات إضافية عن الفحص..."
-                              autocomplete="off">{{ latest_exam.notes|default:'' }}</textarea>
+                              autocomplete="off"
+                              style="width: 100%; padding: 0.75rem; border: 1px solid #e0e0e0; border-radius: 8px;">{{ latest_exam.notes|default:'' }}</textarea>
                 </div>
             </div>
 

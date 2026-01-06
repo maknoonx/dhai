@@ -1,4 +1,4 @@
-// Thermal Label Barcode Printing System - FIXED POSITIONING
+// Thermal Label Barcode Printing System - NO BORDERS VERSION
 // Label specifications: 72mm (W) × 11mm (H)
 // Adjusted layout: Left tail (blank): 35mm | Middle panel (logo+price): 18mm | Right panel (barcode): 19mm
 
@@ -49,29 +49,26 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                     background: white;
                 }
                 
-                /* Left tail - completely blank - INCREASED to 35mm */
+                /* Left tail - completely blank - 35mm */
                 .left-tail {
                     width: 35mm;
                     height: 11mm;
                     background: white;
-                    /* No content, no border - completely blank */
                 }
                 
-                /* Middle panel - Logo and Price - REDUCED to 18mm */
+                /* Middle panel - Logo and Price - 18mm */
                 .middle-panel {
                     width: 18mm;
                     height: 11mm;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 0.4mm;
+                    padding: 0.8mm;
                 }
                 
                 .middle-box {
                     width: 100%;
                     height: 100%;
-                    border: 1.5px solid #000;
-                    border-radius: 1.5mm;
                     background: white;
                     display: flex;
                     flex-direction: column;
@@ -95,7 +92,7 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                     white-space: nowrap;
                 }
                 
-                /* Right panel - Barcode - REDUCED to 19mm */
+                /* Right panel - Barcode - 19mm */
                 .right-panel {
                     width: 19mm;
                     height: 11mm;
@@ -108,8 +105,6 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                 .right-box {
                     width: 100%;
                     height: 100%;
-                    border: 1.5px solid #000;
-                    border-radius: 1.5mm;
                     background: white;
                     display: flex;
                     flex-direction: column;
@@ -156,10 +151,10 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
         </head>
         <body>
             <div class="thermal-label">
-                <!-- Left tail - completely blank - NOW 35mm -->
+                <!-- Left tail - completely blank - 35mm -->
                 <div class="left-tail"></div>
                 
-                <!-- Middle panel - Logo and Price - NOW 18mm -->
+                <!-- Middle panel - Logo and Price - 18mm -->
                 <div class="middle-panel">
                     <div class="middle-box">
                         <img src="${logoUrl}" alt="Logo" class="logo" onerror="this.style.display='none'">
@@ -167,7 +162,7 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                     </div>
                 </div>
                 
-                <!-- Right panel - Barcode - NOW 19mm -->
+                <!-- Right panel - Barcode - 19mm -->
                 <div class="right-panel">
                     <div class="right-box">
                         <div class="barcode-container">
@@ -331,8 +326,6 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                 .middle-box {
                     width: 100%;
                     height: 100%;
-                    border: 1.5px solid #000;
-                    border-radius: 1.5mm;
                     background: white;
                     display: flex;
                     flex-direction: column;
@@ -369,8 +362,6 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                 .right-box {
                     width: 100%;
                     height: 100%;
-                    border: 1.5px solid #000;
-                    border-radius: 1.5mm;
                     background: white;
                     display: flex;
                     flex-direction: column;
@@ -541,4 +532,4 @@ window.printMultipleThermalLabels = printMultipleThermalLabels;
 window.printAllVisibleThermalLabels = printAllVisibleThermalLabels;
 window.printThermalLabelFromDetail = printThermalLabelFromDetail;
 
-console.log('Thermal label printing system (FIXED POSITIONING) loaded successfully');
+console.log('Thermal label printing system (NO BORDERS - CLEAN VERSION) loaded successfully');
