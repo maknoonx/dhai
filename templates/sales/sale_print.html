@@ -147,6 +147,116 @@
             border: 1px solid #f5c6cb;
         }
 
+        /* Eye Exam Section - NEW */
+        .eye-exam-section {
+            margin-bottom: 10px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            padding: 8px;
+            background: #f8f9ff;
+        }
+
+        .eye-exam-section h3 {
+            font-size: 10pt;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 8px;
+            text-align: center;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 5px;
+        }
+
+        .exam-date {
+            text-align: center;
+            font-size: 8pt;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .exam-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 5px;
+            margin-bottom: 5px;
+        }
+
+        .exam-eye {
+            background: white;
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #ddd;
+        }
+
+        .exam-eye-title {
+            font-size: 9pt;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 4px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 2px;
+        }
+
+        .exam-value {
+            font-size: 8pt;
+            padding: 2px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .exam-value .label {
+            color: #666;
+            font-weight: 600;
+        }
+
+        .exam-value .value {
+            color: #000;
+            font-weight: bold;
+        }
+
+        .exam-pd {
+            background: white;
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #ddd;
+            text-align: center;
+            margin-top: 5px;
+        }
+
+        .exam-pd-label {
+            font-size: 8pt;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .exam-pd-value {
+            font-size: 10pt;
+            color: #667eea;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+        .exam-notes {
+            background: #fffbea;
+            padding: 5px;
+            border-radius: 3px;
+            border: 1px solid #ffd700;
+            margin-top: 5px;
+        }
+
+        .exam-notes-title {
+            font-size: 8pt;
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 3px;
+        }
+
+        .exam-notes-text {
+            font-size: 7pt;
+            color: #666;
+            line-height: 1.3;
+        }
+
         /* Items Table */
         .items-section {
             margin-bottom: 10px;
@@ -331,6 +441,21 @@
             font-size: 8pt;
         }
 
+        /* No Eye Exam Message */
+        .no-exam {
+            text-align: center;
+            padding: 10px;
+            background: #fff3cd;
+            border: 1px dashed #ffc107;
+            border-radius: 3px;
+            margin-bottom: 10px;
+        }
+
+        .no-exam-text {
+            font-size: 8pt;
+            color: #856404;
+        }
+
         /* Print Styles */
         @media print {
             body {
@@ -342,21 +467,12 @@
                 width: 100%;
             }
 
-            /* Force page breaks */
             .page-break {
                 page-break-after: always;
             }
 
-            /* Hide elements that shouldn't print */
             .no-print {
                 display: none !important;
-            }
-        }
-
-        /* Landscape mode prevention */
-        @media (orientation: landscape) {
-            body {
-                transform: none;
             }
         }
     </style>
@@ -453,6 +569,94 @@
             </div>
         </div>
 
+        <!-- Eye Exam Section - NEW -->
+        {% if latest_exam %}
+        <div class="eye-exam-section">
+            <h3>📋 تفاصيل فحص النظر</h3>
+            <div class="exam-date">تاريخ الفحص: {{ latest_exam.exam_date|date:"Y/m/d" }}</div>
+            
+            <div class="exam-grid">
+                <!-- Right Eye -->
+                <div class="exam-eye">
+                    <div class="exam-eye-title">العين اليمنى 👁️</div>
+                    {% if latest_exam.right_sphere %}
+                    <div class="exam-value">
+                        <span class="label">SPH:</span>
+                        <span class="value">{{ latest_exam.right_sphere }}</span>
+                    </div>
+                    {% endif %}
+                    {% if latest_exam.right_cylinder %}
+                    <div class="exam-value">
+                        <span class="label">CYL:</span>
+                        <span class="value">{{ latest_exam.right_cylinder }}</span>
+                    </div>
+                    {% endif %}
+                    {% if latest_exam.right_axis %}
+                    <div class="exam-value">
+                        <span class="label">AXIS:</span>
+                        <span class="value">{{ latest_exam.right_axis }}</span>
+                    </div>
+                    {% endif %}
+                    {% if latest_exam.right_add %}
+                    <div class="exam-value">
+                        <span class="label">ADD:</span>
+                        <span class="value">{{ latest_exam.right_add }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Left Eye -->
+                <div class="exam-eye">
+                    <div class="exam-eye-title">العين اليسرى 👁️</div>
+                    {% if latest_exam.left_sphere %}
+                    <div class="exam-value">
+                        <span class="label">SPH:</span>
+                        <span class="value">{{ latest_exam.left_sphere }}</span>
+                    </div>
+                    {% endif %}
+                    {% if latest_exam.left_cylinder %}
+                    <div class="exam-value">
+                        <span class="label">CYL:</span>
+                        <span class="value">{{ latest_exam.left_cylinder }}</span>
+                    </div>
+                    {% endif %}
+                    {% if latest_exam.left_axis %}
+                    <div class="exam-value">
+                        <span class="label">AXIS:</span>
+                        <span class="value">{{ latest_exam.left_axis }}</span>
+                    </div>
+                    {% endif %}
+                    {% if latest_exam.left_add %}
+                    <div class="exam-value">
+                        <span class="label">ADD:</span>
+                        <span class="value">{{ latest_exam.left_add }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- PD Value -->
+            {% if latest_exam.right_pd or latest_exam.left_pd %}
+            <div class="exam-pd">
+                <div class="exam-pd-label">المسافة البؤرية (PD)</div>
+                <div class="exam-pd-value">{{ latest_exam.right_pd|default:latest_exam.left_pd }}</div>
+            </div>
+            {% endif %}
+
+            <!-- Exam Notes -->
+            {% if latest_exam.notes %}
+            <div class="exam-notes">
+                <div class="exam-notes-title">📝 ملاحظات الفحص:</div>
+                <div class="exam-notes-text">{{ latest_exam.notes }}</div>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="no-exam">
+            <div class="no-exam-text">⚠️ لا يوجد فحص نظر مسجل لهذا العميل</div>
+        </div>
+        {% endif %}
+
         <!-- Items -->
         <div class="items-section">
             <h3>الأصناف</h3>
@@ -505,7 +709,7 @@
             {% endif %}
 
             <div class="total-row tax">
-                <span>ض.ق.م (15%):</span>
+                <span>ض.ق.م (0%):</span>
                 <span>{{ sale.tax|floatformat:2 }} ر.س</span>
             </div>
 

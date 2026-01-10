@@ -1,4 +1,4 @@
-// Sale Add JavaScript - مع دعم الخدمات
+// Sale Add JavaScript - مع دعم الخدمات وضريبة صفرية
 
 let selectedProducts = [];
 let selectedServices = [];
@@ -332,7 +332,7 @@ function removeService(index) {
     }
 }
 
-// ============== Calculate Total ==============
+// ============== Calculate Total (ضريبة صفرية) ==============
 
 function calculateTotal() {
     let subtotal = 0;
@@ -346,9 +346,12 @@ function calculateTotal() {
     });
     
     const discount = parseFloat(document.getElementById('discount')?.value || 0);
-    const taxableAmount = subtotal - discount;
-    const tax = taxableAmount > 0 ? taxableAmount * 0.15 : 0;
-    const total = subtotal - discount + tax;
+    
+    // الضريبة صفرية (0%)
+    const tax = 0;
+    
+    // المبلغ الإجمالي = المجموع الفرعي - الخصم (بدون ضريبة)
+    const total = subtotal - discount;
     
     document.getElementById('subtotalDisplay').textContent = subtotal.toFixed(2) + ' ر.س';
     document.getElementById('taxDisplay').textContent = tax.toFixed(2) + ' ر.س';
@@ -416,5 +419,5 @@ document.addEventListener('keydown', function(e) {
 document.addEventListener('DOMContentLoaded', function() {
     updateProductsTable();
     calculateTotal();
-    console.log('Sale Add JS loaded with services support');
+    console.log('Sale Add JS loaded with Zero Tax (0%) support');
 });

@@ -1,4 +1,4 @@
-// Thermal Label Barcode Printing System - NO BORDERS VERSION
+// Thermal Label Barcode Printing System - NO BORDERS - LONGER BARCODE VERSION
 // Label specifications: 72mm (W) × 11mm (H)
 // Adjusted layout: Left tail (blank): 35mm | Middle panel (logo+price): 18mm | Right panel (barcode): 19mm
 
@@ -63,7 +63,7 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 0.8mm;
+                    padding: 0.4mm;
                 }
                 
                 .middle-box {
@@ -124,17 +124,17 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                 
                 .barcode-svg {
                     width: 17mm;
-                    height: 6mm;
+                    height: 8.5mm;
                 }
                 
                 .barcode-text {
                     font-family: 'Courier New', monospace;
-                    font-size: 4.5pt;
+                    font-size: 4pt;
                     font-weight: bold;
                     color: #000;
                     text-align: center;
                     letter-spacing: 0.2px;
-                    margin-top: 0.2mm;
+                    margin-top: 0.1mm;
                 }
                 
                 @media print {
@@ -174,12 +174,12 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
             </div>
             
             <script>
-                // Generate barcode
+                // Generate barcode with longer lines for better scanning
                 try {
                     JsBarcode("#barcode", "${barcode}", {
                         format: "CODE128",
-                        width: 1.2,
-                        height: 20,
+                        width: 1.4,
+                        height: 30,
                         displayValue: false,
                         margin: 0,
                         background: "#ffffff",
@@ -381,17 +381,17 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                 
                 .barcode-svg {
                     width: 17mm;
-                    height: 6mm;
+                    height: 8.5mm;
                 }
                 
                 .barcode-text {
                     font-family: 'Courier New', monospace;
-                    font-size: 4.5pt;
+                    font-size: 4pt;
                     font-weight: bold;
                     color: #000;
                     text-align: center;
                     letter-spacing: 0.2px;
-                    margin-top: 0.2mm;
+                    margin-top: 0.1mm;
                 }
                 
                 .footer {
@@ -436,13 +436,13 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
             </div>
             
             <script>
-                // Generate all barcodes
+                // Generate all barcodes with longer lines for better scanning
                 ${products.map((product, index) => `
                     try {
                         JsBarcode("#barcode-${index}", "${product.barcode}", {
                             format: "CODE128",
-                            width: 1.2,
-                            height: 20,
+                            width: 1.4,
+                            height: 30,
                             displayValue: false,
                             margin: 0,
                             background: "#ffffff",
@@ -532,4 +532,4 @@ window.printMultipleThermalLabels = printMultipleThermalLabels;
 window.printAllVisibleThermalLabels = printAllVisibleThermalLabels;
 window.printThermalLabelFromDetail = printThermalLabelFromDetail;
 
-console.log('Thermal label printing system (NO BORDERS - CLEAN VERSION) loaded successfully');
+console.log('Thermal label printing system (NO BORDERS - LONGER BARCODE) loaded successfully');

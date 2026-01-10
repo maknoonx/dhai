@@ -7,8 +7,8 @@ from django.utils import timezone
 from decimal import Decimal
 import json
 
-from .models import Sale, SaleItem, Payment
-from customers.models import Customer
+from .models import Sale, SaleItem, Payment, Service
+from customers.models import Customer, EyeExam
 from stock.models import Product, Laboratory
 from settings.models import CompanySettings
 
@@ -84,8 +84,6 @@ def sale_list(request):
     
     return render(request, 'sales/sale_list.html', context)
 
-
-# تحديث دالة sale_add في ملف sales/views.py
 
 @login_required
 def sale_add(request):
@@ -187,12 +185,13 @@ def sale_add(request):
                 
                 subtotal += (service_price * quantity)
             
-            # حساب الضريبة (15%)
-            tax = subtotal * Decimal('0.15')
+            # حساب الضريبة (0% - صفرية)
+            # الضريبة موجودة في الحقل ولكن قيمتها صفر
+            tax = Decimal('0')
             
             # تحديث الفاتورة
             sale.subtotal = subtotal
-            sale.tax = tax
+            sale.tax = tax  # ضريبة صفرية
             sale.paid_amount = paid_amount
             sale.save()
             
@@ -228,6 +227,7 @@ def sale_add(request):
     }
     
     return render(request, 'sales/sale_add.html', context)
+
 
 @login_required
 def sale_detail(request, pk):
@@ -313,14 +313,23 @@ def sale_delete(request, pk):
     
     return redirect('sales:detail', pk=pk)
 
-
 @login_required
 def sale_print(request, pk):
-    """طباعة الفاتورة"""
+    """طباعة الفاتورة مع تفاصيل فحص النظر"""
     
     sale = get_object_or_404(Sale.objects.select_related('customer', 'laboratory'), pk=pk)
     items = sale.items.select_related('product').all()
     company_settings = CompanySettings.get_settings()
+    
+    # جلب آخر فحص نظر للعميل
+    latest_exam = None
+    if sale.customer:
+        try:
+            from customers.models import EyeExam
+            latest_exam = sale.customer.eye_exams.first()
+        except Exception as e:
+            print(f"Error fetching eye exam: {e}")
+            latest_exam = None
     
     # توليد QR Code
     import qrcode
@@ -348,9 +357,11 @@ def sale_print(request, pk):
         'items': items,
         'company': company_settings,
         'qr_code': qr_code_base64,
+        'latest_exam': latest_exam,  # ← إضافة فحص النظر للسياق
     }
     
     return render(request, 'sales/sale_print.html', context)
+
 
 
 @login_required
@@ -424,7 +435,7 @@ def credit_note(request, pk):
             notes=f'إشعار دائن للفاتورة {sale.order_number}',
             subtotal=-sale.subtotal,
             discount=-sale.discount,
-            tax=-sale.tax,
+            tax=Decimal('0'),  # ضريبة صفرية
             payment_method=sale.payment_method,
             created_by=request.user.username if request.user.is_authenticated else 'System'
         )
@@ -466,7 +477,7 @@ def debit_note(request, pk):
             status='completed',
             notes=f'إشعار مدين للفاتورة {sale.order_number}: {reason}',
             subtotal=amount,
-            tax=amount * Decimal('0.15'),
+            tax=Decimal('0'),  # ضريبة صفرية
             payment_method=sale.payment_method,
             created_by=request.user.username if request.user.is_authenticated else 'System'
         )
@@ -476,23 +487,6 @@ def debit_note(request, pk):
     
     return redirect('sales:detail', pk=pk)
 
-# استبدل دالة print_eye_exam في sales/views.py بهذا الكود المحسّن
-
-from django.http import HttpResponse
-from django.template.loader import render_to_string
-from customers.models import EyeExam  # إذا EyeExam فعلاً هنا
-from customers.models import Customer, EyeExam
-from settings.models import CompanySettings
-# --- PDF Eye Exam Print (Safe for Railway) ---
-# Place this near the bottom of sales/views.py (or anywhere in the file).
-# IMPORTANT:
-# 1) Do NOT keep "from weasyprint import HTML" at module level.
-# 2) Ensure EyeExam import path is correct for your project.
-
-from django.template.loader import render_to_string
-# === تحديثات مطلوبة على sales/views.py ===
-
-# استبدل دالة print_eye_exam بالكود التالي:
 
 @login_required
 def print_eye_exam(request, invoice_id):
@@ -562,11 +556,7 @@ def print_eye_exam(request, invoice_id):
     return render(request, 'sales/eye_exam_print.html', context)
 
 
-
-
-# إضافة هذه الدوال إلى ملف sales/views.py
-
-from .models import Service
+# ============== إدارة الخدمات ==============
 
 @login_required
 def service_list(request):

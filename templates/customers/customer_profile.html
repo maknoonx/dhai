@@ -13,12 +13,14 @@
     border-radius: 12px;
     padding: 1.5rem;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    direction: ltr;
 }
 
 .prescription-table {
     width: 100%;
     border-collapse: collapse;
     text-align: center;
+    direction: ltr;
 }
 
 .prescription-table thead {
@@ -42,8 +44,8 @@
 .prescription-table .eye-label {
     font-weight: 600;
     background: #f8f9fa;
-    text-align: left;
-    padding-right: 1.5rem;
+    text-align: center;
+    padding: 1rem;
 }
 
 .prescription-table .exam-value {
@@ -52,7 +54,7 @@
 }
 
 .prescription-table .pd-label {
-    text-align: left;
+    text-align: center;
     padding: 1rem 1.5rem;
     background: #fff3e6;
     font-size: 0.875rem;
@@ -67,6 +69,7 @@
     width: 100%;
     border-collapse: collapse;
     margin: 2rem 0;
+    direction: ltr;
 }
 
 .exam-form-table th,
@@ -89,8 +92,8 @@
 .exam-form-table .eye-row-label {
     font-weight: 600;
     background: #f8f9fa;
-    text-align: left;
-    padding-right: 1.5rem;
+    text-align: center;
+    padding: 1rem;
 }
 
 .exam-form-table input {
@@ -100,6 +103,7 @@
     border-radius: 6px;
     text-align: center;
     font-size: 0.875rem;
+    background: white;
 }
 
 .exam-form-table input:focus {
@@ -245,7 +249,7 @@
                         <td class="eye-label">Right</td>
                         <td class="exam-value">{{ latest_exam.right_sphere|default:"-" }}</td>
                         <td class="exam-value">{{ latest_exam.right_cylinder|default:"-" }}</td>
-                        <td class="exam-value">{{ latest_exam.right_axis|default:"-" }}°</td>
+                        <td class="exam-value">{{ latest_exam.right_axis|default:"-" }}</td>
                         <td class="exam-value">-</td>
                         <td class="exam-value">-</td>
                         <td class="exam-value">{{ latest_exam.right_add|default:"-" }}</td>
@@ -254,7 +258,7 @@
                         <td class="eye-label">Left</td>
                         <td class="exam-value">{{ latest_exam.left_sphere|default:"-" }}</td>
                         <td class="exam-value">{{ latest_exam.left_cylinder|default:"-" }}</td>
-                        <td class="exam-value">{{ latest_exam.left_axis|default:"-" }}°</td>
+                        <td class="exam-value">{{ latest_exam.left_axis|default:"-" }}</td>
                         <td class="exam-value">-</td>
                         <td class="exam-value">-</td>
                         <td class="exam-value">{{ latest_exam.left_add|default:"-" }}</td>
@@ -489,7 +493,7 @@
                                 <input type="text" 
                                        name="right_axis" 
                                        value="{{ latest_exam.right_axis|default:'' }}" 
-                                       placeholder="5°"
+                                       placeholder="5"
                                        autocomplete="off">
                             </td>
                             <td>
@@ -534,7 +538,7 @@
                                 <input type="text" 
                                        name="left_axis" 
                                        value="{{ latest_exam.left_axis|default:'' }}" 
-                                       placeholder="165°"
+                                       placeholder="165"
                                        autocomplete="off">
                             </td>
                             <td>

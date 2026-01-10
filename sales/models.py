@@ -59,7 +59,7 @@ class Sale(models.Model):
         validators=[MinValueValidator(0)]
     )
     tax = models.DecimalField(
-        'الضريبة (15%)',
+        'الضريبة (0%)',  # ← تم تغيير النص من (15%) إلى (0%)
         max_digits=10,
         decimal_places=2,
         default=0,
@@ -113,8 +113,9 @@ class Sale(models.Model):
         return f"{self.order_number} - {self.customer.name}"
     
     def save(self, *args, **kwargs):
-        """حساب المبلغ الإجمالي تلقائياً"""
-        self.total_amount = self.subtotal - self.discount + self.tax
+        """حساب المبلغ الإجمالي تلقائياً (بدون إضافة الضريبة)"""
+        # الضريبة موجودة في الحقل ولكن لا تُضاف للمبلغ الإجمالي (ضريبة صفرية 0%)
+        self.total_amount = self.subtotal - self.discount
         super().save(*args, **kwargs)
     
     def get_remaining_amount(self):
@@ -264,13 +265,7 @@ class Payment(models.Model):
     
     def __str__(self):
         return f"دفعة {self.amount} ريال - {self.sale.order_number}"
-    
 
-
-    # إضافة هذا الكود إلى ملف sales/models.py
-
-from django.db import models
-from django.core.validators import MinValueValidator
 
 class Service(models.Model):
     """نموذج الخدمات"""
