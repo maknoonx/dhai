@@ -1,4 +1,4 @@
-// Thermal Label Barcode Printing System - NO BORDERS - MAXIMUM BARCODE SIZE
+// Thermal Label Barcode Printing System - TALLER BARCODE LINES FOR BETTER SCANNING
 // Label specifications: 72mm (W) × 11mm (H)
 // Adjusted layout: Left tail (blank): 35mm | Middle panel (logo+price): 18mm | Right panel (barcode): 19mm
 
@@ -99,7 +99,7 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 0.2mm;
+                    padding: 0.15mm;
                 }
                 
                 .right-box {
@@ -111,32 +111,32 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                     align-items: center;
                     justify-content: center;
                     gap: 0;
-                    padding: 0.2mm;
+                    padding: 0.15mm;
                 }
                 
                 .barcode-container {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    justify-content: center;
+                    justify-content: flex-start;
                     width: 100%;
                     height: 100%;
                 }
                 
                 .barcode-svg {
                     width: 18mm;
-                    height: 9.5mm;
+                    height: 10.5mm;
                 }
                 
                 .barcode-text {
                     font-family: 'Courier New', monospace;
-                    font-size: 3.5pt;
+                    font-size: 3pt;
                     font-weight: bold;
                     color: #000;
                     text-align: center;
-                    letter-spacing: 0.1px;
+                    letter-spacing: 0.05px;
                     margin-top: 0;
-                    line-height: 1;
+                    line-height: 0.8;
                 }
                 
                 @media print {
@@ -176,12 +176,12 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
             </div>
             
             <script>
-                // Generate barcode with MAXIMUM size for best scanning
+                // Generate barcode with TALLER lines for better scanner reading
                 try {
                     JsBarcode("#barcode", "${barcode}", {
                         format: "CODE128",
-                        width: 1.8,
-                        height: 40,
+                        width: 2.5,
+                        height: 110,
                         displayValue: false,
                         margin: 0,
                         background: "#ffffff",
@@ -358,7 +358,7 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 0.2mm;
+                    padding: 0.15mm;
                 }
                 
                 .right-box {
@@ -370,32 +370,32 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     align-items: center;
                     justify-content: center;
                     gap: 0;
-                    padding: 0.2mm;
+                    padding: 0.15mm;
                 }
                 
                 .barcode-container {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
-                    justify-content: center;
+                    justify-content: flex-start;
                     width: 100%;
                     height: 100%;
                 }
                 
                 .barcode-svg {
                     width: 18mm;
-                    height: 9.5mm;
+                    height: 10.5mm;
                 }
                 
                 .barcode-text {
                     font-family: 'Courier New', monospace;
-                    font-size: 3.5pt;
+                    font-size: 3pt;
                     font-weight: bold;
                     color: #000;
                     text-align: center;
-                    letter-spacing: 0.1px;
+                    letter-spacing: 0.05px;
                     margin-top: 0;
-                    line-height: 1;
+                    line-height: 0.8;
                 }
                 
                 .footer {
@@ -440,13 +440,13 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
             </div>
             
             <script>
-                // Generate all barcodes with MAXIMUM size for best scanning
+                // Generate all barcodes with TALLER lines for better scanner reading
                 ${products.map((product, index) => `
                     try {
                         JsBarcode("#barcode-${index}", "${product.barcode}", {
                             format: "CODE128",
-                            width: 1.8,
-                            height: 40,
+                            width: 2.5,
+                            height: 110,
                             displayValue: false,
                             margin: 0,
                             background: "#ffffff",
@@ -536,4 +536,4 @@ window.printMultipleThermalLabels = printMultipleThermalLabels;
 window.printAllVisibleThermalLabels = printAllVisibleThermalLabels;
 window.printThermalLabelFromDetail = printThermalLabelFromDetail;
 
-console.log('Thermal label printing system (NO BORDERS - MAXIMUM BARCODE SIZE) loaded successfully');
+console.log('Thermal label printing system (TALLER BARCODE LINES - height: 85) loaded successfully');
