@@ -307,12 +307,23 @@ def supplier_delete(request, pk):
     
     messages.success(request, f'تم حذف المورد "{name}" بنجاح')
     return redirect('stock:suppliers')
+# في stock/views.py
+# استبدل دالة product_add بهذا الكود:
 
-# Product Views
+@login_required
 def product_add(request):
     if request.method == 'POST':
         item_name = request.POST.get('item_name')
         barcode = request.POST.get('barcode')
+        
+        # ✅ التحقق من أن الباركود غير موجود مسبقاً
+        if Product.objects.filter(barcode=barcode).exists():
+            messages.error(
+                request, 
+                f'الباركود "{barcode}" موجود بالفعل! الرجاء استخدام باركود آخر أو تعديل المنتج الموجود.'
+            )
+            return redirect('stock:products')
+        
         category_id = request.POST.get('category')
         supplier_id = request.POST.get('supplier')
         quantity = int(request.POST.get('quantity', 0))
@@ -323,35 +334,54 @@ def product_add(request):
         description = request.POST.get('description', '')
         notes = request.POST.get('notes', '')
         
-        product = Product.objects.create(
-            item_name=item_name,
-            barcode=barcode,
-            quantity=quantity,
-            min_quantity=min_quantity,
-            box_number=box_number,
-            cost_price=cost_price,
-            selling_price=selling_price,
-            description=description,
-            notes=notes
-        )
+        try:
+            product = Product.objects.create(
+                item_name=item_name,
+                barcode=barcode,
+                quantity=quantity,
+                min_quantity=min_quantity,
+                box_number=box_number,
+                cost_price=cost_price,
+                selling_price=selling_price,
+                description=description,
+                notes=notes
+            )
+            
+            if category_id:
+                product.category_id = category_id
+            if supplier_id:
+                product.supplier_id = supplier_id
+            product.save()
+            
+            messages.success(request, f'تم إضافة المنتج "{item_name}" بنجاح')
+        except Exception as e:
+            messages.error(request, f'حدث خطأ أثناء إضافة المنتج: {str(e)}')
         
-        if category_id:
-            product.category_id = category_id
-        if supplier_id:
-            product.supplier_id = supplier_id
-        product.save()
-        
-        messages.success(request, f'تم إضافة المنتج "{item_name}" بنجاح')
         return redirect('stock:products')
     
     return redirect('stock:products')
 
+
+# ✅ أيضاً، استبدل دالة product_edit بهذا الكود المُحسّن:
+
+@login_required
 def product_edit(request, pk):
     product = get_object_or_404(Product, pk=pk)
     
     if request.method == 'POST':
+        new_barcode = request.POST.get('barcode')
+        
+        # ✅ التحقق من أن الباركود الجديد غير موجود (إلا إذا كان نفس المنتج)
+        if new_barcode != product.barcode:
+            if Product.objects.filter(barcode=new_barcode).exists():
+                messages.error(
+                    request, 
+                    f'الباركود "{new_barcode}" موجود بالفعل لدى منتج آخر! الرجاء استخدام باركود مختلف.'
+                )
+                return redirect('stock:products')
+        
         product.item_name = request.POST.get('item_name')
-        product.barcode = request.POST.get('barcode')
+        product.barcode = new_barcode
         category_id = request.POST.get('category')
         supplier_id = request.POST.get('supplier')
         product.quantity = int(request.POST.get('quantity', 0))
@@ -371,10 +401,13 @@ def product_edit(request, pk):
             product.supplier_id = supplier_id
         else:
             product.supplier = None
-            
-        product.save()
         
-        messages.success(request, f'تم تعديل المنتج "{product.item_name}" بنجاح')
+        try:
+            product.save()
+            messages.success(request, f'تم تعديل المنتج "{product.item_name}" بنجاح')
+        except Exception as e:
+            messages.error(request, f'حدث خطأ أثناء التعديل: {str(e)}')
+        
         return redirect('stock:products')
     
     return redirect('stock:products')
