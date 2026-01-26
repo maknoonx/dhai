@@ -6,6 +6,180 @@
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/sales/sales.css' %}">
 <link rel="stylesheet" href="{% static 'css/sales/sale_add_extra.css' %}">
+<style>
+    /* Eye Exam Display Styles */
+    .eye-exam-display {
+        background: linear-gradient(135deg, #f5f7ff 0%, #e8ecff 100%);
+        border: 2px solid #667eea;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 1rem;
+    }
+    
+    .exam-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid #667eea;
+    }
+    
+    .exam-header h4 {
+        margin: 0;
+        color: #667eea;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .exam-date-badge {
+        background: rgba(102, 126, 234, 0.2);
+        color: #667eea;
+        padding: 0.4rem 0.8rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .exam-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .exam-eye-card {
+        background: white;
+        border-radius: 10px;
+        padding: 1rem;
+        box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+    }
+    
+    .exam-eye-title {
+        color: #667eea;
+        font-weight: 700;
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+        padding-bottom: 0.5rem;
+        border-bottom: 1px solid #e8ecff;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .exam-values {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .exam-value-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.4rem 0.6rem;
+        background: #f8f9ff;
+        border-radius: 6px;
+    }
+    
+    .exam-value-item .label {
+        color: #7f8c8d;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .exam-value-item .value {
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 0.9rem;
+    }
+    
+    .exam-pd-row {
+        display: flex;
+        gap: 1rem;
+        margin-top: 1rem;
+        padding: 1rem;
+        background: white;
+        border-radius: 10px;
+    }
+    
+    .pd-item {
+        flex: 1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: #f8f9ff;
+        border-radius: 8px;
+    }
+    
+    .pd-item .label {
+        color: #667eea;
+        font-weight: 700;
+        font-size: 0.95rem;
+    }
+    
+    .pd-item .value {
+        color: #2c3e50;
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    
+    .exam-notes {
+        background: #fffbea;
+        border: 1px solid #ffd700;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1rem;
+    }
+    
+    .notes-label {
+        color: #856404;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .notes-text {
+        color: #666;
+        line-height: 1.6;
+        font-size: 0.95rem;
+    }
+    
+    .no-exam-message {
+        background: #fff3cd;
+        border: 1px dashed #ffc107;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-top: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: #856404;
+        font-weight: 600;
+    }
+    
+    .no-exam-message i {
+        font-size: 1.5rem;
+    }
+    
+    @media (max-width: 768px) {
+        .exam-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .exam-values {
+            grid-template-columns: 1fr;
+        }
+        
+        .exam-pd-row {
+            flex-direction: column;
+        }
+    }
+    </style>
 {% endblock %}
 
 {% block content %}
@@ -46,6 +220,98 @@
                             <i class="fas fa-times"></i>
                         </button>
                     </div>
+                </div>
+            
+                <!-- Eye Exam Display Section -->
+                <div id="eyeExamDisplay" class="eye-exam-display" style="display: none;">
+                    <div class="exam-header">
+                        <h4>
+                            <i class="fas fa-eye"></i>
+                            آخر فحص نظر للعميل
+                        </h4>
+                        <span id="examDate" class="exam-date-badge"></span>
+                    </div>
+            
+                    <div class="exam-grid">
+                        <!-- Right Eye -->
+                        <div class="exam-eye-card">
+                            <div class="exam-eye-title">
+                                <i class="fas fa-eye"></i>
+                                العين اليمنى
+                            </div>
+                            <div class="exam-values">
+                                <div class="exam-value-item">
+                                    <span class="label">SPH:</span>
+                                    <span id="rightSphere" class="value">-</span>
+                                </div>
+                                <div class="exam-value-item">
+                                    <span class="label">CYL:</span>
+                                    <span id="rightCylinder" class="value">-</span>
+                                </div>
+                                <div class="exam-value-item">
+                                    <span class="label">AXIS:</span>
+                                    <span id="rightAxis" class="value">-</span>
+                                </div>
+                                <div class="exam-value-item">
+                                    <span class="label">ADD:</span>
+                                    <span id="rightAdd" class="value">-</span>
+                                </div>
+                            </div>
+                        </div>
+            
+                        <!-- Left Eye -->
+                        <div class="exam-eye-card">
+                            <div class="exam-eye-title">
+                                <i class="fas fa-eye"></i>
+                                العين اليسرى
+                            </div>
+                            <div class="exam-values">
+                                <div class="exam-value-item">
+                                    <span class="label">SPH:</span>
+                                    <span id="leftSphere" class="value">-</span>
+                                </div>
+                                <div class="exam-value-item">
+                                    <span class="label">CYL:</span>
+                                    <span id="leftCylinder" class="value">-</span>
+                                </div>
+                                <div class="exam-value-item">
+                                    <span class="label">AXIS:</span>
+                                    <span id="leftAxis" class="value">-</span>
+                                </div>
+                                <div class="exam-value-item">
+                                    <span class="label">ADD:</span>
+                                    <span id="leftAdd" class="value">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+            
+                    <!-- PD Values -->
+                    <div class="exam-pd-row">
+                        <div class="pd-item">
+                            <span class="label">PD يمين:</span>
+                            <span id="rightPD" class="value">-</span>
+                        </div>
+                        <div class="pd-item">
+                            <span class="label">PD يسار:</span>
+                            <span id="leftPD" class="value">-</span>
+                        </div>
+                    </div>
+            
+                    <!-- Exam Notes -->
+                    <div id="examNotesContainer" class="exam-notes" style="display: none;">
+                        <div class="notes-label">
+                            <i class="fas fa-sticky-note"></i>
+                            ملاحظات الفحص:
+                        </div>
+                        <div id="examNotes" class="notes-text"></div>
+                    </div>
+                </div>
+            
+                <!-- No Exam Message -->
+                <div id="noExamMessage" class="no-exam-message" style="display: none;">
+                    <i class="fas fa-info-circle"></i>
+                    <span>لا يوجد فحص نظر مسجل لهذا العميل</span>
                 </div>
             </div>
 

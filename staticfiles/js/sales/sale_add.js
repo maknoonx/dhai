@@ -1,4 +1,4 @@
-// Sale Add JavaScript - مع دعم الخدمات وضريبة صفرية
+// Sale Add JavaScript - مع دعم الخدمات وضريبة صفرية وعرض فحص النظر
 
 let selectedProducts = [];
 let selectedServices = [];
@@ -50,6 +50,9 @@ function selectCustomer(element) {
     document.getElementById('selectedCustomerDisplay').style.display = 'block';
     document.getElementById('searchCustomerBtn').style.display = 'none';
     
+    // جلب فحص النظر للعميل
+    loadCustomerEyeExam(id);
+    
     closeCustomerSearchModal();
 }
 
@@ -58,6 +61,83 @@ function removeCustomer() {
     document.getElementById('customer_id').value = '';
     document.getElementById('selectedCustomerDisplay').style.display = 'none';
     document.getElementById('searchCustomerBtn').style.display = 'block';
+    
+    // إخفاء قسم فحص النظر
+    document.getElementById('eyeExamDisplay').style.display = 'none';
+    document.getElementById('noExamMessage').style.display = 'none';
+}
+
+// ============== Eye Exam Functions ==============
+
+function loadCustomerEyeExam(customerId) {
+    // إظهار رسالة تحميل
+    const eyeExamDisplay = document.getElementById('eyeExamDisplay');
+    const noExamMessage = document.getElementById('noExamMessage');
+    
+    eyeExamDisplay.style.display = 'none';
+    noExamMessage.style.display = 'none';
+    
+    // جلب البيانات من API
+    fetch(`/customers/api/eye-exam/${customerId}/`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('No exam found');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.exam) {
+                displayEyeExam(data.exam);
+            } else {
+                showNoExamMessage();
+            }
+        })
+        .catch(error => {
+            console.error('Error loading eye exam:', error);
+            showNoExamMessage();
+        });
+}
+
+function displayEyeExam(exam) {
+    // عرض تاريخ الفحص
+    const examDate = new Date(exam.exam_date);
+    document.getElementById('examDate').textContent = 
+        `${examDate.toLocaleDateString('ar-SA')}`;
+    
+    // العين اليمنى
+    document.getElementById('rightSphere').textContent = exam.right_sphere || '-';
+    document.getElementById('rightCylinder').textContent = exam.right_cylinder || '-';
+    document.getElementById('rightAxis').textContent = exam.right_axis || '-';
+    document.getElementById('rightAdd').textContent = exam.right_add || '-';
+    
+    // العين اليسرى
+    document.getElementById('leftSphere').textContent = exam.left_sphere || '-';
+    document.getElementById('leftCylinder').textContent = exam.left_cylinder || '-';
+    document.getElementById('leftAxis').textContent = exam.left_axis || '-';
+    document.getElementById('leftAdd').textContent = exam.left_add || '-';
+    
+    // المسافة البؤرية
+    document.getElementById('rightPD').textContent = exam.right_pd || '-';
+    document.getElementById('leftPD').textContent = exam.left_pd || '-';
+    
+    // الملاحظات
+    const examNotesContainer = document.getElementById('examNotesContainer');
+    const examNotes = document.getElementById('examNotes');
+    if (exam.notes && exam.notes.trim() !== '') {
+        examNotes.textContent = exam.notes;
+        examNotesContainer.style.display = 'block';
+    } else {
+        examNotesContainer.style.display = 'none';
+    }
+    
+    // إظهار قسم الفحص
+    document.getElementById('eyeExamDisplay').style.display = 'block';
+    document.getElementById('noExamMessage').style.display = 'none';
+}
+
+function showNoExamMessage() {
+    document.getElementById('eyeExamDisplay').style.display = 'none';
+    document.getElementById('noExamMessage').style.display = 'flex';
 }
 
 // ============== Product Functions ==============
@@ -419,5 +499,5 @@ document.addEventListener('keydown', function(e) {
 document.addEventListener('DOMContentLoaded', function() {
     updateProductsTable();
     calculateTotal();
-    console.log('Sale Add JS loaded with Zero Tax (0%) support');
+    console.log('Sale Add JS loaded with Eye Exam Display and Zero Tax (0%) support');
 });

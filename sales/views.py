@@ -692,3 +692,7 @@ def get_service_info(request, pk):
     }
     
     return JsonResponse(data)
+
+
+
+

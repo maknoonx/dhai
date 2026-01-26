@@ -35,4 +35,7 @@ urlpatterns = [
     path('services/<int:pk>/edit/', views.service_edit, name='service_edit'),
     path('services/<int:pk>/delete/', views.service_delete, name='service_delete'),
     path('api/service/<int:pk>/', views.get_service_info, name='get_service_info'),
+# API لجلب فحص النظر
+
+    
 ]

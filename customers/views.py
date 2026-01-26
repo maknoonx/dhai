@@ -327,3 +327,76 @@ def notification_send(request, customer_pk):
             messages.error(request, f'حدث خطأ: {str(e)}')
     
     return redirect('customers:profile', pk=customer_pk)
+
+
+
+# ==============================================================
+# إضافة هذا الكود إلى ملف customers/views.py
+# ==============================================================
+
+from django.http import JsonResponse
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+from .models import Customer, EyeExam
+
+# ضع هذه الدالة في أي مكان في ملف views.py
+@login_required
+def get_customer_eye_exam_api(request, customer_id):
+    """
+    API لجلب آخر فحص نظر للعميل
+    URL: /customers/api/eye-exam/<customer_id>/
+    Method: GET
+    """
+    try:
+        # جلب العميل
+        customer = get_object_or_404(Customer, pk=customer_id)
+        
+        # جلب آخر فحص نظر (مرتب حسب التاريخ تنازلياً)
+        latest_exam = customer.eye_exams.first()
+        
+        if latest_exam:
+            # إعداد البيانات
+            data = {
+                'success': True,
+                'exam': {
+                    'id': latest_exam.id,
+                    'exam_date': latest_exam.exam_date.isoformat() if latest_exam.exam_date else None,
+                    
+                    # العين اليمنى
+                    'right_sphere': latest_exam.right_sphere or '',
+                    'right_cylinder': latest_exam.right_cylinder or '',
+                    'right_axis': latest_exam.right_axis or '',
+                    'right_add': latest_exam.right_add or '',
+                    'right_pd': latest_exam.right_pd or '',
+                    
+                    # العين اليسرى
+                    'left_sphere': latest_exam.left_sphere or '',
+                    'left_cylinder': latest_exam.left_cylinder or '',
+                    'left_axis': latest_exam.left_axis or '',
+                    'left_add': latest_exam.left_add or '',
+                    'left_pd': latest_exam.left_pd or '',
+                    
+                    # الملاحظات
+                    'notes': latest_exam.notes or '',
+                }
+            }
+            return JsonResponse(data)
+        else:
+            # لا يوجد فحص
+            return JsonResponse({
+                'success': False,
+                'exam': None,
+                'message': 'لا يوجد فحص نظر لهذا العميل'
+            })
+    
+    except Customer.DoesNotExist:
+        return JsonResponse({
+            'success': False,
+            'error': 'العميل غير موجود'
+        }, status=404)
+    
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
