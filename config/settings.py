@@ -115,23 +115,33 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+# ==========================
+# Cloudinary Configuration
+# ==========================
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'ddfgomhhd',
+    'API_KEY': '352287196431866',
+    'API_SECRET': 'E_Y12SN5Zcu0Gbg7kVR8-wDS1uk',
+}
+
+# Configure cloudinary
+cloudinary.config(
+    cloud_name='ddfgomhhd',
+    api_key='352287196431866',
+    api_secret='E_Y12SN5Zcu0Gbg7kVR8-wDS1uk',
+    secure=True
+)
+
+# For Django < 4.2 or for ImageField/FileField
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
-
-# =========================
-# Cloudinary (MEDIA uploads)
-# =========================
-
-CLOUDINARY_STORAGE = {
-    "CLOUD_NAME": "dlcrl9zqo",
-    "API_KEY": "169288288777135",
-    "API_SECRET": "5OAmNiDdI_PMLn0NS0OsNbNQTic",
-}
-
-# If your Django is < 4.2, use DEFAULT_FILE_STORAGE (works for ImageField)
-DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 
 
