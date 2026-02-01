@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Security settings
 SECRET_KEY = 'django-insecure-aq9+7!jqzsfn+ce++k23fk$6qgbp(t=jjypuag3xw&x@3pbvhg'
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [ "https://dhaioptics.com", "https://www.dhaioptics.com", ]
@@ -22,10 +22,11 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
         # Cloudinary (media only)
     'cloudinary_storage',
     'cloudinary',
+    'django.contrib.staticfiles',
+
     # Local apps
     'customers',
     'sales',
@@ -115,6 +116,8 @@ STATICFILES_DIRS = [
     BASE_DIR / 'static',
 ]
 
+
+
 # ==========================
 # Cloudinary Configuration
 # ==========================
@@ -122,29 +125,27 @@ import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
+# Cloudinary settings
 CLOUDINARY_STORAGE = {
     'CLOUD_NAME': 'ddfgomhhd',
-    'API_KEY': '352287196431866',
-    'API_SECRET': 'E_Y12SN5Zcu0Gbg7kVR8-wDS1uk',
+    'API_KEY': '729679443281955',
+    'API_SECRET': 'vzDcD58NarX2yre4WXjljwUF9Ss',
 }
 
 # Configure cloudinary
 cloudinary.config(
     cloud_name='ddfgomhhd',
-    api_key='352287196431866',
-    api_secret='E_Y12SN5Zcu0Gbg7kVR8-wDS1uk',
+    api_key='729679443281955',
+    api_secret='vzDcD58NarX2yre4WXjljwUF9Ss',
     secure=True
 )
 
-# For Django < 4.2 or for ImageField/FileField
+# CRITICAL: Set Cloudinary as the default file storage
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
-# Media files
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
-
-
+# Remove or comment out these lines:
+# MEDIA_URL = '/media/'
+# MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
