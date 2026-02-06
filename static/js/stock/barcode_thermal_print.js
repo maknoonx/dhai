@@ -1,6 +1,22 @@
-// Thermal Label Barcode Printing System - TALLER BARCODE LINES FOR BETTER SCANNING
+// Thermal Label Barcode Printing System - BIG TEXT VERSION (6 chars per line)
 // Label specifications: 72mm (W) × 11mm (H)
-// Adjusted layout: Left tail (blank): 35mm | Middle panel (logo+price): 18mm | Right panel (barcode): 19mm
+// Adjusted layout: Left tail (blank): 35mm | Middle panel (logo+price): 18mm | Right panel (barcode name): 19mm
+
+/**
+ * Format barcode text into lines of 6 characters each
+ * @param {string} barcode - The barcode text
+ * @returns {string} HTML with line breaks
+ */
+function formatBarcodeText(barcode) {
+    const charsPerLine = 6;
+    const lines = [];
+    
+    for (let i = 0; i < barcode.length; i += charsPerLine) {
+        lines.push(barcode.substr(i, charsPerLine));
+    }
+    
+    return lines.join('<br>');
+}
 
 /**
  * Print single thermal label for a product
@@ -12,13 +28,14 @@
 function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/images/logo.png') {
     const printWindow = window.open('', '_blank', 'width=400,height=200');
     
+    const formattedBarcode = formatBarcodeText(barcode);
+    
     const html = `
         <!DOCTYPE html>
         <html dir="rtl" lang="ar">
         <head>
             <meta charset="UTF-8">
             <title>ملصق حراري - ${barcode}</title>
-            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
             <style>
                 * {
                     margin: 0;
@@ -92,7 +109,7 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                     white-space: nowrap;
                 }
                 
-                /* Right panel - Barcode - 19mm */
+                /* Right panel - Barcode Name Only - 19mm */
                 .right-panel {
                     width: 19mm;
                     height: 11mm;
@@ -107,36 +124,27 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                     height: 100%;
                     background: white;
                     display: flex;
-                    flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    gap: 0;
-                    padding: 0.15mm;
+                    padding: 0.5mm;
                 }
                 
-                .barcode-container {
+                .barcode-name-container {
                     display: flex;
-                    flex-direction: column;
                     align-items: center;
-                    justify-content: flex-start;
+                    justify-content: center;
                     width: 100%;
                     height: 100%;
                 }
                 
-                .barcode-svg {
-                    width: 18mm;
-                    height: 10.5mm;
-                }
-                
-                .barcode-text {
+                .barcode-name {
                     font-family: 'Courier New', monospace;
-                    font-size: 3pt;
+                    font-size: 4pt;
                     font-weight: bold;
                     color: #000;
                     text-align: center;
-                    letter-spacing: 0.05px;
-                    margin-top: 0;
-                    line-height: 0.8;
+                    line-height: 1;
+                    letter-spacing: 1px;
                 }
                 
                 @media print {
@@ -164,33 +172,17 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                     </div>
                 </div>
                 
-                <!-- Right panel - Barcode - 19mm -->
+                <!-- Right panel - Barcode Name Only - 19mm -->
                 <div class="right-panel">
                     <div class="right-box">
-                        <div class="barcode-container">
-                            <svg class="barcode-svg" id="barcode"></svg>
-                            <div class="barcode-text">${barcode}</div>
+                        <div class="barcode-name-container">
+                            <div class="barcode-name">${formattedBarcode}</div>
                         </div>
                     </div>
                 </div>
             </div>
             
             <script>
-                // Generate barcode with TALLER lines for better scanner reading
-                try {
-                    JsBarcode("#barcode", "${barcode}", {
-                        format: "CODE128",
-                        width: 2.5,
-                        height: 110,
-                        displayValue: false,
-                        margin: 0,
-                        background: "#ffffff",
-                        lineColor: "#000000"
-                    });
-                } catch (error) {
-                    console.error('Barcode generation error:', error);
-                }
-                
                 // Auto print
                 window.onload = function() {
                     setTimeout(function() {
@@ -222,6 +214,7 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
     // Generate labels HTML
     let labelsHTML = '';
     products.forEach((product, index) => {
+        const formattedBarcode = formatBarcodeText(product.barcode);
         labelsHTML += `
             <div class="thermal-label">
                 <!-- Left tail - completely blank -->
@@ -235,12 +228,11 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     </div>
                 </div>
                 
-                <!-- Right panel - Barcode -->
+                <!-- Right panel - Barcode Name Only -->
                 <div class="right-panel">
                     <div class="right-box">
-                        <div class="barcode-container">
-                            <svg class="barcode-svg" id="barcode-${index}"></svg>
-                            <div class="barcode-text">${product.barcode}</div>
+                        <div class="barcode-name-container">
+                            <div class="barcode-name">${formattedBarcode}</div>
                         </div>
                     </div>
                 </div>
@@ -254,7 +246,6 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
         <head>
             <meta charset="UTF-8">
             <title>ملصقات حرارية - ${products.length} منتج</title>
-            <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
             <style>
                 * {
                     margin: 0;
@@ -351,7 +342,7 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     white-space: nowrap;
                 }
                 
-                /* Right panel - Barcode - 19mm */
+                /* Right panel - Barcode Name Only - 19mm */
                 .right-panel {
                     width: 19mm;
                     height: 11mm;
@@ -366,36 +357,27 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     height: 100%;
                     background: white;
                     display: flex;
-                    flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    gap: 0;
-                    padding: 0.15mm;
+                    padding: 0.5mm;
                 }
                 
-                .barcode-container {
+                .barcode-name-container {
                     display: flex;
-                    flex-direction: column;
                     align-items: center;
-                    justify-content: flex-start;
+                    justify-content: center;
                     width: 100%;
                     height: 100%;
                 }
                 
-                .barcode-svg {
-                    width: 18mm;
-                    height: 10.5mm;
-                }
-                
-                .barcode-text {
+                .barcode-name {
                     font-family: 'Courier New', monospace;
-                    font-size: 3pt;
+                    font-size: 16pt;
                     font-weight: bold;
                     color: #000;
                     text-align: center;
-                    letter-spacing: 0.05px;
-                    margin-top: 0;
-                    line-height: 0.8;
+                    line-height: 1;
+                    letter-spacing: 1px;
                 }
                 
                 .footer {
@@ -440,23 +422,6 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
             </div>
             
             <script>
-                // Generate all barcodes with TALLER lines for better scanner reading
-                ${products.map((product, index) => `
-                    try {
-                        JsBarcode("#barcode-${index}", "${product.barcode}", {
-                            format: "CODE128",
-                            width: 2.5,
-                            height: 110,
-                            displayValue: false,
-                            margin: 0,
-                            background: "#ffffff",
-                            lineColor: "#000000"
-                        });
-                    } catch (error) {
-                        console.error('Barcode ${index} generation error:', error);
-                    }
-                `).join('\n')}
-                
                 // Auto print
                 window.onload = function() {
                     setTimeout(function() {
@@ -536,4 +501,4 @@ window.printMultipleThermalLabels = printMultipleThermalLabels;
 window.printAllVisibleThermalLabels = printAllVisibleThermalLabels;
 window.printThermalLabelFromDetail = printThermalLabelFromDetail;
 
-console.log('Thermal label printing system (TALLER BARCODE LINES - height: 85) loaded successfully');
+console.log('Thermal label printing system (BIG TEXT - 6 chars per line) loaded successfully');
