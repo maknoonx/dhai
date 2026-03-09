@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'employees',
     'reports',
     'settings',
+    'whatsapp',
 ]
 
 MIDDLEWARE = [
@@ -178,3 +179,10 @@ STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # WhiteNoise
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+
+
+
+WHATSAPP_PHONE_NUMBER_ID = '1071705932683761'
+WHATSAPP_BUSINESS_ACCOUNT_ID = '895639983287026'
+WHATSAPP_ACCESS_TOKEN = 'EAARvO6KF74ABQ2xYwWxUIQDbgeig45OWz0fG7xVdvrzZAyNohsHnSZA8OYZC1uZA1GK0wHDZChBALv7GZBS4YavSsUb3bUupNQgYXbFaucO3GtFGpgVcFHzpI0WhnLRrvWNVhLpnP1OqXUdhiWPaAeLZAesFxDHaDgZAJt81NqCQfUpfUcEnMCDcZCjRKcqCqDkuH8ZBwfrWpQ48XzJ4JPUHQ2kOV1s72gheE06v7kbnFubk4NNdsSkoSKYtykHA8QUZAPrSMFkWW7gOhdZAjbxe8sJZA'  # from Meta dashboard
+WHATSAPP_VERIFY_TOKEN = 'dhai_optics_whatsapp_2024'  # any secret you choose

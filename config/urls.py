@@ -19,6 +19,7 @@ urlpatterns = [
     path('employees/', include('employees.urls')),
     path('reports/', include('reports.urls')),
     path('settings/', include('settings.urls')),
+    path('whatsapp/', include('whatsapp.urls')),
 ]
 
 if settings.DEBUG:
