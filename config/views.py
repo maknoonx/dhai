@@ -131,6 +131,6 @@ from django.http import HttpResponse
 
 def meta_domain_verify(request):
     return HttpResponse(
-        'r5k239tfdxdtf74x6emoghf7is9n38',
+        'c5y18v6q1iati793vva33t3y9lduyb',
         content_type='text/html'
     )
