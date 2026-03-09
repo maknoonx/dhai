@@ -124,3 +124,13 @@ def dashboard(request):
     }
     
     return render(request, 'dashboard.html', context)
+
+
+
+from django.http import HttpResponse
+
+def meta_domain_verify(request):
+    return HttpResponse(
+        'r5k239tfdxdtf74x6emoghf7is9n38',
+        content_type='text/html'
+    )

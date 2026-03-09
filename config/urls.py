@@ -6,6 +6,8 @@ from . import views
 from .auth_views import login_view, logout_view  # ← إضافة
 
 urlpatterns = [
+    path('r5k239tfdxdtf74x6emoghf7is9n38.html', views.meta_domain_verify),  # ← add this first
+
     path('admin/', admin.site.urls),
     
     # Authentication
