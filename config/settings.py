@@ -12,8 +12,11 @@ SECRET_KEY = 'django-insecure-aq9+7!jqzsfn+ce++k23fk$6qgbp(t=jjypuag3xw&x@3pbvhg
 DEBUG = True
 ALLOWED_HOSTS = ['*']
 
-CSRF_TRUSTED_ORIGINS = [ "https://dhaioptics.com", "https://www.dhaioptics.com", ]
-
+CSRF_TRUSTED_ORIGINS = [
+    "https://dhaioptics.com",
+    "https://www.dhaioptics.com",
+    "https://dhai-production.up.railway.app",  # ← add this
+]
 
 # Application definition
 INSTALLED_APPS = [
@@ -184,5 +187,5 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 WHATSAPP_PHONE_NUMBER_ID = '1071705932683761'
 WHATSAPP_BUSINESS_ACCOUNT_ID = '895639983287026'
-WHATSAPP_ACCESS_TOKEN = 'EAARvO6KF74ABQ2xYwWxUIQDbgeig45OWz0fG7xVdvrzZAyNohsHnSZA8OYZC1uZA1GK0wHDZChBALv7GZBS4YavSsUb3bUupNQgYXbFaucO3GtFGpgVcFHzpI0WhnLRrvWNVhLpnP1OqXUdhiWPaAeLZAesFxDHaDgZAJt81NqCQfUpfUcEnMCDcZCjRKcqCqDkuH8ZBwfrWpQ48XzJ4JPUHQ2kOV1s72gheE06v7kbnFubk4NNdsSkoSKYtykHA8QUZAPrSMFkWW7gOhdZAjbxe8sJZA'  # from Meta dashboard
+WHATSAPP_ACCESS_TOKEN = 'EAARvO6KF74ABQ900ue3c1M0cIzHPrsbxDk2Fkayv0mZC2nU4gdYkYTfXzTe0WHx0XuAqqOplNRZA86tFYsqJk8DJFZBB1eZC6K8ZAdhQ2RXiw6NhO9EX48ZAI8771B91mSznJMY76AHYeadNlETmk3TUv5RrZCkrOZBhy4vZBUvBP5GfavdoV5wOyrN5THg7tzXYkummQt7sLOHDPgs2UBacIzc4ZAbZCa6mHUyeWqVOqZB5mNoGZAgGA4BlW5BRSjZCdKv0IeLBkJDgyjSk9sSTrMVR7R'  # from Meta dashboard
 WHATSAPP_VERIFY_TOKEN = 'dhai_optics_whatsapp_2024'  # any secret you choose
