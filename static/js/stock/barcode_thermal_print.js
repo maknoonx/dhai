@@ -1,41 +1,23 @@
-// Thermal Label Barcode Printing System - BIG TEXT VERSION (6 chars per line)
+// Thermal Label Printing System - LOGO + PRICE ONLY
 // Label specifications: 72mm (W) × 11mm (H)
-// Adjusted layout: Left tail (blank): 35mm | Middle panel (logo+price): 18mm | Right panel (barcode name): 19mm
+// Layout: Left tail (blank): 35mm | Right panel (logo + price): 37mm
 
 /**
- * Format barcode text into lines of 6 characters each
- * @param {string} barcode - The barcode text
- * @returns {string} HTML with line breaks
- */
-function formatBarcodeText(barcode) {
-    const charsPerLine = 6;
-    const lines = [];
-    
-    for (let i = 0; i < barcode.length; i += charsPerLine) {
-        lines.push(barcode.substr(i, charsPerLine));
-    }
-    
-    return lines.join('<br>');
-}
-
-/**
- * Print single thermal label for a product
- * @param {string} barcode - Product barcode
- * @param {string} productName - Product name (for reference only)
+ * Print single thermal label for a product - Logo and Price only
+ * @param {string} barcode - Product barcode (kept for function signature compatibility)
+ * @param {string} productName - Product name (not displayed)
  * @param {string} price - Product price
  * @param {string} logoUrl - URL to company logo
  */
 function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/images/logo.png') {
     const printWindow = window.open('', '_blank', 'width=400,height=200');
     
-    const formattedBarcode = formatBarcodeText(barcode);
-    
     const html = `
         <!DOCTYPE html>
         <html dir="rtl" lang="ar">
         <head>
             <meta charset="UTF-8">
-            <title>ملصق حراري - ${barcode}</title>
+            <title>ملصق حراري</title>
             <style>
                 * {
                     margin: 0;
@@ -73,78 +55,60 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                     background: white;
                 }
                 
-                /* Middle panel - Logo and Price - 18mm */
-                .middle-panel {
-                    width: 18mm;
+                /* Right panel - Logo + Price - 37mm */
+                .right-panel {
+                    width: 37mm;
                     height: 11mm;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 0.5mm 1mm;
+                    gap: 1.5mm;
+                }
+                
+                .logo-area {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 0.3mm;
+                    flex-shrink: 0;
                 }
                 
-                .middle-box {
-                    width: 100%;
-                    height: 100%;
-                    background: white;
+                .logo {
+                    max-width: 16mm;
+                    max-height: 9mm;
+                    object-fit: contain;
+                }
+                
+                .divider {
+                    width: 0.3mm;
+                    height: 8mm;
+                    background: #ccc;
+                    flex-shrink: 0;
+                }
+                
+                .price-area {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    gap: 0.3mm;
-                    padding: 0.3mm;
-                }
-                
-                .logo {
-                    max-width: 11mm;
-                    max-height: 4mm;
-                    object-fit: contain;
+                    flex: 1;
+                    min-width: 0;
                 }
                 
                 .price {
-                    font-size: 7pt;
+                    font-size: 8pt;
                     font-weight: bold;
                     color: #000;
                     text-align: center;
                     white-space: nowrap;
+                    line-height: 1.1;
                 }
                 
-                /* Right panel - Barcode Name Only - 19mm */
-                .right-panel {
-                    width: 19mm;
-                    height: 11mm;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 0.15mm;
-                }
-                
-                .right-box {
-                    width: 100%;
-                    height: 100%;
-                    background: white;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 0.5mm;
-                }
-                
-                .barcode-name-container {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: 100%;
-                    height: 100%;
-                }
-                
-                .barcode-name {
-                    font-family: 'Courier New', monospace;
-                    font-size: 4pt;
-                    font-weight: bold;
-                    color: #000;
-                    text-align: center;
-                    line-height: 1;
-                    letter-spacing: 1px;
+                .price-currency {
+                    font-size: 5pt;
+                    color: #444;
+                    margin-top: 0.3mm;
                 }
                 
                 @media print {
@@ -164,26 +128,22 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
                 <!-- Left tail - completely blank - 35mm -->
                 <div class="left-tail"></div>
                 
-                <!-- Middle panel - Logo and Price - 18mm -->
-                <div class="middle-panel">
-                    <div class="middle-box">
-                        <img src="${logoUrl}" alt="Logo" class="logo" onerror="this.style.display='none'">
-                        ${price ? `<div class="price">${price} ر.س</div>` : ''}
-                    </div>
-                </div>
-                
-                <!-- Right panel - Barcode Name Only - 19mm -->
+                <!-- Right panel - Logo + Price - 37mm -->
                 <div class="right-panel">
-                    <div class="right-box">
-                        <div class="barcode-name-container">
-                            <div class="barcode-name">${formattedBarcode}</div>
-                        </div>
+                    <div class="logo-area">
+                        <img src="${logoUrl}" alt="Logo" class="logo" onerror="this.style.display='none'">
                     </div>
+                    ${price ? `
+                    <div class="divider"></div>
+                    <div class="price-area">
+                        <div class="price">${price}</div>
+                        <div class="price-currency">ر.س</div>
+                    </div>
+                    ` : ''}
                 </div>
             </div>
             
             <script>
-                // Auto print
                 window.onload = function() {
                     setTimeout(function() {
                         window.print();
@@ -199,7 +159,7 @@ function printThermalLabel(barcode, productName, price = '', logoUrl = '/static/
 }
 
 /**
- * Print multiple thermal labels in a sheet
+ * Print multiple thermal labels in a sheet - Logo and Price only
  * @param {Array} products - Array of product objects {barcode, name, price}
  * @param {string} logoUrl - URL to company logo
  */
@@ -211,30 +171,22 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
     
     const printWindow = window.open('', '_blank', 'width=1000,height=800');
     
-    // Generate labels HTML
     let labelsHTML = '';
-    products.forEach((product, index) => {
-        const formattedBarcode = formatBarcodeText(product.barcode);
+    products.forEach((product) => {
         labelsHTML += `
             <div class="thermal-label">
-                <!-- Left tail - completely blank -->
                 <div class="left-tail"></div>
-                
-                <!-- Middle panel - Logo and Price -->
-                <div class="middle-panel">
-                    <div class="middle-box">
-                        <img src="${logoUrl}" alt="Logo" class="logo" onerror="this.style.display='none'">
-                        ${product.price ? `<div class="price">${product.price} ر.س</div>` : ''}
-                    </div>
-                </div>
-                
-                <!-- Right panel - Barcode Name Only -->
                 <div class="right-panel">
-                    <div class="right-box">
-                        <div class="barcode-name-container">
-                            <div class="barcode-name">${formattedBarcode}</div>
-                        </div>
+                    <div class="logo-area">
+                        <img src="${logoUrl}" alt="Logo" class="logo" onerror="this.style.display='none'">
                     </div>
+                    ${product.price ? `
+                    <div class="divider"></div>
+                    <div class="price-area">
+                        <div class="price">${product.price}</div>
+                        <div class="price-currency">ر.س</div>
+                    </div>
+                    ` : ''}
                 </div>
             </div>
         `;
@@ -299,85 +251,65 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     break-inside: avoid;
                 }
                 
-                /* Left tail - completely blank - 35mm */
                 .left-tail {
                     width: 35mm;
                     height: 11mm;
                     background: white;
                 }
                 
-                /* Middle panel - Logo and Price - 18mm */
-                .middle-panel {
-                    width: 18mm;
+                .right-panel {
+                    width: 37mm;
                     height: 11mm;
+                    display: flex;
+                    flex-direction: row;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 0.5mm 1mm;
+                    gap: 1.5mm;
+                }
+                
+                .logo-area {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 0.3mm;
+                    flex-shrink: 0;
                 }
                 
-                .middle-box {
-                    width: 100%;
-                    height: 100%;
-                    background: white;
+                .logo {
+                    max-width: 16mm;
+                    max-height: 9mm;
+                    object-fit: contain;
+                }
+                
+                .divider {
+                    width: 0.3mm;
+                    height: 8mm;
+                    background: #ccc;
+                    flex-shrink: 0;
+                }
+                
+                .price-area {
                     display: flex;
                     flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    gap: 0.3mm;
-                    padding: 0.3mm;
-                }
-                
-                .logo {
-                    max-width: 11mm;
-                    max-height: 4mm;
-                    object-fit: contain;
+                    flex: 1;
+                    min-width: 0;
                 }
                 
                 .price {
-                    font-size: 7pt;
+                    font-size: 8pt;
                     font-weight: bold;
                     color: #000;
                     text-align: center;
                     white-space: nowrap;
+                    line-height: 1.1;
                 }
                 
-                /* Right panel - Barcode Name Only - 19mm */
-                .right-panel {
-                    width: 19mm;
-                    height: 11mm;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 0.15mm;
-                }
-                
-                .right-box {
-                    width: 100%;
-                    height: 100%;
-                    background: white;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    padding: 0.5mm;
-                }
-                
-                .barcode-name-container {
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    width: 100%;
-                    height: 100%;
-                }
-                
-                .barcode-name {
-                    font-family: 'Courier New', monospace;
-                    font-size: 16pt;
-                    font-weight: bold;
-                    color: #000;
-                    text-align: center;
-                    line-height: 1;
-                    letter-spacing: 1px;
+                .price-currency {
+                    font-size: 5pt;
+                    color: #444;
+                    margin-top: 0.3mm;
                 }
                 
                 .footer {
@@ -422,7 +354,6 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
             </div>
             
             <script>
-                // Auto print
                 window.onload = function() {
                     setTimeout(function() {
                         window.print();
@@ -481,24 +412,27 @@ function printThermalLabelFromDetail() {
         price = priceElement.textContent.trim().replace('ريال', '').replace('ر.س', '').trim();
     }
     
+    // Use logo URL from page if available
+    const logoUrl = window.LOGO_URL || '/static/images/logo.png';
+    
     if (!barcodeNumber) {
         alert('خطأ في جلب بيانات المنتج');
         return;
     }
     
-    printThermalLabel(barcodeNumber, '', price);
+    printThermalLabel(barcodeNumber, '', price, logoUrl);
 }
 
-// Backward compatibility - keep old function names as aliases
+// Backward compatibility
 window.printSingleBarcode = printThermalLabel;
 window.printMultipleBarcodes = printMultipleThermalLabels;
 window.printAllVisibleBarcodes = printAllVisibleThermalLabels;
 window.printBarcodeFromDetail = printThermalLabelFromDetail;
 
-// Export new thermal label functions
+// Export thermal label functions
 window.printThermalLabel = printThermalLabel;
 window.printMultipleThermalLabels = printMultipleThermalLabels;
 window.printAllVisibleThermalLabels = printAllVisibleThermalLabels;
 window.printThermalLabelFromDetail = printThermalLabelFromDetail;
 
-console.log('Thermal label printing system (BIG TEXT - 6 chars per line) loaded successfully');
+console.log('Thermal label printing system (Logo + Price only) loaded successfully');
