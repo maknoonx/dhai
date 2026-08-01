@@ -7,6 +7,8 @@ const productModal = document.getElementById('productModal');
 const deleteModal = document.getElementById('deleteModal');
 const productForm = document.getElementById('productForm');
 const deleteForm = document.getElementById('deleteForm');
+const manualLabelModal = document.getElementById('manualLabelModal');
+const manualLabelForm = document.getElementById('manualLabelForm');
 
 // Search functionality
 let searchTimeout;
@@ -74,6 +76,36 @@ function closeDeleteModal() {
     deleteModal.classList.remove('active');
 }
 
+function showManualLabelModal() {
+    manualLabelForm.reset();
+    manualLabelModal.classList.add('active');
+}
+
+function closeManualLabelModal() {
+    manualLabelModal.classList.remove('active');
+}
+
+function submitManualLabel(e) {
+    e.preventDefault();
+
+    const price = document.getElementById('manualLabelPrice').value.trim();
+    const quantity = parseInt(document.getElementById('manualLabelQuantity').value, 10);
+
+    if (!price || isNaN(parseFloat(price)) || parseFloat(price) < 0) {
+        alert('الرجاء إدخال سعر صحيح');
+        return false;
+    }
+
+    if (isNaN(quantity) || quantity < 1) {
+        alert('الرجاء إدخال عدد ملصقات صحيح');
+        return false;
+    }
+
+    printManualThermalLabels(price, quantity);
+    closeManualLabelModal();
+    return false;
+}
+
 // Close modal on outside click
 productModal?.addEventListener('click', function(e) {
     if (e.target === productModal) {
@@ -87,11 +119,18 @@ deleteModal?.addEventListener('click', function(e) {
     }
 });
 
+manualLabelModal?.addEventListener('click', function(e) {
+    if (e.target === manualLabelModal) {
+        closeManualLabelModal();
+    }
+});
+
 // Close modal on Escape key
 document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
         closeModal();
         closeDeleteModal();
+        closeManualLabelModal();
     }
 });
 

@@ -401,6 +401,24 @@ function printAllVisibleThermalLabels() {
 }
 
 /**
+ * Print a manual batch of thermal labels with a user-provided price and quantity
+ * @param {string|number} price - Price to print on every label
+ * @param {number} quantity - Number of labels to print
+ * @param {string} logoUrl - URL to company logo
+ */
+function printManualThermalLabels(price, quantity, logoUrl = '') {
+    logoUrl = logoUrl || window.LOGO_URL || '/static/images/logo.png';
+
+    const formattedPrice = parseFloat(price).toFixed(2);
+    const products = [];
+    for (let i = 0; i < quantity; i++) {
+        products.push({ price: formattedPrice });
+    }
+
+    printMultipleThermalLabels(products, logoUrl);
+}
+
+/**
  * Print thermal label from product detail page
  */
 function printThermalLabelFromDetail() {
@@ -434,5 +452,6 @@ window.printThermalLabel = printThermalLabel;
 window.printMultipleThermalLabels = printMultipleThermalLabels;
 window.printAllVisibleThermalLabels = printAllVisibleThermalLabels;
 window.printThermalLabelFromDetail = printThermalLabelFromDetail;
+window.printManualThermalLabels = printManualThermalLabels;
 
 console.log('Thermal label printing system (Logo + Price only) loaded successfully');

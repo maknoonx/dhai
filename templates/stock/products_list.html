@@ -24,6 +24,10 @@
                 <i class="fas fa-print"></i>
                 طباعة جميع الملصقات
             </button>
+            <button class="btn btn-print-manual" onclick="showManualLabelModal()">
+                <i class="fas fa-tags"></i>
+                طباعة ملصق يدوي
+            </button>
             <button class="btn btn-primary" onclick="showAddModal()">
                 <i class="fas fa-plus"></i>
                 إضافة منتج
@@ -411,6 +415,58 @@
                     حذف
                 </button>
                 <button type="button" class="btn btn-cancel" onclick="closeDeleteModal()">
+                    إلغاء
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Manual Label Print Modal -->
+<div id="manualLabelModal" class="modal">
+    <div class="modal-content modal-small">
+        <div class="modal-header">
+            <h2>طباعة ملصق يدوي</h2>
+            <button class="btn-close" onclick="closeManualLabelModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+
+        <form id="manualLabelForm" onsubmit="return submitManualLabel(event)">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="manualLabelPrice">السعر <span class="required">*</span></label>
+                    <input type="number"
+                           id="manualLabelPrice"
+                           name="manualLabelPrice"
+                           autocomplete="off"
+                           required
+                           step="0.01"
+                           min="0"
+                           placeholder="0.00">
+                    <small>ريال</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="manualLabelQuantity">عدد الملصقات <span class="required">*</span></label>
+                    <input type="number"
+                           id="manualLabelQuantity"
+                           name="manualLabelQuantity"
+                           autocomplete="off"
+                           required
+                           min="1"
+                           step="1"
+                           value="1"
+                           placeholder="1">
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-print"></i>
+                    طباعة
+                </button>
+                <button type="button" class="btn btn-cancel" onclick="closeManualLabelModal()">
                     إلغاء
                 </button>
             </div>
