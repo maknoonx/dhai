@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.db.models import Q, Sum, Count, F
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
+from django.conf import settings
 from decimal import Decimal
 import json
 
@@ -77,10 +78,15 @@ def _send_invoice_whatsapp(request, sale) -> bool:
         f"سيتم التواصل معكم عند استلام النظارة. شكراً لزيارتكم 🌟"
     )
     try:
-        pdf_bytes = _render_invoice_pdf(request, sale)
-        result = whatsapp.send_document_pdf(
+        # نرسل الفاتورة عبر رابط يجلبه Evolution (أكثر موثوقية من base64)
+        token = getattr(settings, 'EVOLUTION_WEBHOOK_TOKEN', '')
+        site = getattr(settings, 'SITE_URL', '').rstrip('/')
+        pdf_url = f"{site}/sales/{sale.pk}/invoice.pdf"
+        if token:
+            pdf_url += f"?token={token}"
+        result = whatsapp.send_document_url(
             customer.phone,
-            pdf_bytes,
+            pdf_url,
             filename=f'{sale.order_number}.pdf',
             caption=caption,
         )
@@ -92,6 +98,24 @@ def _send_invoice_whatsapp(request, sale) -> bool:
         # لا نوقف إنشاء الفاتورة إذا فشل الإرسال — نسجّل الخطأ فقط
         print(f"WhatsApp invoice send failed for {sale.order_number}: {e}")
     return False
+
+
+def invoice_pdf(request, pk):
+    """
+    يعيد الفاتورة كملف PDF بدون تسجيل دخول (محمي بـ token)،
+    ليتمكّن Evolution من جلبه وإرساله للعميل عبر واتساب.
+    """
+    expected = getattr(settings, 'EVOLUTION_WEBHOOK_TOKEN', '')
+    if expected and request.GET.get('token') != expected:
+        return HttpResponse('Forbidden', status=403)
+
+    sale = get_object_or_404(
+        Sale.objects.select_related('customer', 'laboratory'), pk=pk
+    )
+    pdf_bytes = _render_invoice_pdf(request, sale)
+    resp = HttpResponse(pdf_bytes, content_type='application/pdf')
+    resp['Content-Disposition'] = f'inline; filename="{sale.order_number}.pdf"'
+    return resp
 
 
 @login_required
