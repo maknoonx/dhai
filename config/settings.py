@@ -185,7 +185,18 @@ STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 
 
-WHATSAPP_PHONE_NUMBER_ID = '1071705932683761'
-WHATSAPP_BUSINESS_ACCOUNT_ID = '895639983287026'
-WHATSAPP_ACCESS_TOKEN = 'EAARvO6KF74ABQ900ue3c1M0cIzHPrsbxDk2Fkayv0mZC2nU4gdYkYTfXzTe0WHx0XuAqqOplNRZA86tFYsqJk8DJFZBB1eZC6K8ZAdhQ2RXiw6NhO9EX48ZAI8771B91mSznJMY76AHYeadNlETmk3TUv5RrZCkrOZBhy4vZBUvBP5GfavdoV5wOyrN5THg7tzXYkummQt7sLOHDPgs2UBacIzc4ZAbZCa6mHUyeWqVOqZB5mNoGZAgGA4BlW5BRSjZCdKv0IeLBkJDgyjSk9sSTrMVR7R'  # from Meta dashboard
-WHATSAPP_VERIFY_TOKEN = 'dhai_optics_whatsapp_2024'  # any secret you choose
+# ============================================================
+# Evolution API (WhatsApp) — self-hosted gateway
+# القيم تُقرأ من متغيرات البيئة (Railway → Variables). لا تكتب المفاتيح هنا.
+# ============================================================
+# عنوان خدمة Evolution، مثل: https://dhai-evolution.up.railway.app
+EVOLUTION_BASE_URL = os.environ.get('EVOLUTION_BASE_URL', '').rstrip('/')
+# مفتاح المصادقة (AUTHENTICATION_API_KEY في Evolution)
+EVOLUTION_API_KEY = os.environ.get('EVOLUTION_API_KEY', '')
+# اسم الـ instance الذي رُبط به رقم واتساب المحل
+EVOLUTION_INSTANCE = os.environ.get('EVOLUTION_INSTANCE', 'dhai')
+# سر بسيط نتحقق منه في webhook حتى لا يقبل طلبات مجهولة (?token=...)
+EVOLUTION_WEBHOOK_TOKEN = os.environ.get('EVOLUTION_WEBHOOK_TOKEN', '')
+
+# العنوان العام للموقع (يُستخدم في روابط الفاتورة داخل رسائل واتساب)
+SITE_URL = os.environ.get('SITE_URL', 'https://dhaioptics.com').rstrip('/')

@@ -23,11 +23,31 @@
                 <span class="badge badge-{{ sale.get_status_color }}">
                     {{ sale.get_status_display }}
                 </span>
+                {% if sale.delivery_choice %}
+                <span class="badge badge-info">
+                    <i class="fas fa-truck"></i>
+                    {{ sale.get_delivery_choice_display }}
+                </span>
+                {% elif sale.arrival_notified_at %}
+                <span class="badge badge-warning">
+                    <i class="fab fa-whatsapp"></i>
+                    بانتظار رد العميل
+                </span>
+                {% endif %}
             </div>
         </div>
         <div class="header-actions">
-            <a href="{% url 'sales:print' sale.pk %}" 
-               class="btn btn-primary" 
+            <form method="POST" action="{% url 'sales:notify_arrival' sale.pk %}"
+                  style="display:inline;"
+                  onsubmit="return confirm('إرسال إشعار وصول النظارة للعميل عبر واتساب؟');">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success" style="background:#25D366;border-color:#25D366;">
+                    <i class="fab fa-whatsapp"></i>
+                    إشعار بوصول النظارة
+                </button>
+            </form>
+            <a href="{% url 'sales:print' sale.pk %}"
+               class="btn btn-primary"
                target="_blank">
                 <i class="fas fa-print"></i>
                 طباعة

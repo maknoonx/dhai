@@ -1,19 +1,33 @@
 """
-WhatsApp Webhook Views.
+WhatsApp Webhook Views — Evolution API.
 
-Step 3 from Meta dashboard — configure these URLs:
-  Callback URL:  https://dhaioptics.com/whatsapp/webhook/
-  Verify Token:  <your WHATSAPP_VERIFY_TOKEN from settings>
+في لوحة Evolution Manager، اضبط webhook الخاص بالـ instance على:
+  URL:   https://dhaioptics.com/whatsapp/webhook/?token=<EVOLUTION_WEBHOOK_TOKEN>
+  Events: messages.upsert
+
+Evolution يرسل الأحداث كـ POST. صيغة رسالة واردة (messages.upsert):
+  {
+    "event": "messages.upsert",
+    "instance": "dhai",
+    "data": {
+      "key": {"remoteJid": "9665XXXXXXXX@s.whatsapp.net", "fromMe": false, "id": "..."},
+      "pushName": "اسم العميل",
+      "message": {"conversation": "1"}   # أو extendedTextMessage.text
+    }
+  }
 """
 
 import json
 import logging
+
 from django.conf import settings
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse
+from django.utils import timezone
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 
 from .models import WhatsAppMessage, WebhookLog
+from .service import whatsapp
 
 logger = logging.getLogger(__name__)
 
@@ -21,151 +35,127 @@ logger = logging.getLogger(__name__)
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def webhook(request):
-    """
-    Single endpoint that handles both:
-      GET  → Meta verification handshake
-      POST → Incoming message / status notifications
-    """
+    """نقطة استقبال أحداث Evolution API."""
+    # التحقق البسيط من السر (اختياري لكنه موصى به)
+    expected = getattr(settings, 'EVOLUTION_WEBHOOK_TOKEN', '')
+    if expected and request.GET.get('token') != expected:
+        return HttpResponse('Forbidden', status=403)
+
     if request.method == 'GET':
-        return _verify(request)
-    return _handle_event(request)
+        return HttpResponse('OK', status=200)
 
-
-def _verify(request):
-    """
-    Meta sends a GET request with:
-      hub.mode=subscribe
-      hub.verify_token=<your token>
-      hub.challenge=<random string>
-
-    You must return hub.challenge as plain text with HTTP 200.
-    """
-    mode = request.GET.get('hub.mode')
-    token = request.GET.get('hub.verify_token')
-    challenge = request.GET.get('hub.challenge')
-
-    verify_token = getattr(settings, 'WHATSAPP_VERIFY_TOKEN', '')
-
-    if mode == 'subscribe' and token == verify_token:
-        logger.info('WhatsApp webhook verified successfully')
-        return HttpResponse(challenge, content_type='text/plain', status=200)
-
-    logger.warning(f'WhatsApp webhook verification failed: mode={mode}')
-    return HttpResponse('Verification failed', status=403)
-
-
-def _handle_event(request):
-    """
-    Process incoming webhook notifications.
-    Must return 200 quickly (< 30s) or Meta will retry.
-    """
     try:
         payload = json.loads(request.body)
     except json.JSONDecodeError:
         return HttpResponse('Invalid JSON', status=400)
 
-    # Log raw webhook for debugging
     WebhookLog.objects.create(payload=payload, processed=False)
 
-    # Parse the webhook payload
     try:
-        for entry in payload.get('entry', []):
-            for change in entry.get('changes', []):
-                value = change.get('value', {})
-
-                # Handle incoming messages
-                if 'messages' in value:
-                    _process_messages(value)
-
-                # Handle status updates (sent, delivered, read)
-                if 'statuses' in value:
-                    _process_statuses(value)
-
+        event = payload.get('event', '')
+        if event in ('messages.upsert', 'MESSAGES_UPSERT'):
+            _process_incoming(payload.get('data', {}))
     except Exception as e:
-        logger.exception(f'Error processing webhook: {e}')
+        logger.exception(f'Error processing Evolution webhook: {e}')
 
-    # Always return 200 to acknowledge receipt
     return HttpResponse('OK', status=200)
 
 
-def _process_messages(value: dict):
-    """Handle incoming messages from customers."""
-    contacts = {c['wa_id']: c.get('profile', {}).get('name', '')
-                for c in value.get('contacts', [])}
-
-    for msg in value.get('messages', []):
-        wa_id = msg.get('id', '')
-        sender = msg.get('from', '')
-        msg_type = msg.get('type', 'text')
-        timestamp = msg.get('timestamp', '')
-
-        # Extract message body based on type
-        body = ''
-        if msg_type == 'text':
-            body = msg.get('text', {}).get('body', '')
-        elif msg_type == 'image':
-            body = msg.get('image', {}).get('caption', '[صورة]')
-        elif msg_type == 'document':
-            body = msg.get('document', {}).get('caption', '[مستند]')
-        elif msg_type == 'audio':
-            body = '[رسالة صوتية]'
-        elif msg_type == 'video':
-            body = '[فيديو]'
-        elif msg_type == 'location':
-            loc = msg.get('location', {})
-            body = f"[موقع: {loc.get('latitude')}, {loc.get('longitude')}]"
-        elif msg_type == 'interactive':
-            interactive = msg.get('interactive', {})
-            if interactive.get('type') == 'button_reply':
-                body = interactive.get('button_reply', {}).get('title', '')
-            elif interactive.get('type') == 'list_reply':
-                body = interactive.get('list_reply', {}).get('title', '')
-
-        sender_name = contacts.get(sender, '')
-
-        WhatsAppMessage.objects.create(
-            wa_message_id=wa_id,
-            direction='inbound',
-            recipient_phone=sender,
-            message_type=msg_type if msg_type in ['text', 'image', 'document'] else 'text',
-            body=body[:500],
-            status='delivered',
-            raw_payload=msg,
-        )
-
-        logger.info(f'Inbound WhatsApp from {sender} ({sender_name}): {body[:100]}')
+def _extract_text(message: dict) -> str:
+    """يستخرج نص الرسالة من صيغ Evolution/Baileys المختلفة."""
+    if not isinstance(message, dict):
+        return ''
+    if message.get('conversation'):
+        return message['conversation']
+    ext = message.get('extendedTextMessage') or {}
+    if ext.get('text'):
+        return ext['text']
+    # ردود الأزرار (نادرة على البوابات المجانية لكن نغطّيها)
+    btn = message.get('buttonsResponseMessage') or {}
+    if btn.get('selectedDisplayText'):
+        return btn['selectedDisplayText']
+    lst = message.get('listResponseMessage') or {}
+    if (lst.get('title')):
+        return lst['title']
+    return ''
 
 
-def _process_statuses(value: dict):
-    """Update message status (sent → delivered → read)."""
-    for status_update in value.get('statuses', []):
-        wa_id = status_update.get('id', '')
-        new_status = status_update.get('status', '')
+def _process_incoming(data):
+    """يعالج رسالة/رسائل واردة من العميل."""
+    # قد تأتي data كقائمة أو كعنصر واحد
+    items = data if isinstance(data, list) else [data]
 
-        # Map Meta status to our status choices
-        status_map = {
-            'sent': 'sent',
-            'delivered': 'delivered',
-            'read': 'read',
-            'failed': 'failed',
-        }
-
-        mapped_status = status_map.get(new_status)
-        if not mapped_status:
+    for item in items:
+        if not isinstance(item, dict):
             continue
 
-        updated = WhatsAppMessage.objects.filter(
-            wa_message_id=wa_id
-        ).update(status=mapped_status)
+        key = item.get('key', {}) or {}
+        if key.get('fromMe'):
+            continue  # تجاهل رسائلنا الصادرة
 
-        if updated:
-            logger.info(f'WhatsApp message {wa_id} status → {mapped_status}')
+        remote_jid = key.get('remoteJid', '') or ''
+        # نتجاهل رسائل المجموعات
+        if remote_jid.endswith('@g.us'):
+            continue
 
-        # Log errors for failed messages
-        if new_status == 'failed':
-            errors = status_update.get('errors', [])
-            if errors:
-                error_msg = json.dumps(errors, ensure_ascii=False)[:1000]
-                WhatsAppMessage.objects.filter(
-                    wa_message_id=wa_id
-                ).update(error_message=error_msg)
+        sender_digits = ''.join(ch for ch in remote_jid.split('@')[0] if ch.isdigit())
+        text = _extract_text(item.get('message', {})).strip()
+
+        # تسجيل الرسالة الواردة
+        WhatsAppMessage.objects.create(
+            wa_message_id=key.get('id', ''),
+            direction='inbound',
+            recipient_phone=sender_digits,
+            message_type='text',
+            body=text[:500],
+            status='delivered',
+            raw_payload=item,
+        )
+        logger.info(f'Inbound WhatsApp from {sender_digits}: {text[:100]}')
+
+        if text:
+            _handle_delivery_reply(sender_digits, text)
+
+
+def _handle_delivery_reply(sender_digits: str, text: str):
+    """يربط رد العميل (1/2) بآخر فاتورة أُشعر بوصولها ويحدّثها."""
+    from sales.models import Sale
+
+    # آخر 9 أرقام تطابق حقل جوال العميل (المخزّن بدون مفتاح الدولة)
+    local9 = sender_digits[-9:] if len(sender_digits) >= 9 else sender_digits
+
+    # نحدّد الاختيار من نص الرد
+    choice = None
+    if text in ('1', '١') or 'استلام' in text or 'المحل' in text:
+        choice = 'pickup'
+    elif text in ('2', '٢') or 'توصيل' in text or 'توصيله' in text:
+        choice = 'delivery'
+
+    if not choice:
+        return  # رد غير مفهوم — نتجاهله (يمكن لاحقاً إرسال رسالة توضيح)
+
+    # نبحث عن آخر فاتورة لهذا العميل أُشعرت بالوصول ولم يُحدَّد لها اختيار بعد
+    sale = (
+        Sale.objects
+        .filter(customer__phone__endswith=local9,
+                arrival_notified_at__isnull=False,
+                delivery_choice='')
+        .order_by('-arrival_notified_at')
+        .first()
+    )
+    if not sale:
+        return
+
+    sale.delivery_choice = choice
+    sale.delivery_choice_at = timezone.now()
+    sale.save(update_fields=['delivery_choice', 'delivery_choice_at', 'updated_at'])
+
+    label = 'الاستلام من المحل' if choice == 'pickup' else 'التوصيل'
+    confirm = (
+        f"تم تسجيل رغبتكم في *{label}* للطلب رقم {sale.order_number}.\n"
+        f"سنتواصل معكم لإتمام ذلك. شكراً لكم 🌟"
+    )
+    try:
+        whatsapp.send_text(sender_digits, confirm)
+    except Exception:
+        logger.exception('Failed to send delivery confirmation')

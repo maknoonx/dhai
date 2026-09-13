@@ -20,6 +20,9 @@ urlpatterns = [
     
     # الدفعات
     path('<int:pk>/payment/add/', views.add_payment, name='add_payment'),
+
+    # إشعار العميل بوصول النظارة (واتساب)
+    path('<int:pk>/notify-arrival/', views.notify_arrival, name='notify_arrival'),
     
     # إشعارات دائن ومدين
     path('<int:pk>/credit-note/', views.credit_note, name='credit_note'),

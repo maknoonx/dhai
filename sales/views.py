@@ -11,6 +11,87 @@ from .models import Sale, SaleItem, Payment, Service
 from customers.models import Customer, EyeExam
 from stock.models import Product, Laboratory
 from settings.models import CompanySettings
+from whatsapp.service import whatsapp
+
+
+def _build_sale_print_context(sale):
+    """يبني سياق قالب طباعة الفاتورة (مستخدم في الطباعة وفي توليد PDF)."""
+    import base64
+    from io import BytesIO
+    import qrcode
+
+    items = sale.items.select_related('product').all()
+    company_settings = CompanySettings.get_settings()
+
+    latest_exam = None
+    if sale.customer:
+        try:
+            latest_exam = sale.customer.eye_exams.first()
+        except Exception:
+            latest_exam = None
+
+    qr_data = f"""اسم المنشأة: {company_settings.company_name_ar or 'البصريات الحديثة'}
+الرقم الضريبي: {company_settings.tax_number or 'غير متوفر'}
+التاريخ: {sale.order_date.strftime('%Y-%m-%d %H:%M')}
+الإجمالي: {sale.total_amount} ر.س
+الضريبة: {sale.tax} ر.س"""
+
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(qr_data.strip())
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buffer = BytesIO()
+    img.save(buffer, format='PNG')
+    qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
+
+    return {
+        'sale': sale,
+        'items': items,
+        'company': company_settings,
+        'qr_code': qr_code_base64,
+        'latest_exam': latest_exam,
+    }
+
+
+def _render_invoice_pdf(request, sale) -> bytes:
+    """يولّد الفاتورة كملف PDF (bytes) من نفس قالب الطباعة عبر WeasyPrint."""
+    from django.template.loader import render_to_string
+    from weasyprint import HTML
+
+    context = _build_sale_print_context(sale)
+    html_string = render_to_string('sales/sale_print.html', context)
+    base_url = request.build_absolute_uri('/') if request else None
+    return HTML(string=html_string, base_url=base_url).write_pdf()
+
+
+def _send_invoice_whatsapp(request, sale) -> bool:
+    """يرسل فاتورة PDF للعميل عبر واتساب مع ملاحظة. يُرجع True عند النجاح."""
+    customer = sale.customer
+    if not customer or not customer.phone or not customer.notify_whatsapp:
+        return False
+
+    caption = (
+        f"مرحباً {customer.name}،\n"
+        f"مرفق فاتورتكم رقم {sale.order_number} من بصريات ضي.\n"
+        f"الإجمالي: {sale.total_amount} ر.س\n\n"
+        f"سيتم التواصل معكم عند استلام النظارة. شكراً لزيارتكم 🌟"
+    )
+    try:
+        pdf_bytes = _render_invoice_pdf(request, sale)
+        result = whatsapp.send_document_pdf(
+            customer.phone,
+            pdf_bytes,
+            filename=f'{sale.order_number}.pdf',
+            caption=caption,
+        )
+        if isinstance(result, dict) and not result.get('error'):
+            sale.invoice_sent_at = timezone.now()
+            sale.save(update_fields=['invoice_sent_at'])
+            return True
+    except Exception as e:
+        # لا نوقف إنشاء الفاتورة إذا فشل الإرسال — نسجّل الخطأ فقط
+        print(f"WhatsApp invoice send failed for {sale.order_number}: {e}")
+    return False
 
 
 @login_required
@@ -205,7 +286,21 @@ def sale_add(request):
                     created_by=request.user.username if request.user.is_authenticated else 'System'
                 )
             
-            messages.success(request, f'تم إنشاء الفاتورة {order_number} بنجاح')
+            # إرسال الفاتورة للعميل عبر واتساب (الخيار مفعّل تلقائياً، ويمكن إلغاؤه في الفورم)
+            send_invoice = request.POST.get('send_invoice') == 'on'
+            if send_invoice:
+                sent = _send_invoice_whatsapp(request, sale)
+                if sent:
+                    messages.success(request, f'تم إنشاء الفاتورة {order_number} وإرسالها للعميل عبر واتساب ✅')
+                else:
+                    messages.warning(
+                        request,
+                        f'تم إنشاء الفاتورة {order_number}، لكن تعذّر إرسالها عبر واتساب '
+                        f'(تحقق من رقم العميل وإعدادات Evolution).'
+                    )
+            else:
+                messages.success(request, f'تم إنشاء الفاتورة {order_number} بنجاح')
+
             return redirect('sales:detail', pk=sale.pk)
             
         except Exception as e:
@@ -316,51 +411,49 @@ def sale_delete(request, pk):
 @login_required
 def sale_print(request, pk):
     """طباعة الفاتورة مع تفاصيل فحص النظر"""
-    
+
     sale = get_object_or_404(Sale.objects.select_related('customer', 'laboratory'), pk=pk)
-    items = sale.items.select_related('product').all()
-    company_settings = CompanySettings.get_settings()
-    
-    # جلب آخر فحص نظر للعميل
-    latest_exam = None
-    if sale.customer:
-        try:
-            from customers.models import EyeExam
-            latest_exam = sale.customer.eye_exams.first()
-        except Exception as e:
-            print(f"Error fetching eye exam: {e}")
-            latest_exam = None
-    
-    # توليد QR Code
-    import qrcode
-    from io import BytesIO
-    import base64
-    
-    # بيانات QR Code حسب متطلبات هيئة الزكاة والدخل
-    qr_data = f"""اسم المنشأة: {company_settings.company_name_ar or 'البصريات الحديثة'}
-الرقم الضريبي: {company_settings.tax_number or 'غير متوفر'}
-التاريخ: {sale.order_date.strftime('%Y-%m-%d %H:%M')}
-الإجمالي: {sale.total_amount} ر.س
-الضريبة: {sale.tax} ر.س"""
-    
-    qr = qrcode.QRCode(version=1, box_size=10, border=5)
-    qr.add_data(qr_data.strip())
-    qr.make(fit=True)
-    
-    img = qr.make_image(fill_color="black", back_color="white")
-    buffer = BytesIO()
-    img.save(buffer, format='PNG')
-    qr_code_base64 = base64.b64encode(buffer.getvalue()).decode()
-    
-    context = {
-        'sale': sale,
-        'items': items,
-        'company': company_settings,
-        'qr_code': qr_code_base64,
-        'latest_exam': latest_exam,  # ← إضافة فحص النظر للسياق
-    }
-    
+    context = _build_sale_print_context(sale)
     return render(request, 'sales/sale_print.html', context)
+
+
+@login_required
+def notify_arrival(request, pk):
+    """إشعار العميل بوصول النظارة وسؤاله: استلام من المحل (1) أم توصيل (2)."""
+    sale = get_object_or_404(Sale.objects.select_related('customer'), pk=pk)
+
+    if request.method != 'POST':
+        return redirect('sales:detail', pk=sale.pk)
+
+    customer = sale.customer
+    if not customer or not customer.phone:
+        messages.error(request, 'لا يوجد رقم جوال لهذا العميل.')
+        return redirect('sales:detail', pk=sale.pk)
+
+    body = (
+        f"مرحباً {customer.name} 👋\n"
+        f"يسعدنا إبلاغكم بوصول نظارتكم الخاصة بالطلب رقم {sale.order_number} إلى بصريات ضي.\n\n"
+        f"هل تودون الاستلام من المحل أم التوصيل؟\n"
+        f"↩️ ردّوا بـ *1* للاستلام من المحل\n"
+        f"↩️ ردّوا بـ *2* للتوصيل\n\n"
+        f"شكراً لكم 🌟"
+    )
+
+    result = whatsapp.send_text(customer.phone, body)
+    if isinstance(result, dict) and not result.get('error'):
+        sale.arrival_notified_at = timezone.now()
+        # لا نغيّر الحالة إن كانت أبعد من "جاهز"
+        if sale.status in ('created', 'lab'):
+            sale.status = 'ready'
+        sale.save(update_fields=['arrival_notified_at', 'status', 'updated_at'])
+        messages.success(request, 'تم إرسال إشعار وصول النظارة للعميل عبر واتساب ✅')
+    else:
+        messages.error(
+            request,
+            'تعذّر إرسال الإشعار عبر واتساب (تحقق من رقم العميل وإعدادات Evolution).'
+        )
+
+    return redirect('sales:detail', pk=sale.pk)
 
 
 

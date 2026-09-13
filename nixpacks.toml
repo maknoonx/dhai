@@ -14,5 +14,8 @@ nixPkgs = [
   "libxslt",
   "zlib",
   "libjpeg",
-  "libpng"
+  "libpng",
+  "noto-fonts",
+  "dejavu_fonts",
+  "fontconfig"
 ]

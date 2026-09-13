@@ -37,7 +37,21 @@ class Sale(models.Model):
         ('cancelled', 'ملغي'),
     ]
     status = models.CharField('حالة الطلب', max_length=20, choices=STATUS_CHOICES, default='created')
-    
+
+    # طريقة الاستلام التي يختارها العميل بعد إشعار الوصول (عبر واتساب: 1 استلام / 2 توصيل)
+    DELIVERY_CHOICES = [
+        ('pickup', 'استلام من المحل'),
+        ('delivery', 'توصيل'),
+    ]
+    delivery_choice = models.CharField(
+        'طريقة الاستلام', max_length=10, choices=DELIVERY_CHOICES, blank=True
+    )
+
+    # تتبّع إرسال الفاتورة وإشعار الوصول عبر واتساب
+    invoice_sent_at = models.DateTimeField('تاريخ إرسال الفاتورة عبر واتساب', null=True, blank=True)
+    arrival_notified_at = models.DateTimeField('تاريخ إشعار وصول النظارة', null=True, blank=True)
+    delivery_choice_at = models.DateTimeField('تاريخ رد العميل على الاستلام', null=True, blank=True)
+
     # التواريخ
     order_date = models.DateTimeField('تاريخ الطلب', auto_now_add=True)
     delivery_date = models.DateField('تاريخ التسليم المتوقع', null=True, blank=True)
