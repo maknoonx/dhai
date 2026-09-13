@@ -24,8 +24,8 @@ urlpatterns = [
     # إشعار العميل بوصول النظارة (واتساب)
     path('<int:pk>/notify-arrival/', views.notify_arrival, name='notify_arrival'),
 
-    # رابط الفاتورة PDF (يجلبه Evolution لإرساله عبر واتساب)
-    path('<int:pk>/invoice.pdf', views.invoice_pdf, name='invoice_pdf'),
+    # رابط الفاتورة PDF الموقَّع (يُرسَل للعميل عبر واتساب كرابط)
+    path('invoice/<str:token>/', views.invoice_pdf, name='invoice_pdf'),
     
     # إشعارات دائن ومدين
     path('<int:pk>/credit-note/', views.credit_note, name='credit_note'),

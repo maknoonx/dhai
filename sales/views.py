@@ -5,6 +5,7 @@ from django.db.models import Q, Sum, Count, F
 from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.conf import settings
+from django.core import signing
 from decimal import Decimal
 import json
 
@@ -71,43 +72,39 @@ def _send_invoice_whatsapp(request, sale) -> bool:
     if not customer or not customer.phone or not customer.notify_whatsapp:
         return False
 
-    caption = (
-        f"مرحباً {customer.name}،\n"
-        f"مرفق فاتورتكم رقم {sale.order_number} من بصريات ضي.\n"
+    # رابط موقَّع فريد لكل فاتورة (لا يكشف أي سر مشترك)
+    site = getattr(settings, 'SITE_URL', '').rstrip('/')
+    link_token = signing.dumps(sale.pk, salt='invoice-pdf')
+    link = f"{site}/sales/invoice/{link_token}/"
+
+    body = (
+        f"مرحباً {customer.name} 👋\n"
+        f"شكراً لزيارتكم بصريات ضي. تم إنشاء فاتورتكم رقم {sale.order_number}.\n"
         f"الإجمالي: {sale.total_amount} ر.س\n\n"
-        f"سيتم التواصل معكم عند استلام النظارة. شكراً لزيارتكم 🌟"
+        f"📄 لعرض وتحميل الفاتورة اضغط الرابط:\n{link}\n\n"
+        f"سيتم التواصل معكم عند استلام النظارة 🌟"
     )
     try:
-        # نرسل الفاتورة عبر رابط يجلبه Evolution (أكثر موثوقية من base64)
-        token = getattr(settings, 'EVOLUTION_WEBHOOK_TOKEN', '')
-        site = getattr(settings, 'SITE_URL', '').rstrip('/')
-        pdf_url = f"{site}/sales/{sale.pk}/invoice.pdf"
-        if token:
-            pdf_url += f"?token={token}"
-        result = whatsapp.send_document_url(
-            customer.phone,
-            pdf_url,
-            filename=f'{sale.order_number}.pdf',
-            caption=caption,
-        )
+        result = whatsapp.send_text(customer.phone, body)
         if isinstance(result, dict) and not result.get('error'):
             sale.invoice_sent_at = timezone.now()
             sale.save(update_fields=['invoice_sent_at'])
             return True
     except Exception as e:
         # لا نوقف إنشاء الفاتورة إذا فشل الإرسال — نسجّل الخطأ فقط
-        print(f"WhatsApp invoice send failed for {sale.order_number}: {e}")
+        print(f"WhatsApp invoice link send failed for {sale.order_number}: {e}")
     return False
 
 
-def invoice_pdf(request, pk):
+def invoice_pdf(request, token):
     """
-    يعيد الفاتورة كملف PDF بدون تسجيل دخول (محمي بـ token)،
-    ليتمكّن Evolution من جلبه وإرساله للعميل عبر واتساب.
+    يعيد الفاتورة كملف PDF عبر رابط موقَّع (بدون تسجيل دخول).
+    الرابط يُرسَل للعميل عبر واتساب، ويفتحه في متصفحه.
     """
-    expected = getattr(settings, 'EVOLUTION_WEBHOOK_TOKEN', '')
-    if expected and request.GET.get('token') != expected:
-        return HttpResponse('Forbidden', status=403)
+    try:
+        pk = signing.loads(token, salt='invoice-pdf')
+    except signing.BadSignature:
+        return HttpResponse('رابط غير صالح', status=403)
 
     sale = get_object_or_404(
         Sale.objects.select_related('customer', 'laboratory'), pk=pk
