@@ -72,16 +72,11 @@ def _send_invoice_whatsapp(request, sale) -> bool:
     if not customer or not customer.phone or not customer.notify_whatsapp:
         return False
 
-    # رابط موقَّع فريد لكل فاتورة (لا يكشف أي سر مشترك)
-    site = getattr(settings, 'SITE_URL', '').rstrip('/')
-    link_token = signing.dumps(sale.pk, salt='invoice-pdf')
-    link = f"{site}/sales/invoice/{link_token}/"
-
+    # إشعار نصي بسيط عند إنشاء الفاتورة (أكثر طرق الإرسال موثوقية)
     body = (
         f"مرحباً {customer.name} 👋\n"
-        f"شكراً لزيارتكم بصريات ضي. تم إنشاء فاتورتكم رقم {sale.order_number}.\n"
-        f"الإجمالي: {sale.total_amount} ر.س\n\n"
-        f"📄 لعرض وتحميل الفاتورة اضغط الرابط:\n{link}\n\n"
+        f"شكراً لزيارتكم بصريات ضي.\n"
+        f"تم إنشاء فاتورتكم رقم {sale.order_number} بمبلغ {sale.total_amount} ر.س.\n\n"
         f"سيتم التواصل معكم عند استلام النظارة 🌟"
     )
     try:
@@ -92,7 +87,7 @@ def _send_invoice_whatsapp(request, sale) -> bool:
             return True
     except Exception as e:
         # لا نوقف إنشاء الفاتورة إذا فشل الإرسال — نسجّل الخطأ فقط
-        print(f"WhatsApp invoice link send failed for {sale.order_number}: {e}")
+        print(f"WhatsApp invoice notify send failed for {sale.order_number}: {e}")
     return False
 
 
