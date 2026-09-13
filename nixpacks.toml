@@ -16,6 +16,23 @@ nixPkgs = [
   "libjpeg",
   "libpng",
   "noto-fonts",
-  "dejavu_fonts",
-  "fontconfig"
+  "dejavu_fonts"
+]
+
+# Libraries added to LD_LIBRARY_PATH so WeasyPrint can load gobject/pango/cairo at runtime
+nixLibs = [
+  "glib",
+  "pango",
+  "cairo",
+  "gdk-pixbuf",
+  "fontconfig",
+  "freetype",
+  "harfbuzz",
+  "fribidi",
+  "libffi",
+  "libxml2",
+  "libxslt",
+  "zlib",
+  "libjpeg",
+  "libpng"
 ]
