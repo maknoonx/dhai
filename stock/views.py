@@ -2,8 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Q, Sum, Count, F
+from django.db.models.deletion import ProtectedError
 from django.utils import timezone
 from .models import Product, Category, Supplier, StockMovement, Laboratory
+from sales.models import SaleItem
 
 
 # في stock/views.py
@@ -415,9 +417,21 @@ def product_edit(request, pk):
 def product_delete(request, pk):
     product = get_object_or_404(Product, pk=pk)
     name = product.item_name
-    product.delete()
-    
-    messages.success(request, f'تم حذف المنتج "{name}" بنجاح')
+
+    try:
+        product.delete()
+        messages.success(request, f'تم حذف المنتج "{name}" بنجاح')
+    except ProtectedError as e:
+        # المنتج مرتبط بفواتير مبيعات، لذلك لا يمكن حذفه للحفاظ على سجلات المبيعات
+        invoice_count = SaleItem.objects.filter(product=product).values('sale').distinct().count()
+        messages.error(
+            request,
+            f'لا يمكن حذف المنتج "{name}" لأنه مستخدم في {invoice_count} فاتورة مبيعات. '
+            f'يمكنك تعطيل المنتج أو تعديل كميته بدلاً من حذفه للحفاظ على سجلات المبيعات.'
+        )
+    except Exception as e:
+        messages.error(request, f'حدث خطأ أثناء حذف المنتج "{name}": {str(e)}')
+
     return redirect('stock:products')
 
 
