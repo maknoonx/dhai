@@ -204,43 +204,22 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     padding: 0;
                     box-sizing: border-box;
                 }
-                
+
+                /* Same shelf-label page as the single thermal label:
+                   each label is its own 72mm × 11mm page */
                 @page {
-                    size: A4;
-                    margin: 5mm;
+                    size: 72mm 11mm;
+                    margin: 0;
                 }
-                
+
                 body {
                     font-family: Arial, sans-serif;
-                    background: #f5f5f5;
-                    padding: 5mm;
-                }
-                
-                .header {
-                    text-align: center;
-                    margin-bottom: 5mm;
-                    padding: 3mm;
                     background: white;
-                    border-radius: 4px;
+                    width: 72mm;
+                    margin: 0;
+                    padding: 0;
                 }
-                
-                .header h1 {
-                    font-size: 14pt;
-                    color: #2c3e50;
-                    margin-bottom: 2mm;
-                }
-                
-                .header p {
-                    font-size: 9pt;
-                    color: #7f8c8d;
-                }
-                
-                .labels-container {
-                    display: flex;
-                    flex-direction: column;
-                    gap: 2mm;
-                }
-                
+
                 .thermal-label {
                     width: 72mm;
                     height: 11mm;
@@ -249,14 +228,23 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     background: white;
                     page-break-inside: avoid;
                     break-inside: avoid;
+                    /* Each label prints on its own shelf label */
+                    page-break-after: always;
+                    break-after: page;
                 }
-                
+
+                /* Avoid an extra blank label after the last one */
+                .thermal-label:last-child {
+                    page-break-after: auto;
+                    break-after: auto;
+                }
+
                 .left-tail {
                     width: 35mm;
                     height: 11mm;
                     background: white;
                 }
-                
+
                 .right-panel {
                     width: 37mm;
                     height: 11mm;
@@ -267,27 +255,27 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     padding: 0.5mm 1mm;
                     gap: 1.5mm;
                 }
-                
+
                 .logo-area {
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     flex-shrink: 0;
                 }
-                
+
                 .logo {
                     max-width: 16mm;
                     max-height: 9mm;
                     object-fit: contain;
                 }
-                
+
                 .divider {
                     width: 0.3mm;
                     height: 8mm;
                     background: #ccc;
                     flex-shrink: 0;
                 }
-                
+
                 .price-area {
                     display: flex;
                     flex-direction: column;
@@ -296,7 +284,7 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     flex: 1;
                     min-width: 0;
                 }
-                
+
                 .price {
                     font-size: 8pt;
                     font-weight: bold;
@@ -305,54 +293,24 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     white-space: nowrap;
                     line-height: 1.1;
                 }
-                
+
                 .price-currency {
                     font-size: 5pt;
                     color: #444;
                     margin-top: 0.3mm;
                 }
-                
-                .footer {
-                    text-align: center;
-                    margin-top: 5mm;
-                    padding: 3mm;
-                    background: white;
-                    border-radius: 4px;
-                    font-size: 8pt;
-                    color: #7f8c8d;
-                }
-                
+
                 @media print {
                     body {
                         background: white;
                         padding: 0;
                     }
-                    
-                    .header,
-                    .footer {
-                        display: none;
-                    }
-                    
-                    .labels-container {
-                        gap: 1mm;
-                    }
                 }
             </style>
         </head>
         <body>
-            <div class="header">
-                <h1>ملصقات حرارية للمنتجات</h1>
-                <p>إجمالي: ${products.length} ملصق | ${new Date().toLocaleDateString('ar-SA')}</p>
-            </div>
-            
-            <div class="labels-container">
-                ${labelsHTML}
-            </div>
-            
-            <div class="footer">
-                تم الطباعة من نظام إدارة المخزون
-            </div>
-            
+            ${labelsHTML}
+
             <script>
                 window.onload = function() {
                     setTimeout(function() {

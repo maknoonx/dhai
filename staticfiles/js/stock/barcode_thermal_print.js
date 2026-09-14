@@ -262,15 +262,18 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     box-sizing: border-box;
                 }
                 
+                /* Same shelf-label page as the single thermal label:
+                   each label is its own 72mm × 11mm page */
                 @page {
-                    size: A4;
-                    margin: 5mm;
+                    size: 72mm 11mm;
+                    margin: 0;
                 }
-                
+
                 body {
                     font-family: Arial, sans-serif;
-                    background: #f5f5f5;
-                    padding: 5mm;
+                    background: white;
+                    width: 72mm;
+                    padding: 0;
                 }
                 
                 .header {
@@ -306,8 +309,17 @@ function printMultipleThermalLabels(products, logoUrl = '/static/images/logo.png
                     background: white;
                     page-break-inside: avoid;
                     break-inside: avoid;
+                    /* Each label prints on its own shelf label */
+                    page-break-after: always;
+                    break-after: page;
                 }
-                
+
+                /* Avoid an extra blank label after the last one */
+                .thermal-label:last-child {
+                    page-break-after: auto;
+                    break-after: auto;
+                }
+
                 /* Left tail - completely blank - 35mm */
                 .left-tail {
                     width: 35mm;
