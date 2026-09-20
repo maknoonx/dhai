@@ -447,12 +447,9 @@ def notify_arrival(request, pk):
         return redirect('sales:detail', pk=sale.pk)
 
     body = (
-        f"مرحباً {customer.name} 👋\n"
-        f"يسعدنا إبلاغكم بوصول نظارتكم الخاصة بالطلب رقم {sale.order_number} إلى بصريات ضي.\n\n"
-        f"هل تودون الاستلام من المحل أم التوصيل؟\n"
-        f"↩️ ردّوا بـ *1* للاستلام من المحل\n"
-        f"↩️ ردّوا بـ *2* للتوصيل\n\n"
-        f"شكراً لكم 🌟"
+        "عزيزي العميل، نظارتك الطبية جاهزة الآن للاستلام.\n"
+        "يسعدنا زيارتكم في الفرع بأقرب وقت.\n\n"
+        "شكراً لاختياركم ضي للبصريات."
     )
 
     result = whatsapp.send_text(customer.phone, body)
